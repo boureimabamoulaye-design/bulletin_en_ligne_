@@ -3,7 +3,8 @@ import { Etudiant, Paiement, Semestre } from '../types';
 import { 
   DollarSign, 
   Search, 
-  SlidersHorizontal, 
+  SlidersHorizontal,
+   
   Plus, 
   TrendingUp, 
   Clock, 
