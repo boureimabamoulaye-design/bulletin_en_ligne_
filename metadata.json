@@ -1,0 +1,6 @@
+{
+  "name": "Gestion Scolaire PHP-MySQL",
+  "description": "Plateforme moderne de gestion scolaire construite avec PHP, HTML5, CSS3 et MySQL. Comprend un tableau de bord, la gestion des étudiants et filières, bulletins et autorisations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,327 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cinzel", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-slate-50: #060810;
+  --color-slate-100: #14172a;
+  --color-slate-200: #20253e;
+  --color-slate-300: #3b4266;
+  --color-slate-400: #7b85a6;
+  --color-slate-500: #8c96bc;
+  --color-slate-700: #bfcbde;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #080a12;
+  
+  --color-white: #111422;
+  
+  --color-gray-50: #0b0d1a;
+  --color-gray-100: #14182a;
+  --color-gray-150: #1b1e32;
+  --color-gray-200: #23273e;
+  --color-gray-300: #32385c;
+  --color-gray-400: #6c78a3;
+  --color-gray-500: #8995c0;
+  --color-gray-700: #c2cde6;
+  --color-gray-800: #f1f5f9;
+  --color-gray-900: #ffffff;
+  --color-gray-950: #ffffff;
+  
+  --color-blue-50: #0d1222;
+  --color-blue-100: #141c30;
+  --color-blue-300: #e5d5be;
+  --color-blue-500: #c5a880;
+  --color-blue-600: #c5a880; /* Venetian/Champagne Gold */
+  --color-blue-700: #dfcbb0; /* lighter gold */
+  --color-blue-800: #a38965; /* darker gold */
+  --color-blue-850: #111422;
+  --color-blue-900: #c5a880;
+  
+  --color-indigo-50: #09131a;
+  --color-indigo-600: #c5a880;
+  --color-indigo-805: #dfcbb0;
+  
+  --color-teal-50: #0d1a1b;
+  --color-teal-600: #93b392; /* elegant sage */
+  --color-teal-700: #b9d1b8;
+  
+  --color-amber-50: #191410;
+  --color-amber-600: #cca072; /* warm gold-copper */
+  --color-amber-700: #dfc5a0;
+}
+
+/* --- ADAPTIVE ROOT AND CORE ELEMENTS OVERRIDES --- */
+body {
+  background-color: #060810;
+  color: #e2e8f0;
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Display typography serif elements */
+h1, h2, h3, h4, .font-serif, .logo-area h3 {
+  font-family: "Cinzel", Georgia, serif !important;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* Fine-tune login screen left panel */
+#guest-screen-parent div {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom Table overrides for gorgeous dark-gold lists */
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #cad2e1;
+  background-color: #111422;
+}
+
+.custom-table th {
+  background-color: #0d101d;
+  color: #c5a880;
+  font-family: "Cinzel", serif;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 14px 18px;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-bottom: 2px solid #22263d;
+  text-align: left;
+}
+
+.custom-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #1a1f35;
+  font-size: 13px;
+}
+
+.custom-table tr:hover td {
+  background-color: rgba(197, 168, 128, 0.035);
+}
+
+/* Input Fields styling to match Sophisticated Dark */
+input[type="text"], 
+input[type="password"], 
+input[type="email"], 
+input[type="number"], 
+select, 
+textarea,
+.form-control {
+  background-color: #0d101d !important;
+  color: #ffffff !important;
+  border: 1px solid #252b47 !important;
+  transition: all 0.2s ease-in-out;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+input[type="text"]:focus, 
+input[type="password"]:focus, 
+input[type="email"]:focus, 
+input[type="number"]:focus, 
+select:focus, 
+textarea:focus,
+.form-control:focus {
+  border-color: #c5a880 !important;
+  box-shadow: 0 0 10px rgba(197, 168, 128, 0.25) !important;
+  outline: none !important;
+}
+
+/* Custom gorgeous gold buttons */
+.btn-primary, button[type="submit"]:not(.bg-red-600):not(.bg-red-650) {
+  background-color: #c5a880 !important;
+  color: #060810 !important;
+  font-family: "Cinzel", serif;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+  padding: 10px 18px;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+  border: none !important;
+  cursor: pointer;
+}
+
+.btn-primary:hover, button[type="submit"]:not(.bg-red-600):not(.bg-red-650):hover {
+  background-color: #dfcbb0 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(197, 168, 128, 0.25);
+}
+
+.btn-secondary {
+  background-color: #0d101d !important;
+  color: #ffffff !important;
+  border: 1px solid #252b47 !important;
+}
+
+/* Inner borders & cards */
+.border, .border-dashed, .border-t, .border-b, .border-l, .border-r {
+  border-color: #23273e !important;
+}
+
+/* Printable PDF card aesthetic tuning (and screen preview with high-contrast light backgrounds) */
+#student-pdf-bulletin, #bulletin-official-canvas {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 4px solid #0f172a !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+#student-pdf-bulletin *, #bulletin-official-canvas * {
+  border-color: #e2e8f0 !important;
+  text-shadow: none !important;
+}
+
+/* Forcing exact light background states inside the bulletin */
+#student-pdf-bulletin .bg-slate-50, #bulletin-official-canvas .bg-slate-50,
+#student-pdf-bulletin .bg-slate-100, #bulletin-official-canvas .bg-slate-100,
+#student-pdf-bulletin .bg-gray-50, #bulletin-official-canvas .bg-gray-50,
+#student-pdf-bulletin .bg-slate-100\/50, #bulletin-official-canvas .bg-slate-100\/50 {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+#student-pdf-bulletin .bg-blue-50, #bulletin-official-canvas .bg-blue-50,
+#student-pdf-bulletin .bg-blue-50\/30, #bulletin-official-canvas .bg-blue-50\/30 {
+  background-color: #eff6ff !important;
+  border-color: #3b82f6 !important;
+}
+
+/* table backgrounds inside bulletins */
+#student-pdf-bulletin table, #bulletin-official-canvas table,
+#student-pdf-bulletin .custom-table, #bulletin-official-canvas .custom-table {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+#student-pdf-bulletin table th, #bulletin-official-canvas table th {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #0f172a !important;
+}
+
+#student-pdf-bulletin table td, #bulletin-official-canvas table td {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+#student-pdf-bulletin table tr:hover td, #bulletin-official-canvas table tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+/* Exact typography overrides inside the bulletins */
+#student-pdf-bulletin h1, #bulletin-official-canvas h1,
+#student-pdf-bulletin h2, #bulletin-official-canvas h2,
+#student-pdf-bulletin h3, #bulletin-official-canvas h3,
+#student-pdf-bulletin h4, #bulletin-official-canvas h4,
+#student-pdf-bulletin h5, #bulletin-official-canvas h5,
+#student-pdf-bulletin strong, #bulletin-official-canvas strong,
+#student-pdf-bulletin dd, #bulletin-official-canvas dd {
+  color: #0f172a !important;
+}
+
+#student-pdf-bulletin text, #bulletin-official-canvas text,
+#student-pdf-bulletin span, #bulletin-official-canvas span,
+#student-pdf-bulletin div, #bulletin-official-canvas div,
+#student-pdf-bulletin p, #bulletin-official-canvas p,
+#student-pdf-bulletin dt, #bulletin-official-canvas dt {
+  color: #334155 !important; /* highly readable slate-700 */
+}
+
+/* Support badges and statuses inside the documents */
+#student-pdf-bulletin .text-gray-400, #bulletin-official-canvas .text-gray-400,
+#student-pdf-bulletin .text-gray-500, #bulletin-official-canvas .text-gray-500,
+#student-pdf-bulletin .text-slate-400, #bulletin-official-canvas .text-slate-400,
+#student-pdf-bulletin .text-slate-500, #bulletin-official-canvas .text-slate-500 {
+  color: #64748b !important; /* slate-500, visible gray label */
+}
+
+#student-pdf-bulletin .text-blue-900, #bulletin-official-canvas .text-blue-900,
+#student-pdf-bulletin .text-blue-800, #bulletin-official-canvas .text-blue-800,
+#student-pdf-bulletin .text-blue-700, #bulletin-official-canvas .text-blue-700,
+#student-pdf-bulletin .text-blue-600, #bulletin-official-canvas .text-blue-600 {
+  color: #1d4ed8 !important; /* real high-contrast dark blue */
+}
+
+#student-pdf-bulletin .text-green-600, #bulletin-official-canvas .text-green-600,
+#student-pdf-bulletin .text-emerald-600, #bulletin-official-canvas .text-emerald-600,
+#student-pdf-bulletin .text-teal-600, #bulletin-official-canvas .text-teal-600 {
+  color: #15803d !important; /* sharp green text */
+}
+
+#student-pdf-bulletin .bg-green-50, #bulletin-official-canvas .bg-green-50,
+#student-pdf-bulletin .bg-emerald-50, #bulletin-official-canvas .bg-emerald-50 {
+  background-color: #f0fdf4 !important;
+  color: #15803d !important;
+}
+
+#student-pdf-bulletin .text-red-500, #bulletin-official-canvas .text-red-500,
+#student-pdf-bulletin .text-red-600, #bulletin-official-canvas .text-red-600 {
+  color: #b91c1c !important; /* sharp red text */
+}
+
+#student-pdf-bulletin .bg-red-50, #bulletin-official-canvas .bg-red-50 {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+#student-pdf-bulletin font, #bulletin-official-canvas font,
+#student-pdf-bulletin b, #bulletin-official-canvas b {
+  color: #0f172a !important;
+}
+
+/* --- High Readability & Contrast Global Adjustments for Dark Theme --- */
+/* Target elements when they are displayed on screen outside the printable cards to guarantee pristine legibility */
+.text-slate-900:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-950:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-gray-950:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-850:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-800:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-gray-800:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-955:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-755:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-705:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *) {
+  color: #f8fafc !important;
+}
+
+.text-gray-600:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-655:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-600:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-gray-500:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-500:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-450:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-slate-400:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-gray-450:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *),
+.text-gray-400:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *) {
+  color: #cbd5e1 !important;
+}
+
+.text-blue-900:not(#student-pdf-bulletin *):not(#bulletin-official-canvas *) {
+  color: #93c5fd !important;
+}
+
+/* Scrollbars styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #060810;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f2336;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c5a880;
+}
