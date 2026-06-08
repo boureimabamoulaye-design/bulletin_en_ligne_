@@ -212,9 +212,7 @@ export default function AutorisationsTab({ autorisations, etudiants, filieres, l
                           <td>
                             <button 
                               onClick={() => {
-                                if (confirm("Révoquer l'accès à cette filière ? L'étudiant ne pourra plus consulter ses supports de cours.")) {
-                                  onDeleteAutorisation(auth.id);
-                                }
+                                onDeleteAutorisation(auth.id);
                               }}
                               className="p-1 px-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded transition font-bold text-xs"
                             >

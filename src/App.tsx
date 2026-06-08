@@ -12,7 +12,7 @@ import {
   INITIAL_MATIERES,
   INITIAL_PAIEMENTS
 } from './mockData';
-import { Filiere, Matiere, Classe, Semestre, Etudiant, Cours, Note, AutorisationFiliere, HistoriqueAcces, Administrateur, Paiement } from './types';
+import { Filiere, Matiere, Classe, Semestre, Etudiant, Cours, Note, AutorisationFiliere, HistoriqueAcces, Administrateur, Paiement, TrashItem } from './types';
 
 // Tab components
 import AdminDashboard from './components/AdminDashboard';
@@ -24,13 +24,14 @@ import NotesTab from './components/NotesTab';
 import BulletinsTab from './components/BulletinsTab';
 import AutorisationsTab from './components/AutorisationsTab';
 import PaiementsTab from './components/PaiementsTab';
+import CorbeilleTab from './components/CorbeilleTab';
 import StudentPortal from './components/StudentPortal';
 
 // Icons
 import { 
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
   BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info, Lightbulb,
-  ArrowLeft, Menu, X, CreditCard, DollarSign
+  ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2
 } from 'lucide-react';
 
 export default function App() {
@@ -82,6 +83,10 @@ export default function App() {
   const [anneesScolaires, setAnneesScolaires] = useState<string[]>(() => {
     const saved = localStorage.getItem('school_annees_scolaires');
     return saved ? JSON.parse(saved) : ["2025-2026", "2026-2027", "2024-2025"];
+  });
+  const [trash, setTrash] = useState<TrashItem[]>(() => {
+    const saved = localStorage.getItem('school_trash');
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Auth and Nav states
@@ -159,6 +164,9 @@ export default function App() {
   React.useEffect(() => {
     localStorage.setItem('school_annees_scolaires', JSON.stringify(anneesScolaires));
   }, [anneesScolaires]);
+  React.useEffect(() => {
+    localStorage.setItem('school_trash', JSON.stringify(trash));
+  }, [trash]);
 
   // --- ACTIONS (CREATION / MODIFICATION / DELETION) ---
   
@@ -173,6 +181,19 @@ export default function App() {
   };
 
   const handleDeletePaiement = (id: number) => {
+    const item = paiements.find(p => p.id === id);
+    if (item) {
+      const etu = etudiants.find(e => e.id === item.etudiant_id);
+      const studentName = etu ? `${etu.prenom} ${etu.nom}` : `Étudiant #${item.etudiant_id}`;
+      const trashItem: TrashItem = {
+        id: `paiement-${id}-${Date.now()}`,
+        itemType: 'paiement',
+        itemName: `Paiement: N° ${item.recu_numero} - ${item.montant} FCFA de ${studentName} (${item.type_frais})`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setPaiements(paiements.filter(p => p.id !== id));
   };
   
@@ -189,6 +210,17 @@ export default function App() {
 
   // Delete major
   const handleDeleteFiliere = (id: number) => {
+    const item = filieres.find(f => f.id === id);
+    if (item) {
+      const trashItem: TrashItem = {
+        id: `filiere-${id}-${Date.now()}`,
+        itemType: 'filiere',
+        itemName: `Filière: ${item.nom_filiere}`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setFilieres(filieres.filter(f => f.id !== id));
     setMatieres(matieres.filter(m => m.filiere_id !== id));
     setCours(cours.filter(c => c.filiere_id !== id));
@@ -216,6 +248,17 @@ export default function App() {
   };
 
   const handleDeleteMatiere = (id: number) => {
+    const item = matieres.find(m => m.id === id);
+    if (item) {
+      const trashItem: TrashItem = {
+        id: `matiere-${id}-${Date.now()}`,
+        itemType: 'matiere',
+        itemName: `Matière: ${item.nom_matiere} (Code: ${item.code_matiere})`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setMatieres(matieres.filter(m => m.id !== id));
   };
 
@@ -227,6 +270,17 @@ export default function App() {
 
   // Delete Semestre
   const handleDeleteSemestre = (id: number) => {
+    const item = semestres.find(s => s.id === id);
+    if (item) {
+      const trashItem: TrashItem = {
+        id: `semestre-${id}-${Date.now()}`,
+        itemType: 'semestre',
+        itemName: `Semestre: ${item.nom_semestre} (${item.annee_scolaire})`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setSemestres(semestres.filter(s => s.id !== id));
   };
 
@@ -246,6 +300,17 @@ export default function App() {
 
   // Delete student
   const handleDeleteEtudiant = (id: number) => {
+    const item = etudiants.find(e => e.id === id);
+    if (item) {
+      const trashItem: TrashItem = {
+        id: `etudiant-${id}-${Date.now()}`,
+        itemType: 'etudiant',
+        itemName: `Étudiant: ${item.prenom} ${item.nom} (Matricule: ${item.matricule})`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setEtudiants(etudiants.filter(e => e.id !== id));
     setNotes(notes.filter(n => n.etudiant_id !== id));
     setAutorisations(autorisations.filter(a => a.etudiant_id !== id));
@@ -265,6 +330,17 @@ export default function App() {
 
   // Delete course support
   const handleDeleteCours = (id: number) => {
+    const item = cours.find(c => c.id === id);
+    if (item) {
+      const trashItem: TrashItem = {
+        id: `cours-${id}-${Date.now()}`,
+        itemType: 'cours',
+        itemName: `Support de cours: ${item.titre} (Enseignant: ${item.enseignant})`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setCours(cours.filter(c => c.id !== id));
     setNotes(notes.filter(n => n.cours_id !== id));
   };
@@ -351,6 +427,21 @@ export default function App() {
 
   // Delete note
   const handleDeleteNote = (id: number) => {
+    const item = notes.find(n => n.id === id);
+    if (item) {
+      const etu = etudiants.find(e => e.id === item.etudiant_id);
+      const studentName = etu ? `${etu.prenom} ${etu.nom}` : `Étudiant #${item.etudiant_id}`;
+      const crs = cours.find(c => c.id === item.cours_id);
+      const courseTitle = crs ? crs.titre : `Cours #${item.cours_id}`;
+      const trashItem: TrashItem = {
+        id: `note-${id}-${Date.now()}`,
+        itemType: 'note',
+        itemName: `Note de ${item.note}/20 de ${studentName} (${courseTitle})`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setNotes(notes.filter(n => n.id !== id));
   };
 
@@ -363,7 +454,62 @@ export default function App() {
 
   // Revoke authorization
   const handleDeleteAutorisation = (id: number) => {
+    const item = autorisations.find(a => a.id === id);
+    if (item) {
+      const etu = etudiants.find(e => e.id === item.etudiant_id);
+      const studentName = etu ? `${etu.prenom} ${etu.nom}` : `Étudiant #${item.etudiant_id}`;
+      const fil = filieres.find(f => f.id === item.filiere_id);
+      const filName = fil ? fil.nom_filiere : `Filière #${item.filiere_id}`;
+      const trashItem: TrashItem = {
+        id: `autorisation-${id}-${Date.now()}`,
+        itemType: 'autorisation',
+        itemName: `Autorisation d'accès de ${studentName} à la filière ${filName}`,
+        originalData: item,
+        deletedAt: new Date().toISOString()
+      };
+      setTrash(prev => [trashItem, ...prev]);
+    }
     setAutorisations(autorisations.filter(a => a.id !== id));
+  };
+
+  // Trash bin handlers
+  const handleRestoreItem = (itemToRestore: TrashItem) => {
+    const data = itemToRestore.originalData;
+    switch (itemToRestore.itemType) {
+      case 'paiement':
+        setPaiements(prev => [...prev.filter(p => p.id !== data.id), data]);
+        break;
+      case 'filiere':
+        setFilieres(prev => [...prev.filter(f => f.id !== data.id), data]);
+        break;
+      case 'matiere':
+        setMatieres(prev => [...prev.filter(m => m.id !== data.id), data]);
+        break;
+      case 'semestre':
+        setSemestres(prev => [...prev.filter(s => s.id !== data.id), data]);
+        break;
+      case 'etudiant':
+        setEtudiants(prev => [...prev.filter(e => e.id !== data.id), data]);
+        break;
+      case 'cours':
+        setCours(prev => [...prev.filter(c => c.id !== data.id), data]);
+        break;
+      case 'note':
+        setNotes(prev => [...prev.filter(n => n.id !== data.id), data]);
+        break;
+      case 'autorisation':
+        setAutorisations(prev => [...prev.filter(a => a.id !== data.id), data]);
+        break;
+    }
+    setTrash(prev => prev.filter(t => t.id !== itemToRestore.id));
+  };
+
+  const handlePermanentDeleteItem = (id: string) => {
+    setTrash(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleEmptyTrash = () => {
+    setTrash([]);
   };
 
   // Log active cross-major file consumption (triggered by student)
@@ -729,6 +875,15 @@ export default function App() {
                       Gestion des Paiements
                     </button>
                   </li>
+                  <li>
+                    <button 
+                      onClick={() => { setAdminActiveTab('corbeille'); setShowCodeExplorer(false); }}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'corbeille' && !showCodeExplorer ? 'bg-red-650 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-red-400'}`}
+                    >
+                      <Trash2 className="w-4 h-4 text-rose-500" />
+                      Corbeille ({trash.length})
+                    </button>
+                  </li>
                 </ul>
               </nav>
             </div>
@@ -832,6 +987,8 @@ export default function App() {
                             {adminActiveTab === 'notes' && "Gestionnaire de Bulletins & Notes"}
                             {adminActiveTab === 'bulletins' && "Génération Dynamique de Bulletins"}
                             {adminActiveTab === 'autorisations' && "Liaisons Inter-parcours & Droits"}
+                            {adminActiveTab === 'paiements' && "Suivi Énergique des Paiements"}
+                            {adminActiveTab === 'corbeille' && "Corbeille & Récupération de Données"}
                           </>
                         )}
                       </h2>
@@ -845,6 +1002,8 @@ export default function App() {
                             {adminActiveTab === 'notes' && "Saisie des évaluations et notes d'examen par matière."}
                             {adminActiveTab === 'bulletins' && "Visualisation et édition des relevés de notes semestriels."}
                             {adminActiveTab === 'autorisations' && "Accréditations exceptionnelles d'accès de consultation inter-filières pour étudiants."}
+                            {adminActiveTab === 'paiements' && "Suivi de la scolarité et encaissement des frais scolaires."}
+                            {adminActiveTab === 'corbeille' && "Restaurez ou purgez définitivement vos enregistrements supprimés."}
                           </>
                         )}
                       </p>
@@ -1005,6 +1164,15 @@ export default function App() {
                           onAddPaiement={handleAddPaiement}
                           onUpdatePaiementStatus={handleUpdatePaiementStatus}
                           onDeletePaiement={handleDeletePaiement}
+                        />
+                      )}
+
+                      {adminActiveTab === 'corbeille' && (
+                        <CorbeilleTab 
+                          trash={trash}
+                          onRestore={handleRestoreItem}
+                          onPermanentDelete={handlePermanentDeleteItem}
+                          onEmptyTrash={handleEmptyTrash}
                         />
                       )}
                 </div>

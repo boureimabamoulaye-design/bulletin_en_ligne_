@@ -144,14 +144,6 @@ export default function SemestresTab({
                     <td className="text-right">
                       <button 
                         onClick={() => {
-                          // Warn if items exist
-                          if (linkedCourses > 0 || linkedGrades > 0) {
-                            if (!confirm(`Attention: ce semestre possède ${linkedCourses} cours et ${linkedGrades} notes. Supprimer ce semestre va détacher ou invalider ces données. Confirmer quand même la suppression ?`)) {
-                              return;
-                            }
-                          } else {
-                            if (!confirm(`Supprimer le semestre : ${s.nom_semestre} ?`)) return;
-                          }
                           onDeleteSemestre(s.id);
                         }}
                         className="p-1 px-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded text-xs inline-flex items-center gap-1 font-semibold transition"

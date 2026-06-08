@@ -559,9 +559,7 @@ export default function PaiementsTab({
                               {/* Delete Receipt Button */}
                               <button
                                 onClick={() => {
-                                  if (confirm(`Êtes-vous sûr de vouloir supprimer le reçu ${p.recu_numero} ?`)) {
-                                    onDeletePaiement(p.id);
-                                  }
+                                  onDeletePaiement(p.id);
                                 }}
                                 title="Supprimer définitivement"
                                 className="p-1 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded transition cursor-pointer"

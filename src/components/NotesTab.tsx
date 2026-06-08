@@ -544,9 +544,7 @@ export default function NotesTab({
                         </div>
                         <button 
                           onClick={() => {
-                            if (confirm("Supprimer cette note définitivement ? Cette décision affectera la moyenne de l'étudiant.")) {
-                              onDeleteNote(note.id);
-                            }
+                            onDeleteNote(note.id);
                           }}
                           className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded px-1.5 py-0.5 font-bold text-[10px]"
                         >

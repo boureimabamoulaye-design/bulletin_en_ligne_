@@ -398,9 +398,7 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
                       </button>
                       <button 
                         onClick={() => {
-                          if (confirm(`Voulez-vous supprimer le cours : ${course.titre} ?`)) {
-                            onDeleteCours(course.id);
-                          }
+                          onDeleteCours(course.id);
                         }}
                         className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded"
                         title="Supprimer le cours"

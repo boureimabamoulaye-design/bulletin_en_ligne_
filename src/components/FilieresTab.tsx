@@ -282,13 +282,7 @@ export default function FilieresTab({
                         </button>
                         <button 
                           onClick={() => {
-                            if (enrolledStudents.length > 0) {
-                              alert(`Impossible de supprimer cette filière. Elle contient actuellement ${enrolledStudents.length} étudiant(s) inscrit(s). Veuillez d'abord réaffecter ces étudiants.`);
-                              return;
-                            }
-                            if (confirm(`Voulez-vous supprimer définitivement la filière : ${f.nom_filiere} ? Toutes les matières associées seront aussi retirées.`)) {
-                              onDeleteFiliere(f.id);
-                            }
+                            onDeleteFiliere(f.id);
                           }}
                           className="p-1.5 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded transition"
                           title="Supprimer la filière"
@@ -454,9 +448,7 @@ export default function FilieresTab({
                                             </button>
                                             <button 
                                               onClick={() => {
-                                                if (confirm(`Voulez-vous supprimer définitivement la matière "${m.nom_matiere}" (${m.code_matiere}) ?`)) {
-                                                  onDeleteMatiere(m.id);
-                                                }
+                                                onDeleteMatiere(m.id);
                                               }}
                                               className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
                                               title="Retirer la matière"

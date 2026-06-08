@@ -114,3 +114,11 @@ export interface Paiement {
   notes?: string;
 }
 
+export interface TrashItem {
+  id: string; // Unique string built like "{type}-{originalId}"
+  itemType: 'filiere' | 'matiere' | 'semestre' | 'etudiant' | 'cours' | 'note' | 'autorisation' | 'paiement';
+  itemName: string; // User-friendly description of what was deleted
+  originalData: any; // The original JSON object of the deleted item
+  deletedAt: string; // Date-time of deletion (ISO string)
+}
+

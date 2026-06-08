@@ -804,9 +804,7 @@ export default function EtudiantsTab({
                           </button>
                           <button 
                             onClick={() => {
-                              if(confirm(`Confirmer l'exclusion définitive de ${student.nom} ${student.prenom} ?`)) {
-                                onDeleteEtudiant(student.id);
-                              }
+                              onDeleteEtudiant(student.id);
                             }}
                             className="p-1 px-2 bg-red-50 text-red-600 hover:bg-red-100 rounded transition text-xs flex items-center gap-1 font-semibold"
                           >
