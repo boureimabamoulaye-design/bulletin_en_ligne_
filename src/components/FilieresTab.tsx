@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Filiere, Etudiant, Matiere } from '../types';
+import { Filiere, Etudiant, Matiere, Semestre } from '../types';
 import { 
   GraduationCap, BookOpen, Plus, Trash2, Edit, Book, 
   ChevronDown, ChevronUp, Save, X, Layers, Sparkles 
@@ -42,6 +42,7 @@ interface FilieresTabProps {
   onAddMatiere: (matiere: Omit<Matiere, 'id'>) => void;
   onUpdateMatiere: (matiere: Matiere) => void;
   onDeleteMatiere: (id: number) => void;
+  semestres: Semestre[];
 }
 
 export default function FilieresTab({ 
@@ -53,7 +54,8 @@ export default function FilieresTab({
   matieres,
   onAddMatiere,
   onUpdateMatiere,
-  onDeleteMatiere
+  onDeleteMatiere,
+  semestres
 }: FilieresTabProps) {
   const [showFiliereForm, setShowFiliereForm] = useState(false);
   const [editingFiliere, setEditingFiliere] = useState<Filiere | null>(null);
@@ -69,12 +71,14 @@ export default function FilieresTab({
   const [nomMatiere, setNomMatiere] = useState("");
   const [codeMatiere, setCodeMatiere] = useState("");
   const [creditMatiere, setCreditMatiere] = useState<number>(3);
+  const [semestreId, setSemestreId] = useState<number>(0);
 
   // States for the direct side matiere assignment form
   const [sideFiliereId, setSideFiliereId] = useState<number>(filieres[0]?.id || 0);
   const [sideNomMatiere, setSideNomMatiere] = useState("");
   const [sideCodeMatiere, setSideCodeMatiere] = useState("");
   const [sideCreditMatiere, setSideCreditMatiere] = useState<number>(3);
+  const [sideSemestreId, setSideSemestreId] = useState<number>(0);
 
   const resetForm = () => {
     setNomFiliere("");
@@ -86,6 +90,7 @@ export default function FilieresTab({
     setNomMatiere("");
     setCodeMatiere("");
     setCreditMatiere(3);
+    setSemestreId(0);
     setEditingMatiere(null);
     setShowMatiereForm(false);
   };
@@ -106,13 +111,15 @@ export default function FilieresTab({
       nom_matiere: sideNomMatiere,
       code_matiere: sideCodeMatiere,
       credits: sideCreditMatiere,
-      filiere_id: targetFiliereId
+      filiere_id: targetFiliereId,
+      semestre_id: sideSemestreId > 0 ? sideSemestreId : undefined
     });
 
     // Reset side form but keep the selected filiere for easier batch entry
     setSideNomMatiere("");
     setSideCodeMatiere("");
     setSideCreditMatiere(3);
+    setSideSemestreId(0);
 
     // Expand the affected filière list automatically to give instant visual feedback
     setExpandedFiliereId(targetFiliereId);
@@ -153,6 +160,7 @@ export default function FilieresTab({
     setNomMatiere("");
     setCodeMatiere("");
     setCreditMatiere(3);
+    setSemestreId(0);
     setShowMatiereForm(true);
   };
 
@@ -161,6 +169,7 @@ export default function FilieresTab({
     setNomMatiere(m.nom_matiere);
     setCodeMatiere(m.code_matiere);
     setCreditMatiere(m.credits);
+    setSemestreId(m.semestre_id || 0);
     setShowMatiereForm(true);
   };
 
@@ -176,14 +185,16 @@ export default function FilieresTab({
         ...editingMatiere,
         nom_matiere: nomMatiere,
         code_matiere: codeMatiere,
-        credits: creditMatiere
+        credits: creditMatiere,
+        semestre_id: semestreId > 0 ? semestreId : undefined
       });
     } else {
       onAddMatiere({
         nom_matiere: nomMatiere,
         code_matiere: codeMatiere,
         credits: creditMatiere,
-        filiere_id: filiereId
+        filiere_id: filiereId,
+        semestre_id: semestreId > 0 ? semestreId : undefined
       });
     }
 
@@ -352,7 +363,7 @@ export default function FilieresTab({
                                 </button>
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
                                 <div className="form-group sm:col-span-2">
                                   <label className="text-[10px] font-bold text-gray-500 uppercase">Nom de la matière *</label>
                                   <input 
@@ -374,6 +385,20 @@ export default function FilieresTab({
                                     placeholder="Ex: IG-104"
                                     required
                                   />
+                                </div>
+                                <div className="form-group">
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase">Semestre Associé *</label>
+                                  <select
+                                    value={semestreId || ""}
+                                    onChange={e => setSemestreId(Number(e.target.value))}
+                                    className="form-control w-full py-1.5 bg-white font-bold"
+                                    required
+                                  >
+                                    <option value="">Choisir...</option>
+                                    {semestres.filter(s => s.filiere_id === f.id).map(s => (
+                                      <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                                    ))}
+                                  </select>
                                 </div>
                               </div>
 
@@ -427,6 +452,7 @@ export default function FilieresTab({
                                     <tr className="bg-gray-55 border-b border-gray-200">
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400">Code</th>
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400">Matière</th>
+                                      <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400">Semestre</th>
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400 text-center">Crédits</th>
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400 text-right">Actions</th>
                                     </tr>
@@ -436,6 +462,11 @@ export default function FilieresTab({
                                       <tr key={m.id} className="hover:bg-slate-50 border-b border-gray-100 last:border-b-0">
                                         <td className="py-2.5 px-3 font-mono font-bold text-gray-800">{m.code_matiere}</td>
                                         <td className="py-2.5 px-3 font-medium text-gray-700">{m.nom_matiere}</td>
+                                        <td className="py-2.5 px-3 text-gray-650">
+                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-105">
+                                            {semestres.find(s => s.id === m.semestre_id)?.nom_semestre || "Non défini"}
+                                          </span>
+                                        </td>
                                         <td className="py-2.5 px-3 text-center font-bold text-gray-600">{m.credits}</td>
                                         <td className="py-2.5 px-3 text-right">
                                           <div className="inline-flex gap-2">
@@ -502,13 +533,32 @@ export default function FilieresTab({
                 <label className="text-[10px] font-black uppercase text-gray-600 tracking-wider block mb-1">Filière Académique Cible *</label>
                 <select 
                   value={sideFiliereId || (filieres[0]?.id || "")}
-                  onChange={e => setSideFiliereId(Number(e.target.value))}
+                  onChange={e => {
+                    const fid = Number(e.target.value);
+                    setSideFiliereId(fid);
+                    setSideSemestreId(0); // Reset selected semester
+                  }}
                   className="form-control text-xs w-full py-2 bg-white font-bold"
                   required
                 >
                   <option value="">Sélectionner la filière...</option>
                   {filieres.map(f => (
                     <option key={f.id} value={f.id}>{f.nom_filiere}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="text-[10px] font-black uppercase text-gray-600 tracking-wider block mb-1">Semestre Cible *</label>
+                <select 
+                  value={sideSemestreId || ""}
+                  onChange={e => setSideSemestreId(Number(e.target.value))}
+                  className="form-control text-xs w-full py-2 bg-white font-bold"
+                  required
+                >
+                  <option value="">Sélectionner le semestre...</option>
+                  {semestres.filter(s => s.filiere_id === (sideFiliereId || filieres[0]?.id)).map(s => (
+                    <option key={s.id} value={s.id}>{s.nom_semestre}</option>
                   ))}
                 </select>
               </div>

@@ -14,6 +14,7 @@ export interface Matiere {
   code_matiere: string;
   credits: number;
   filiere_id: number;
+  semestre_id?: number;
 }
 
 export interface Classe {

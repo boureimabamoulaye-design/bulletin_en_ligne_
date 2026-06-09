@@ -2,22 +2,22 @@ import { Filiere, Matiere, Classe, Semestre, Etudiant, Cours, Note, Autorisation
 
 export const INITIAL_MATIERES: Matiere[] = [
   // IG
-  { id: 1, nom_matiere: "Algorithmique & Structures de Données", code_matiere: "IG-101", credits: 3, filiere_id: 1 },
-  { id: 2, nom_matiere: "Bases de Données Relationnelles & SQL", code_matiere: "IG-201", credits: 3, filiere_id: 1 },
-  { id: 3, nom_matiere: "Développement Web PHP-MySQL", code_matiere: "IG-301", credits: 4, filiere_id: 1 },
-  { id: 4, nom_matiere: "Analyse Mathématique", code_matiere: "IG-102", credits: 2, filiere_id: 1 },
+  { id: 1, nom_matiere: "Algorithmique & Structures de Données", code_matiere: "IG-101", credits: 3, filiere_id: 1, semestre_id: 1 },
+  { id: 2, nom_matiere: "Bases de Données Relationnelles & SQL", code_matiere: "IG-201", credits: 3, filiere_id: 1, semestre_id: 2 },
+  { id: 3, nom_matiere: "Développement Web PHP-MySQL", code_matiere: "IG-301", credits: 4, filiere_id: 1, semestre_id: 2 },
+  { id: 4, nom_matiere: "Analyse Mathématique", code_matiere: "IG-102", credits: 2, filiere_id: 1, semestre_id: 1 },
   // RT
-  { id: 5, nom_matiere: "Architecture des Réseaux TCP/IP", code_matiere: "RT-101", credits: 3, filiere_id: 2 },
-  { id: 6, nom_matiere: "Administration Système Linux", code_matiere: "RT-201", credits: 3, filiere_id: 2 },
-  { id: 7, nom_matiere: "Sécurité & Cryptographie", code_matiere: "RT-301", credits: 4, filiere_id: 2 },
+  { id: 5, nom_matiere: "Architecture des Réseaux TCP/IP", code_matiere: "RT-101", credits: 3, filiere_id: 2, semestre_id: 3 },
+  { id: 6, nom_matiere: "Administration Système Linux", code_matiere: "RT-201", credits: 3, filiere_id: 2, semestre_id: 4 },
+  { id: 7, nom_matiere: "Sécurité & Cryptographie", code_matiere: "RT-301", credits: 4, filiere_id: 2, semestre_id: 4 },
   // CF
-  { id: 8, nom_matiere: "Comptabilité Générale Intermédiaire", code_matiere: "CF-101", credits: 4, filiere_id: 3 },
-  { id: 9, nom_matiere: "Finance d'Entreprise & Budget", code_matiere: "CF-201", credits: 3, filiere_id: 3 },
-  { id: 10, nom_matiere: "Fiscalité & Droit des Affaires", code_matiere: "CF-301", credits: 3, filiere_id: 3 },
+  { id: 8, nom_matiere: "Comptabilité Générale Intermédiaire", code_matiere: "CF-101", credits: 4, filiere_id: 3, semestre_id: 5 },
+  { id: 9, nom_matiere: "Finance d'Entreprise & Budget", code_matiere: "CF-201", credits: 3, filiere_id: 3, semestre_id: 6 },
+  { id: 10, nom_matiere: "Fiscalité & Droit des Affaires", code_matiere: "CF-301", credits: 3, filiere_id: 3, semestre_id: 6 },
   // MD
-  { id: 11, nom_matiere: "Stratégie de Content Marketing", code_matiere: "MD-101", credits: 3, filiere_id: 4 },
-  { id: 12, nom_matiere: "SEO & Growth Hacking", code_matiere: "MD-201", credits: 3, filiere_id: 4 },
-  { id: 13, nom_matiere: "Community Management", code_matiere: "MD-301", credits: 2, filiere_id: 4 }
+  { id: 11, nom_matiere: "Stratégie de Content Marketing", code_matiere: "MD-101", credits: 3, filiere_id: 4, semestre_id: 7 },
+  { id: 12, nom_matiere: "SEO & Growth Hacking", code_matiere: "MD-201", credits: 3, filiere_id: 4, semestre_id: 8 },
+  { id: 13, nom_matiere: "Community Management", code_matiere: "MD-301", credits: 2, filiere_id: 4, semestre_id: 8 }
 ];
 
 export const INITIAL_FILIERES: Filiere[] = [

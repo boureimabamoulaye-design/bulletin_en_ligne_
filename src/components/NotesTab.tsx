@@ -128,11 +128,14 @@ export default function NotesTab({
       }
 
       setSearchedStudent(match);
-      // Retrieve subjects of their filiere and reset grade input map
-      const studentMatieres = matieres.filter(m => m.filiere_id === selectedFiliereId);
+      // Retrieve subjects of their filiere and selected semester, and reset grade input map
+      const studentMatieres = matieres.filter(
+        m => m.filiere_id === selectedFiliereId && 
+        (!m.semestre_id || m.semestre_id === selectedSemesterId)
+      );
       
       if (studentMatieres.length === 0) {
-        setMatriculeError(`Aucune matière n'est configurée pour la filière sélectionnée. Veuillez d'abord en ajouter dans l'onglet Filières & Matières !`);
+        setMatriculeError(`Aucune matière n'est configurée pour la filière et le semestre sélectionnés. Veuillez d'abord en ajouter dans l'onglet Filières & Matières !`);
         setSearchedStudent(null);
         return;
       }
@@ -167,7 +170,10 @@ export default function NotesTab({
     e.preventDefault();
     if (!searchedStudent) return;
 
-    const studentMatieres = matieres.filter(m => m.filiere_id === searchedStudent.filiere_id);
+    const studentMatieres = matieres.filter(
+      m => m.filiere_id === searchedStudent.filiere_id &&
+      (!m.semestre_id || m.semestre_id === selectedSemesterId)
+    );
     const gradesToSubmit: {
       etudiant_id: number;
       semestre_id: number;
@@ -379,7 +385,10 @@ export default function NotesTab({
                     .filter(n => Number(n.note) >= 10)
                     .reduce((sum, n) => sum + Number(n.credits), 0);
                   
-                  const studentMatieres = matieres.filter(m => m.filiere_id === searchedStudent.filiere_id);
+                  const studentMatieres = matieres.filter(
+                    m => m.filiere_id === searchedStudent.filiere_id &&
+                    (!m.semestre_id || m.semestre_id === selectedSemesterId)
+                  );
                   let potentialNewCredits = 0;
                   const alreadySavedMatiereTitles = existingNotes.map(n => {
                     const c = cours.find(x => x.id === n.cours_id);
@@ -456,7 +465,10 @@ export default function NotesTab({
                           </tr>
                         </thead>
                         <tbody>
-                          {matieres.filter(m => m.filiere_id === searchedStudent.filiere_id).map(m => {
+                          {matieres.filter(m => 
+                            m.filiere_id === searchedStudent.filiere_id &&
+                            (!m.semestre_id || m.semestre_id === selectedSemesterId)
+                          ).map(m => {
                             const currentInput = gradesInput[m.id] || { note_classe: "", note_examen: "" };
                             const computed = calculateLiveWeighted(currentInput.note_classe, currentInput.note_examen);
                             

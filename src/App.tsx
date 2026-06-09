@@ -1162,6 +1162,7 @@ export default function App() {
                           onAddMatiere={handleAddMatiere}
                           onUpdateMatiere={handleUpdateMatiere}
                           onDeleteMatiere={handleDeleteMatiere}
+                          semestres={semestres}
                         />
                       )}
 
