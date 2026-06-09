@@ -44,9 +44,9 @@ export const INITIAL_FILIERES: Filiere[] = [
 ];
 
 export const INITIAL_CLASSES: Classe[] = [
-  { id: 1, nom_classe: "Licence 1 (L1)" },
-  { id: 2, nom_classe: "Licence 2 (L2)" },
-  { id: 3, nom_classe: "Licence 3 (L3)" }
+  { id: 1, nom_classe: "Niveau 1 (N1)" },
+  { id: 2, nom_classe: "Niveau 2 (N2)" },
+  { id: 3, nom_classe: "Niveau 3 (N3)" }
 ];
 
 export const INITIAL_SEMESTRES: Semestre[] = [
@@ -82,7 +82,7 @@ export const INITIAL_ETUDIANTS: Etudiant[] = [
     adresse: "Abidjan, Cocody",
     photo: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150&h=150",
     filiere_id: 1, // Informatique de Gestion
-    classe_id: 3, // Licence 3
+    classe_id: 3, // Niveau 3
     mot_de_passe: "student123"
   },
   {
@@ -97,7 +97,7 @@ export const INITIAL_ETUDIANTS: Etudiant[] = [
     adresse: "Conakry, Dixinn",
     photo: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=150&h=150",
     filiere_id: 2, // Réseaux et Télécommunications
-    classe_id: 1, // Licence 1
+    classe_id: 1, // Niveau 1
     mot_de_passe: "student123"
   },
   {
@@ -112,7 +112,7 @@ export const INITIAL_ETUDIANTS: Etudiant[] = [
     adresse: "Bamako, Faladié",
     photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150",
     filiere_id: 3, // Comptabilité
-    classe_id: 2, // Licence 2
+    classe_id: 2, // Niveau 2
     mot_de_passe: "student123"
   }
 ];
@@ -123,7 +123,7 @@ export const INITIAL_COURS: Cours[] = [
     id: 1,
     titre: "Algorithmique & Structures de Données",
     description: "Concepts de base de l'algorithmique, tableaux, pointeurs et listes chaînées.",
-    fichier: "cours_algo_l1.pdf",
+    fichier: "cours_algo_n1.pdf",
     filiere_id: 1,
     classe_id: 1,
     semestre_id: 1,
@@ -134,7 +134,7 @@ export const INITIAL_COURS: Cours[] = [
     id: 2,
     titre: "Bases de Données Relationnelles & SQL",
     description: "Modélisation Conceptuelle (MCD), Normalisation et langage SQL (DDL, DML, DQL).",
-    fichier: "cours_sql_l2.pdf",
+    fichier: "cours_sql_n2.pdf",
     filiere_id: 1,
     classe_id: 2,
     semestre_id: 1,
@@ -180,7 +180,7 @@ export const INITIAL_COURS: Cours[] = [
     id: 6,
     titre: "Comptabilité Générale Intermédiaire",
     description: "Enregistrement des opérations courantes, TVA, bilan et compte de résultat.",
-    fichier: "compta_generale_l1.pdf",
+    fichier: "compta_generale_n1.pdf",
     filiere_id: 3,
     classe_id: 1,
     semestre_id: 5,

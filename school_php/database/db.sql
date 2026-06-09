@@ -134,6 +134,6 @@ INSERT INTO filieres (id, nom_filiere, description) VALUES
 (3, 'Comptabilité', 'Finances, audit et comptabilité générale.');
 
 INSERT INTO classes (id, nom_classe) VALUES
-(1, 'Licence 1 (L1)'),
-(2, 'Licence 2 (L2)'),
-(3, 'Licence 3 (L3)');
+(1, 'Niveau 1 (N1)'),
+(2, 'Niveau 2 (N2)'),
+(3, 'Niveau 3 (N3)');

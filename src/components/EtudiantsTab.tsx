@@ -110,10 +110,12 @@ export default function EtudiantsTab({
     const cl = classes.find(c => c.id === classeId);
     let classSlug = "XS";
     if (cl) {
-      if (cl.nom_classe.includes("Licence 1")) classSlug = "L1";
-      else if (cl.nom_classe.includes("Licence 2")) classSlug = "L2";
-      else if (cl.nom_classe.includes("Licence 3")) classSlug = "L3";
-      else classSlug = cl.nom_classe.replace(/\s+/g, '').substring(0, 2).toUpperCase();
+      const match = cl.nom_classe.match(/\(([^)]+)\)/);
+      if (match && match[1]) {
+        classSlug = match[1].toUpperCase();
+      } else {
+        classSlug = cl.nom_classe.replace(/[^a-zA-Z0-9]/g, '').substring(0, 2).toUpperCase();
+      }
     }
     
     return `${prefix}-${yearSuffix}${classSlug}-${seq}`;
