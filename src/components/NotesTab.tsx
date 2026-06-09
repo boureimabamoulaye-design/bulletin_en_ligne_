@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Note, Etudiant, Cours, Semestre, Matiere, Filiere } from '../types';
 import { 
   Plus, Award, Trash2, ShieldAlert, Search, User, 
@@ -79,10 +79,26 @@ export default function NotesTab({
   const selectedFiliereId = globalFiliereId && globalFiliereId > 0 ? globalFiliereId : localFiliereId;
   const selectedSemesterId = globalSemestreId && globalSemestreId > 0 ? globalSemestreId : localSemesterId;
 
+  // Auto-sync local semester when selected filiere changes
+  useEffect(() => {
+    if (selectedFiliereId > 0) {
+      const filtered = semestres.filter(s => Number(s.filiere_id) === Number(selectedFiliereId));
+      if (filtered.length > 0) {
+        if (!filtered.some(s => s.id === localSemesterId)) {
+          setLocalSemesterId(filtered[0].id);
+        }
+      }
+    }
+  }, [selectedFiliereId, semestres, localSemesterId]);
+
   // States to keep class/exam scores for loaded subjects
   // Key represents matiere.id
   const [gradesInput, setGradesInput] = useState<Record<number, { note_classe: string; note_examen: string }>>({});
   const [matriculeError, setMatriculeError] = useState("");
+  
+  // Real-time Credit status list states
+  const [creditSearchQuery, setCreditSearchQuery] = useState("");
+  const [expandedStudentId, setExpandedStudentId] = useState<Record<number, boolean>>({});
 
   // Search/Load student from matricule
   const handleLoadStudent = (e: React.FormEvent) => {
@@ -305,9 +321,11 @@ export default function NotesTab({
                       className="form-control text-pivoted text-xs w-full py-2 px-3 bg-white"
                       required
                     >
-                      {semestres.map(s => (
-                        <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
-                      ))}
+                      {semestres
+                        .filter(s => !selectedFiliereId || Number(s.filiere_id) === Number(selectedFiliereId))
+                        .map(s => (
+                          <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
+                        ))}
                     </select>
                   )}
                 </div>
@@ -350,6 +368,78 @@ export default function NotesTab({
                     </div>
                   </div>
                 </div>
+
+                {/* Real-time credits calculator for this specific loaded student */}
+                {(() => {
+                  const existingNotes = notes.filter(n => 
+                    Number(n.etudiant_id) === Number(searchedStudent.id) && 
+                    Number(n.semestre_id) === Number(selectedSemesterId)
+                  );
+                  const savedValidatedCredits = existingNotes
+                    .filter(n => Number(n.note) >= 10)
+                    .reduce((sum, n) => sum + Number(n.credits), 0);
+                  
+                  const studentMatieres = matieres.filter(m => m.filiere_id === searchedStudent.filiere_id);
+                  let potentialNewCredits = 0;
+                  const alreadySavedMatiereTitles = existingNotes.map(n => {
+                    const c = cours.find(x => x.id === n.cours_id);
+                    return c ? c.titre : "";
+                  });
+
+                  studentMatieres.forEach(m => {
+                    if (alreadySavedMatiereTitles.includes(m.nom_matiere)) {
+                      return;
+                    }
+                    const inputs = gradesInput[m.id];
+                    if (inputs && (inputs.note_classe.trim() !== "" || inputs.note_examen.trim() !== "")) {
+                      const computed = calculateLiveWeighted(inputs.note_classe, inputs.note_examen);
+                      if (computed !== null && computed >= 10) {
+                        potentialNewCredits += Number(m.credits);
+                      }
+                    }
+                  });
+
+                  const totalEstimatedCredits = savedValidatedCredits + potentialNewCredits;
+                  const maxPossibleCredits = studentMatieres.reduce((sum, m) => sum + Number(m.credits), 0);
+
+                  return (
+                    <div className="bg-slate-900 text-white p-4 rounded-xl border border-slate-755 shadow-inner space-y-2.5">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-indigo-300">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Bilan prévisionnel (Saisie courante)
+                        </span>
+                        <span className="font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-900/30">
+                          Option LMD
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-center">
+                        <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                          <span className="text-[9px] text-gray-400 font-bold uppercase block">Acquis enregistrés</span>
+                          <span className="text-sm font-black text-rose-100">{savedValidatedCredits} ECTS</span>
+                        </div>
+                        <div className="bg-indigo-950/60 p-2 rounded-lg border border-indigo-900/30">
+                          <span className="text-[9px] text-indigo-200 font-bold uppercase block">Projetés via Saisie</span>
+                          <span className="text-sm font-black text-emerald-300">+{potentialNewCredits} ECTS</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center text-[10px] font-bold text-gray-300">
+                          <span>TOTAL CRÉDITS VALIDÉS ESTIMÉ :</span>
+                          <span className="text-xs font-black text-emerald-400">
+                            {totalEstimatedCredits} / {maxPossibleCredits || 30} ECTS
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                            style={{ width: `${maxPossibleCredits > 0 ? Math.min(100, Math.round((totalEstimatedCredits / maxPossibleCredits) * 100)) : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Syllabus-wide subjects entry */}
                 <form onSubmit={handleSyllabusSubmit} className="space-y-4">
@@ -583,6 +673,227 @@ export default function NotesTab({
           </div>
         </div>
 
+      </div>
+
+      {/* SECTION: Bilan des Crédits Académiques en Temps Réel pour CHAQUE étudiant */}
+      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4" id="credits-summary-realtime">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-150 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-indigo-50 text-indigo-700 rounded-lg">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-950 text-sm">Tableau de Validation des Crédits Académiques</h3>
+              <p className="text-[11px] text-gray-400">Suivi en temps réel des ECTS validés (notes ≥ 10/20) pour tous les étudiants du semestre</p>
+            </div>
+          </div>
+          <div className="relative w-full sm:w-64">
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+            <input 
+              type="text"
+              placeholder="Rechercher un étudiant..."
+              value={creditSearchQuery}
+              onChange={e => setCreditSearchQuery(e.target.value)}
+              className="form-control pl-8 py-1.5 text-xs w-full bg-slate-50 border-gray-200 focus:bg-white focus:border-indigo-405"
+            />
+          </div>
+        </div>
+
+        {(() => {
+          const activeStudents = etudiants.filter(e => !selectedFiliereId || Number(e.filiere_id) === Number(selectedFiliereId));
+          const filteredForCredits = activeStudents.filter(st => {
+            const query = creditSearchQuery.toLowerCase().trim();
+            if (!query) return true;
+            return (
+              st.nom.toLowerCase().includes(query) ||
+              st.prenom.toLowerCase().includes(query) ||
+              st.matricule.toLowerCase().includes(query)
+            );
+          });
+
+          if (filteredForCredits.length === 0) {
+            return (
+              <div className="p-8 text-center text-gray-400 text-xs">
+                Aucun étudiant trouvé pour les sélections de filière & recherche actuelles.
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-3">
+              {filteredForCredits.map(st => {
+                // Get all matieres for this filiere
+                const studentMatieres = matieres.filter(m => Number(m.filiere_id) === Number(st.filiere_id));
+                const totalSyllabusCredits = studentMatieres.reduce((sum, m) => sum + Number(m.credits), 0);
+
+                // Find saved grades for st in selected semester
+                const studentNotesInSem = notes.filter(n => 
+                  Number(n.etudiant_id) === Number(st.id) && 
+                  Number(n.semestre_id) === Number(selectedSemesterId)
+                );
+
+                // Calculate validated credits
+                const validatedCredits = studentNotesInSem
+                  .filter(n => Number(n.note) >= 10)
+                  .reduce((sum, n) => sum + Number(n.credits), 0);
+
+                // Calculate active average for current semester
+                const gradesValueList = studentNotesInSem.map(n => Number(n.note));
+                const totalGradesCount = gradesValueList.length;
+                const averageSemesterScore = totalGradesCount > 0 
+                  ? (gradesValueList.reduce((sum, val) => sum + val, 0) / totalGradesCount)
+                  : 0;
+
+                const progressPct = totalSyllabusCredits > 0 
+                  ? Math.round((validatedCredits / totalSyllabusCredits) * 100) 
+                  : 0;
+
+                const isExpanded = expandedStudentId[st.id] || false;
+
+                // LMD status
+                let statusLabel = "En cours d'acquisition";
+                let badgeClass = "bg-slate-105 text-slate-700 border-slate-200";
+                
+                if (totalGradesCount > 0) {
+                  if (validatedCredits === totalSyllabusCredits && totalSyllabusCredits > 0) {
+                    statusLabel = "Semestre Validé (V.A.)";
+                    badgeClass = "bg-emerald-100 text-emerald-800 border-emerald-250";
+                  } else if (averageSemesterScore >= 10) {
+                    statusLabel = "Validé par Compensation (V.Comp)";
+                    badgeClass = "bg-sky-100 text-sky-800 border-sky-200";
+                  } else {
+                    statusLabel = "Crédits partiels (R.A.)";
+                    badgeClass = "bg-rose-100 text-rose-800 border-rose-250";
+                  }
+                }
+
+                return (
+                  <div key={st.id} className="border border-gray-200 rounded-xl overflow-hidden hover:border-gray-350 transition-all bg-white shadow-xs">
+                    {/* Header Row */}
+                    <div 
+                      className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 select-none"
+                      onClick={() => setExpandedStudentId(prev => ({ ...prev, [st.id]: !isExpanded }))}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-705 text-xs font-bold font-mono border border-slate-200 flex items-center justify-center shrink-0 uppercase">
+                          {st.nom.substring(0, 1)}{st.prenom.substring(0, 1)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-gray-900 uppercase text-xs leading-none">{st.nom} {st.prenom}</span>
+                            <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded leading-none">
+                              {st.matricule}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-medium block mt-1.5">
+                            Filière : {filieres.find(f => f.id === st.filiere_id)?.nom_filiere || "-"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Stats Metrics Grid */}
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs font-bold">
+                        {/* Semester average */}
+                        <div className="text-left sm:text-center shrink-0">
+                          <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block">Moyenne Semestrielle</span>
+                          <span className={`font-black text-sm ${averageSemesterScore >= 10 ? 'text-indigo-650' : averageSemesterScore > 0 ? 'text-rose-600' : 'text-gray-400'}`}>
+                            {totalGradesCount > 0 ? `${averageSemesterScore.toFixed(2)}/20` : 'Non saisi'}
+                          </span>
+                        </div>
+
+                        {/* Validated ECTS count */}
+                        <div className="text-left sm:text-center shrink-0">
+                          <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block">Crédits Capitalisés</span>
+                          <span className="font-mono text-sm text-slate-900 block font-black">
+                            {validatedCredits} <span className="text-[10px] text-gray-400 font-normal">/ {totalSyllabusCredits} ECTS</span>
+                          </span>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="shrink-0">
+                          <span className={`text-[10px] font-extrabold uppercase px-2 py-1 rounded-full border ${badgeClass}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+
+                        {/* Expand Icon */}
+                        <div className="text-slate-400 shrink-0 ml-auto md:ml-0">
+                          <span className="p-1 hover:bg-slate-150 rounded-full inline-block">
+                            <Layers className={`w-4 h-4 transform transition-transform duration-200 ${isExpanded ? 'rotate-180 text-blue-800' : ''}`} />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress slider bar indicator */}
+                    <div className="bg-gray-100 h-1.5 w-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${validatedCredits === totalSyllabusCredits && totalSyllabusCredits > 0 ? "bg-emerald-500" : averageSemesterScore >= 10 ? "bg-sky-500" : "bg-indigo-500"}`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {/* Expand Detail Grid */}
+                    {isExpanded && (
+                      <div className="bg-slate-50 border-t border-gray-150 p-4 space-y-3">
+                        <div className="flex justify-between items-center pb-1">
+                          <span className="text-[10px] uppercase font-black tracking-wider text-slate-700 block">Détail des modules d'évaluation</span>
+                          <span className="text-[10px] text-gray-400 font-semibold font-mono">{studentNotesInSem.length} notes saisies</span>
+                        </div>
+                        
+                        {studentMatieres.length === 0 ? (
+                          <p className="text-gray-400 italic text-xs">Aucune matière enregistrée dans cette filière académique.</p>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                            {studentMatieres.map(m => {
+                              // Find corresponding note
+                              const activeNoteObj = studentNotesInSem.find(n => {
+                                const parCourse = cours.find(c => c.id === n.cours_id);
+                                return parCourse ? parCourse.titre === m.nom_matiere : false;
+                              });
+
+                              return (
+                                <div key={m.id} className="bg-white p-3 rounded-lg border border-gray-200 flex items-center justify-between text-xs hover:border-slate-350 transition-colors">
+                                  <div>
+                                    <div className="font-extrabold text-slate-900">{m.nom_matiere}</div>
+                                    <div className="font-mono text-[9px] text-gray-400 flex items-center gap-2 mt-0.5">
+                                      <span>Code: {m.code_matiere}</span>
+                                      &bull;
+                                      <span className="font-bold text-slate-500">{m.credits} ECTS</span>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    {activeNoteObj ? (
+                                      <div className="space-y-1">
+                                        <span className={`font-mono font-black text-xs px-2 py-0.5 rounded ${Number(activeNoteObj.note) >= 10 ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-rose-50 text-rose-800 border border-rose-100'}`}>
+                                          {Number(activeNoteObj.note).toFixed(2)}/20
+                                        </span>
+                                        <div className="text-[9px] uppercase font-bold text-gray-400 leading-none mt-1">
+                                          {Number(activeNoteObj.note) >= 10 ? 'Capitalisé ✓ (V.A.)' : 'En rattrapage ✗'}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <span className="bg-gray-100 text-gray-400 font-mono text-[10px] px-2 py-0.5 rounded italic">
+                                          Non saisi
+                                        </span>
+                                        <div className="text-[9px] text-gray-300 font-semibold mt-1">Saisie requise</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

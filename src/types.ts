@@ -25,6 +25,7 @@ export interface Semestre {
   id: number;
   nom_semestre: string;
   annee_scolaire: string;
+  filiere_id?: number;
 }
 
 export interface Etudiant {

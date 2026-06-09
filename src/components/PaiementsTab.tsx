@@ -32,6 +32,7 @@ interface PaiementsTabProps {
   onAddPaiement: (paiement: Omit<Paiement, 'id'>) => void;
   onUpdatePaiementStatus: (id: number, newStatus: 'Payé' | 'En attente' | 'Remboursé') => void;
   onDeletePaiement: (id: number) => void;
+  globalAnneeScolaire?: string;
 }
 
 export default function PaiementsTab({ 
@@ -44,7 +45,8 @@ export default function PaiementsTab({
   onUpdateScolariteAnnuelle,
   onAddPaiement, 
   onUpdatePaiementStatus, 
-  onDeletePaiement 
+  onDeletePaiement,
+  globalAnneeScolaire
 }: PaiementsTabProps) {
   
   // Search & Filter state
@@ -67,6 +69,13 @@ export default function PaiementsTab({
   const [anneeFilter, setAnneeFilter] = useState<string>(() => {
     return uniqueAnneeScolaires.includes("2025-2026") ? "2025-2026" : (uniqueAnneeScolaires[0] || "2025-2026");
   });
+
+  // Sync with global academic year toggle
+  React.useEffect(() => {
+    if (globalAnneeScolaire) {
+      setAnneeFilter(globalAnneeScolaire);
+    }
+  }, [globalAnneeScolaire]);
 
   const [showAddAnneeInline, setShowAddAnneeInline] = useState(false);
   const [newAnneeInput, setNewAnneeInput] = useState("");

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Semestre, Note, Cours } from '../types';
-import { Calendar, Plus, Trash2, Milestone } from 'lucide-react';
+import { Semestre, Note, Cours, Filiere } from '../types';
+import { Calendar, Plus, Trash2 } from 'lucide-react';
 
 interface SemestresTabProps {
   semestres: Semestre[];
   notes: Note[];
   cours: Cours[];
+  filieres: Filiere[];
   anneesScolaires?: string[];
   onAddSemestre: (semestre: Omit<Semestre, 'id'>) => void;
   onDeleteSemestre: (id: number) => void;
@@ -15,6 +16,7 @@ export default function SemestresTab({
   semestres, 
   notes, 
   cours, 
+  filieres,
   anneesScolaires = [], 
   onAddSemestre, 
   onDeleteSemestre 
@@ -29,18 +31,20 @@ export default function SemestresTab({
 
   const [nomSemestre, setNomSemestre] = useState("");
   const [anneeScolaire, setAnneeScolaire] = useState(() => allYears.includes("2025-2026") ? "2025-2026" : (allYears[0] || "2025-2026"));
+  const [filiereId, setFiliereId] = useState<number>(filieres[0]?.id || 1);
   const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nomSemestre || !anneeScolaire) {
+    if (!nomSemestre || !anneeScolaire || !filiereId) {
       alert("Veuillez remplir tous les champs obligatoires.");
       return;
     }
 
     onAddSemestre({
       nom_semestre: nomSemestre,
-      annee_scolaire: anneeScolaire
+      annee_scolaire: anneeScolaire,
+      filiere_id: filiereId
     });
 
     setNomSemestre("");
@@ -67,7 +71,7 @@ export default function SemestresTab({
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4" id="semestre-form">
           <h4 className="text-md font-bold text-blue-900 border-b border-gray-100 pb-2">Ajouter un Nouveau Semestre</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="form-group">
               <label className="form-label">Nom du Semestre <span className="text-red-500">*</span></label>
               <input 
@@ -78,6 +82,19 @@ export default function SemestresTab({
                 className="form-control"
                 required
               />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Filière Académique <span className="text-red-500">*</span></label>
+              <select 
+                value={filiereId}
+                onChange={e => setFiliereId(Number(e.target.value))}
+                className="form-control font-semibold text-slate-900"
+                required
+              >
+                {filieres.map(f => (
+                  <option key={f.id} value={f.id}>{f.nom_filiere}</option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label className="form-label">Année Scolaire <span className="text-red-500">*</span></label>
@@ -116,6 +133,7 @@ export default function SemestresTab({
             <thead>
               <tr>
                 <th>Période d'évaluation</th>
+                <th>Filière Associée</th>
                 <th>Année Scolaire</th>
                 <th>Courses Liés</th>
                 <th>Évaluations / Notes associées</th>
@@ -125,14 +143,20 @@ export default function SemestresTab({
             <tbody>
               {semestres.map(s => {
                 // Calculate counts
-                const linkedCourses = cours.filter(c => c.semestre_id === s.id).length;
-                const linkedGrades = notes.filter(n => n.semestre_id === s.id).length;
+                const linkedCourses = cours.filter(c => Number(c.semestre_id) === Number(s.id)).length;
+                const linkedGrades = notes.filter(n => Number(n.semestre_id) === Number(s.id)).length;
+                const matchingFiliere = filieres.find(f => Number(f.id) === Number(s.filiere_id));
 
                 return (
                   <tr key={s.id} className="hover:bg-slate-50 transition">
                     <td className="font-semibold text-gray-950 flex items-center gap-3">
                       <Calendar className="w-5 h-5 text-blue-600" />
                       <span>{s.nom_semestre}</span>
+                    </td>
+                    <td>
+                      <span className="bg-indigo-50 border border-indigo-100 font-bold text-[11px] px-2.5 py-1 rounded-full text-indigo-700">
+                        {matchingFiliere ? matchingFiliere.nom_filiere : "Général / Toutes filières"}
+                      </span>
                     </td>
                     <td>
                       <span className="bg-gray-100 font-mono text-xs px-2.5 py-1 rounded text-gray-700 font-bold">

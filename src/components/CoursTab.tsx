@@ -33,6 +33,18 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
 
   const currentFiliereMatieres = matieres.filter(m => m.filiere_id === filiereId);
 
+  // Synchronize dynamic semester choices based on active filiereId inside course creator
+  React.useEffect(() => {
+    if (filiereId > 0) {
+      const filtered = semestres.filter(s => Number(s.filiere_id) === Number(filiereId));
+      if (filtered.length > 0) {
+        if (!filtered.some(s => s.id === semestreId)) {
+          setSemestreId(filtered[0].id);
+        }
+      }
+    }
+  }, [filiereId, semestres, semestreId]);
+
   const resetForm = () => {
     setTitre("");
     setDescription("");
@@ -310,9 +322,11 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
                 className="form-control"
                 required
               >
-                {semestres.map(s => (
-                  <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
-                ))}
+                {semestres
+                  .filter(s => !filiereId || Number(s.filiere_id) === Number(filiereId))
+                  .map(s => (
+                    <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
+                  ))}
               </select>
             </div>
 

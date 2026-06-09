@@ -17,6 +17,8 @@ interface StudentPortalProps {
   onLogAccess: (studentId: number, filiereId: number) => void;
   onUpdatePassword: (studentId: number, newPass: string) => void;
   onLogout: () => void;
+  globalAnneeScolaire?: string;
+  onAnneeScolaireChange?: (annee: string) => void;
 }
 
 export default function StudentPortal({ 
@@ -33,11 +35,16 @@ export default function StudentPortal({
   initialFiliereId,
   onLogAccess,
   onUpdatePassword,
-  onLogout
+  onLogout,
+  globalAnneeScolaire,
+  onAnneeScolaireChange
 }: StudentPortalProps) {
   const [activeTab, setActiveTab] = useState<'profil' | 'cours' | 'notes' | 'bulletins' | 'paiements'>('profil');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedSemestreId, setSelectedSemestreId] = useState<number>(semestres[0]?.id || 0);
+  const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
+  const [selectedSemestreId, setSelectedSemestreId] = useState<number>(() => {
+    return studentSemestres[0]?.id || semestres[0]?.id || 0;
+  });
 
   // Dynamically compile unique list of academic years
   const uniqueAnneeScolaires = Array.from(new Set([
@@ -53,6 +60,23 @@ export default function StudentPortal({
   const [selectedStudentAnnee, setSelectedStudentAnnee] = useState<string>(() => {
     return uniqueAnneeScolaires.includes("2025-2026") ? "2025-2026" : (uniqueAnneeScolaires[0] || "2025-2026");
   });
+
+  // Sync state with global academic year toggle
+  React.useEffect(() => {
+    if (globalAnneeScolaire) {
+      setSelectedStudentAnnee(globalAnneeScolaire);
+    }
+  }, [globalAnneeScolaire]);
+
+  // Synchronise selectedSemestreId if the semesters filtered list updates as academic year gets toggled
+  React.useEffect(() => {
+    const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
+    if (studentSemestres.length > 0) {
+      if (!studentSemestres.some(s => s.id === selectedSemestreId)) {
+        setSelectedSemestreId(studentSemestres[0].id);
+      }
+    }
+  }, [semestres, activeStudent.filiere_id, selectedSemestreId]);
 
   // Password fields
   const [currentPass, setCurrentPass] = useState("");
@@ -239,15 +263,59 @@ export default function StudentPortal({
 
       {/* Main Working Panel */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0">
-          <h2 className="text-lg font-black text-slate-900 tracking-tight">
-            {activeTab === 'profil' && "Mon Profil Universitaire"}
-            {activeTab === 'cours' && "Supports & Syllabus des Filières"}
-            {activeTab === 'notes' && "Relevé des notes d'évaluations"}
-            {activeTab === 'bulletins' && "Génération Automatique de Bulletins"}
-            {activeTab === 'paiements' && "Mon Carnet de Paiements & Versements"}
-          </h2>
-          <div className="flex items-center gap-2">
+        <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+          <div>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">
+              {activeTab === 'profil' && "Mon Profil Universitaire"}
+              {activeTab === 'cours' && "Supports & Syllabus des Filières"}
+              {activeTab === 'notes' && "Relevé des notes d'évaluations"}
+              {activeTab === 'bulletins' && "Génération Automatique de Bulletins"}
+              {activeTab === 'paiements' && "Mon Carnet de Paiements & Versements"}
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">Espace sécurisé de gestion scolaire de l'étudiant.</p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
+            {/* SÉLECTEUR GLOBAL D'ANNÉE ACADÉMIQUE */}
+            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 space-x-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2024-2025")}
+                className={`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                  selectedStudentAnnee === "2024-2025"
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                }`}
+                title="Année Précédente"
+              >
+                Précédent (24-25)
+              </button>
+              <button
+                type="button"
+                onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2025-2026")}
+                className={`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                  selectedStudentAnnee === "2025-2026"
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                }`}
+                title="Année Courante"
+              >
+                Courant (25-26)
+              </button>
+              <button
+                type="button"
+                onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2026-2027")}
+                className={`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                  selectedStudentAnnee === "2026-2027"
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                }`}
+                title="Année Suivante"
+              >
+                Suivant (26-27)
+              </button>
+            </div>
+
             <div className="flex items-center gap-1 bg-slate-150 border border-slate-300 rounded-xl p-1 shrink-0">
               <span className="text-[10px] font-black text-slate-500 uppercase px-1.5 hidden sm:inline">Active :</span>
               <select
@@ -262,6 +330,7 @@ export default function StudentPortal({
                 ))}
               </select>
             </div>
+            
             <button 
               onClick={onLogout}
               className="flex items-center gap-2 p-1.5 px-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-xs font-bold hover:bg-red-150 transition cursor-pointer"
@@ -489,9 +558,11 @@ export default function StudentPortal({
                       onChange={e => setSelectedSemestreId(Number(e.target.value))}
                       className="form-control"
                     >
-                      {semestres.map(s => (
-                        <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
-                      ))}
+                      {semestres
+                        .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
+                        .map(s => (
+                          <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
+                        ))}
                     </select>
                   </div>
                 </div>
@@ -530,7 +601,7 @@ export default function StudentPortal({
                         <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
                         <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Grade Pondéré</th>
                         <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Mention</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Statut</th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Statut LMD</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -552,7 +623,18 @@ export default function StudentPortal({
                             return "Ajourné";
                           };
 
-                          const subjStatus = finalNote >= 10 ? "Validé" : "Rattrapage";
+                          // University LMD validation status
+                          let subjStatus = "Rattrapage (R.A.)";
+                          let badgeStyle = "bg-rose-100 text-rose-850 border border-rose-250";
+                          
+                          if (finalNote >= 10) {
+                            subjStatus = "Capitalisé (V.A.)";
+                            badgeStyle = "bg-emerald-100 text-emerald-850 border border-emerald-250";
+                          } else if (currentAverage >= 10) {
+                            subjStatus = "Compensé (V.Comp)";
+                            badgeStyle = "bg-sky-100 text-sky-850 border border-sky-200";
+                          }
+
                           const subjMention = getSubjMention(finalNote);
 
                           return (
@@ -574,17 +656,14 @@ export default function StudentPortal({
                               <td className="font-medium">
                                 <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
                                   finalNote >= 14 ? "bg-emerald-50 text-emerald-700" :
-                                  finalNote >= 10 ? "bg-blue-50 text-blue-700" :
+                                  finalNote >= 10 ? "bg-blue-50 text-blue-750" :
                                   "bg-rose-50 text-rose-700"
                                 }`}>
                                   {subjMention}
                                 </span>
                               </td>
                               <td>
-                                <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                                  finalNote >= 10                                     ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
-                                    : "bg-rose-100 text-rose-800 border border-rose-250"
-                                }`}>
+                                <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
                                   {subjStatus}
                                 </span>
                               </td>
@@ -595,6 +674,62 @@ export default function StudentPortal({
                     </tbody>
                   </table>
                 </div>
+
+                {/* University Credits Balance (LMD System) */}
+                {studentGrades.length > 0 && (() => {
+                  const totalSemCredits = studentGrades.reduce((sum, g) => sum + Number(g.credits), 0);
+                  const capCredits = studentGrades.filter(g => Number(g.note) >= 10).reduce((sum, g) => sum + Number(g.credits), 0);
+                  const isComp = currentAverage >= 10;
+                  const valCredits = isComp ? totalSemCredits : capCredits;
+                  const compCredits = isComp ? (totalSemCredits - capCredits) : 0;
+                  const progressPercentage = totalSemCredits > 0 ? Math.round((valCredits / totalSemCredits) * 100) : 0;
+
+                  return (
+                    <div className="bg-slate-50 border-t border-gray-200 p-5 space-y-3">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
+                          Bilan des Crédits Académiques (Système LMD)
+                        </span>
+                        <span className="text-[10px] text-gray-500 font-mono">Compensation semestrielle active</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center">
+                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                          <span className="text-[9px] font-bold text-gray-400 uppercase block">Crédits inscrits</span>
+                          <span className="text-sm font-black text-slate-900">{totalSemCredits} ECTS</span>
+                        </div>
+                        <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                          <span className="text-[9px] font-bold text-emerald-600 uppercase block">Crédits acquis</span>
+                          <span className="text-sm font-black text-emerald-800">{capCredits} ECTS</span>
+                        </div>
+                        <div className="bg-sky-50/50 p-3 rounded-lg border border-sky-150">
+                          <span className="text-[9px] font-bold text-sky-600 uppercase block">Crédits compensés</span>
+                          <span className="text-sm font-black text-sky-850">{compCredits} ECTS</span>
+                        </div>
+                        <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-150">
+                          <span className="text-[9px] font-bold text-indigo-700 uppercase block">Crédits validés</span>
+                          <span className="text-sm font-black text-indigo-900">{valCredits} / {totalSemCredits} ECTS</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-center text-[10px] font-bold text-slate-700">
+                          <span>Progression d'acquisition :</span>
+                          <span>{progressPercentage}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              progressPercentage >= 100 ? 'bg-emerald-500' : progressPercentage >= 50 ? 'bg-indigo-500' : 'bg-rose-500'
+                            }`}
+                            style={{ width: `${progressPercentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Score summary */}
                 {studentGrades.length > 0 && (
@@ -619,9 +754,11 @@ export default function StudentPortal({
                     onChange={e => setSelectedSemestreId(Number(e.target.value))}
                     className="form-control w-52"
                   >
-                    {semestres.map(s => (
-                      <option key={s.id} value={s.id}>{s.nom_semestre}</option>
-                    ))}
+                    {semestres
+                      .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
+                      .map(s => (
+                        <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                      ))}
                   </select>
                   <button 
                     onClick={handlePrint}
@@ -683,7 +820,7 @@ export default function StudentPortal({
                     <div className="overflow-x-auto w-full">
                       <table className="custom-table w-full text-xs">
                         <thead>
-                          <tr className="bg-slate-900 text-slate-100">
+                          <tr className="bg-slate-900 text-slate-100 font-bold">
                             <th className="py-2.5 px-4 font-bold text-left">Cours module</th>
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (60%)</th>
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (40%)</th>
@@ -691,7 +828,7 @@ export default function StudentPortal({
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Total</th>
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Mention</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Statut</th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Statut LMD</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -713,7 +850,18 @@ export default function StudentPortal({
                                 return "Ajourné";
                               };
 
-                              const subjStatus = finalNote >= 10 ? "Validé" : "Rattrapage";
+                              // University LMD validation status
+                              let subjStatus = "Rattrapage (R.A.)";
+                              let badgeStyle = "bg-rose-100 text-rose-850 border border-rose-250";
+                              
+                              if (finalNote >= 10) {
+                                subjStatus = "Capitalisé (V.A.)";
+                                badgeStyle = "bg-emerald-100 text-emerald-850 border border-emerald-250";
+                              } else if (currentAverage >= 10) {
+                                subjStatus = "Compensé (V.Comp)";
+                                badgeStyle = "bg-sky-100 text-sky-850 border border-sky-150";
+                              }
+
                               const subjMention = getSubjMention(finalNote);
 
                               return (
@@ -742,11 +890,7 @@ export default function StudentPortal({
                                     </span>
                                   </td>
                                   <td>
-                                    <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                                      finalNote >= 10 
-                                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
-                                        : "bg-rose-100 text-rose-800 border border-rose-250"
-                                    }`}>
+                                    <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
                                       {subjStatus}
                                     </span>
                                   </td>
@@ -758,6 +902,62 @@ export default function StudentPortal({
                       </table>
                     </div>
                   </div>
+
+                  {/* LMD Credits Balance Section */}
+                  {studentGrades.length > 0 && (() => {
+                    const totalSemCredits = studentGrades.reduce((sum, g) => sum + Number(g.credits), 0);
+                    const capCredits = studentGrades.filter(g => Number(g.note) >= 10).reduce((sum, g) => sum + Number(g.credits), 0);
+                    const isComp = currentAverage >= 10;
+                    const valCredits = isComp ? totalSemCredits : capCredits;
+                    const compCredits = isComp ? (totalSemCredits - capCredits) : 0;
+                    const progressPercentage = totalSemCredits > 0 ? Math.round((valCredits / totalSemCredits) * 100) : 0;
+
+                    return (
+                      <div className="mt-5 p-4 bg-slate-50 border border-slate-300 rounded-xl space-y-3 relative mx-auto w-full">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-200 pb-2">
+                          <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                            Bilan des Crédits Académiques (Système LMD)
+                          </span>
+                          <span className="text-[10px] text-gray-500 font-mono">Compensations semestrielles actives</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center">
+                          <div className="bg-white p-2.5 rounded-lg border border-gray-200">
+                            <span className="text-[9px] font-bold text-gray-400 uppercase block">Crédits inscrits</span>
+                            <span className="text-sm font-black text-slate-900">{totalSemCredits} ECTS</span>
+                          </div>
+                          <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100">
+                            <span className="text-[9px] font-bold text-emerald-600 uppercase block">Crédits capitalisés</span>
+                            <span className="text-sm font-black text-emerald-800">{capCredits} ECTS</span>
+                          </div>
+                          <div className="bg-sky-50/50 p-2.5 rounded-lg border border-sky-150">
+                            <span className="text-[9px] font-bold text-sky-600 uppercase block">Crédits compensés</span>
+                            <span className="text-sm font-black text-sky-850">{compCredits} ECTS</span>
+                          </div>
+                          <div className="bg-indigo-50 p-2.5 rounded-lg border border-indigo-150">
+                            <span className="text-[9px] font-bold text-indigo-700 uppercase block">Crédits validés</span>
+                            <span className="text-sm font-black text-indigo-900">{valCredits} / {totalSemCredits} ECTS</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-[10px] font-bold text-slate-700">
+                            <span>Taux de validation du semestre :</span>
+                            <span>{progressPercentage}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                progressPercentage >= 100 ? 'bg-emerald-500' : progressPercentage >= 50 ? 'bg-indigo-500' : 'bg-rose-500'
+                              }`}
+                              style={{ width: `${progressPercentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Results summarisations */}
                   <div className="mt-6 border-t-2 border-slate-900 pt-5 flex flex-col md:flex-row gap-4">

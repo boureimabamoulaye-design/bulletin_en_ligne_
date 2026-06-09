@@ -50,8 +50,18 @@ export const INITIAL_CLASSES: Classe[] = [
 ];
 
 export const INITIAL_SEMESTRES: Semestre[] = [
-  { id: 1, nom_semestre: "Semestre 1", annee_scolaire: "2025-2026" },
-  { id: 2, nom_semestre: "Semestre 2", annee_scolaire: "2025-2026" }
+  // Informatique de Gestion (IG) - id: 1
+  { id: 1, nom_semestre: "Semestre 1 (IG)", annee_scolaire: "2025-2026", filiere_id: 1 },
+  { id: 2, nom_semestre: "Semestre 2 (IG)", annee_scolaire: "2025-2026", filiere_id: 1 },
+  // Réseaux et Télécommunications (RT) - id: 2
+  { id: 3, nom_semestre: "Semestre 1 (RT)", annee_scolaire: "2025-2026", filiere_id: 2 },
+  { id: 4, nom_semestre: "Semestre 2 (RT)", annee_scolaire: "2025-2026", filiere_id: 2 },
+  // Comptabilité et Finance (CF) - id: 3
+  { id: 5, nom_semestre: "Semestre 1 (CF)", annee_scolaire: "2025-2026", filiere_id: 3 },
+  { id: 6, nom_semestre: "Semestre 2 (CF)", annee_scolaire: "2025-2026", filiere_id: 3 },
+  // Marketing Digital & Communication (MD) - id: 4
+  { id: 7, nom_semestre: "Semestre 1 (MD)", annee_scolaire: "2025-2026", filiere_id: 4 },
+  { id: 8, nom_semestre: "Semestre 2 (MD)", annee_scolaire: "2025-2026", filiere_id: 4 }
 ];
 
 export const INITIAL_ADMINS: Administrateur[] = [
@@ -150,7 +160,7 @@ export const INITIAL_COURS: Cours[] = [
     fichier: "reseau_tcpip_intro.pdf",
     filiere_id: 2,
     classe_id: 1,
-    semestre_id: 1,
+    semestre_id: 3,
     enseignant: "Ing. Touré Aly",
     date_ajout: "2025-09-20"
   },
@@ -161,7 +171,7 @@ export const INITIAL_COURS: Cours[] = [
     fichier: "admin_linux_tuto.pdf",
     filiere_id: 2,
     classe_id: 2,
-    semestre_id: 2,
+    semestre_id: 4,
     enseignant: "M. Cissé Ibrahim",
     date_ajout: "2026-02-10"
   },
@@ -173,7 +183,7 @@ export const INITIAL_COURS: Cours[] = [
     fichier: "compta_generale_l1.pdf",
     filiere_id: 3,
     classe_id: 1,
-    semestre_id: 1,
+    semestre_id: 5,
     enseignant: "Prof. Sylla Moussa",
     date_ajout: "2025-09-22"
   }
@@ -185,10 +195,10 @@ export const INITIAL_NOTES: Note[] = [
   { id: 2, etudiant_id: 1, cours_id: 3, semestre_id: 1, note: 17.0, credits: 4, date_ajout: "2026-01-20" },
   
   // Student 2 (Aissatou) in RT courses
-  { id: 3, etudiant_id: 2, cours_id: 4, semestre_id: 1, note: 14.0, credits: 3, date_ajout: "2026-01-18" },
+  { id: 3, etudiant_id: 2, cours_id: 4, semestre_id: 3, note: 14.0, credits: 3, date_ajout: "2026-01-18" },
   
   // Student 3 (Adama) in CF courses
-  { id: 4, etudiant_id: 3, cours_id: 6, semestre_id: 1, note: 11.5, credits: 4, date_ajout: "2026-01-19" }
+  { id: 4, etudiant_id: 3, cours_id: 6, semestre_id: 5, note: 11.5, credits: 4, date_ajout: "2026-01-19" }
 ];
 
 export const INITIAL_AUTORISATIONS: AutorisationFiliere[] = [

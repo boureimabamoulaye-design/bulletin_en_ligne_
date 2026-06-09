@@ -124,6 +124,49 @@ export default function App() {
   const [globalFiliereId, setGlobalFiliereId] = useState<number>(0);
   const [globalSemestreId, setGlobalSemestreId] = useState<number>(INITIAL_SEMESTRES[0]?.id || 0);
 
+  const [globalAnneeScolaire, setGlobalAnneeScolaire] = useState<string>(() => {
+    return localStorage.getItem('school_global_annee_scolaire') || "2025-2026";
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('school_global_annee_scolaire', globalAnneeScolaire);
+  }, [globalAnneeScolaire]);
+
+  // Filtered lists based on globally selected academic year
+  const filteredSemestres = React.useMemo(() => {
+    return semestres.filter(s => s.annee_scolaire === globalAnneeScolaire);
+  }, [semestres, globalAnneeScolaire]);
+
+  const filteredPaiements = React.useMemo(() => {
+    return paiements.filter(p => !p.annee_scolaire || p.annee_scolaire === globalAnneeScolaire);
+  }, [paiements, globalAnneeScolaire]);
+
+  const filteredNotes = React.useMemo(() => {
+    const semIds = semestres.filter(s => s.annee_scolaire === globalAnneeScolaire).map(s => s.id);
+    return notes.filter(n => semIds.includes(n.semestre_id));
+  }, [notes, semestres, globalAnneeScolaire]);
+
+  const filteredCours = React.useMemo(() => {
+    const semIds = semestres.filter(s => s.annee_scolaire === globalAnneeScolaire).map(s => s.id);
+    return cours.filter(c => semIds.includes(c.semestre_id));
+  }, [cours, semestres, globalAnneeScolaire]);
+
+  // Auto-sync active semester when active filiere or active academic year changes
+  React.useEffect(() => {
+    const filteredByYear = semestres.filter(s => s.annee_scolaire === globalAnneeScolaire);
+    const filteredByFiliereAndYear = globalFiliereId > 0 
+      ? filteredByYear.filter(s => Number(s.filiere_id) === Number(globalFiliereId))
+      : filteredByYear;
+
+    if (filteredByFiliereAndYear.length > 0) {
+      if (!filteredByFiliereAndYear.some(s => s.id === globalSemestreId)) {
+        setGlobalSemestreId(filteredByFiliereAndYear[0].id);
+      }
+    } else if (filteredByYear.length > 0 && !filteredByYear.some(s => s.id === globalSemestreId)) {
+      setGlobalSemestreId(filteredByYear[0].id);
+    }
+  }, [globalFiliereId, globalAnneeScolaire, semestres, globalSemestreId]);
+
   // --- SYNC TO LOCAL STORAGE ---
   React.useEffect(() => {
     localStorage.setItem('school_filieres', JSON.stringify(filieres));
@@ -181,9 +224,9 @@ export default function App() {
   };
 
   const handleDeletePaiement = (id: number) => {
-    const item = paiements.find(p => p.id === id);
+    const item = paiements.find(p => Number(p.id) === Number(id));
     if (item) {
-      const etu = etudiants.find(e => e.id === item.etudiant_id);
+      const etu = etudiants.find(e => Number(e.id) === Number(item.etudiant_id));
       const studentName = etu ? `${etu.prenom} ${etu.nom}` : `Étudiant #${item.etudiant_id}`;
       const trashItem: TrashItem = {
         id: `paiement-${id}-${Date.now()}`,
@@ -194,7 +237,7 @@ export default function App() {
       };
       setTrash(prev => [trashItem, ...prev]);
     }
-    setPaiements(paiements.filter(p => p.id !== id));
+    setPaiements(paiements.filter(p => Number(p.id) !== Number(id)));
   };
   
   // Add major (filière)
@@ -210,7 +253,7 @@ export default function App() {
 
   // Delete major
   const handleDeleteFiliere = (id: number) => {
-    const item = filieres.find(f => f.id === id);
+    const item = filieres.find(f => Number(f.id) === Number(id));
     if (item) {
       const trashItem: TrashItem = {
         id: `filiere-${id}-${Date.now()}`,
@@ -221,19 +264,19 @@ export default function App() {
       };
       setTrash(prev => [trashItem, ...prev]);
     }
-    setFilieres(filieres.filter(f => f.id !== id));
-    setMatieres(matieres.filter(m => m.filiere_id !== id));
-    setCours(cours.filter(c => c.filiere_id !== id));
+    setFilieres(filieres.filter(f => Number(f.id) !== Number(id)));
+    setMatieres(matieres.filter(m => Number(m.filiere_id) !== Number(id)));
+    setCours(cours.filter(c => Number(c.filiere_id) !== Number(id)));
     setNotes(notes.filter(n => {
-      const parentCourse = cours.find(c => c.id === n.cours_id);
-      return parentCourse ? parentCourse.filiere_id !== id : true;
+      const parentCourse = cours.find(c => Number(c.id) === Number(n.cours_id));
+      return parentCourse ? Number(parentCourse.filiere_id) !== Number(id) : true;
     }));
-    setEtudiants(etudiants.filter(e => e.filiere_id !== id));
-    setAutorisations(autorisations.filter(a => a.filiere_id !== id));
-    setLogs(logs.filter(l => l.filiere_id !== id));
+    setEtudiants(etudiants.filter(e => Number(e.filiere_id) !== Number(id)));
+    setAutorisations(autorisations.filter(a => Number(a.filiere_id) !== Number(id)));
+    setLogs(logs.filter(l => Number(l.filiere_id) !== Number(id)));
     setPaiements(paiements.filter(p => {
-      const student = etudiants.find(e => e.id === p.etudiant_id);
-      return student ? student.filiere_id !== id : true;
+      const student = etudiants.find(e => Number(e.id) === Number(p.etudiant_id));
+      return student ? Number(student.filiere_id) !== Number(id) : true;
     }));
   };
 
@@ -248,7 +291,7 @@ export default function App() {
   };
 
   const handleDeleteMatiere = (id: number) => {
-    const item = matieres.find(m => m.id === id);
+    const item = matieres.find(m => Number(m.id) === Number(id));
     if (item) {
       const trashItem: TrashItem = {
         id: `matiere-${id}-${Date.now()}`,
@@ -259,7 +302,7 @@ export default function App() {
       };
       setTrash(prev => [trashItem, ...prev]);
     }
-    setMatieres(matieres.filter(m => m.id !== id));
+    setMatieres(matieres.filter(m => Number(m.id) !== Number(id)));
   };
 
   // Add Semestre (Dynamic Semester option requested)
@@ -1011,6 +1054,46 @@ export default function App() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
+                    {/* SÉLECTEUR GLOBAL D'ANNÉE ACADÉMIQUE */}
+                    <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 space-x-0.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setGlobalAnneeScolaire("2024-2025")}
+                        className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                          globalAnneeScolaire === "2024-2025"
+                            ? "bg-blue-600 text-white shadow"
+                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                        }`}
+                        title="Année Précédente"
+                      >
+                        Précédent (24-25)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGlobalAnneeScolaire("2025-2026")}
+                        className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                          globalAnneeScolaire === "2025-2026"
+                            ? "bg-blue-600 text-white shadow"
+                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                        }`}
+                        title="Année Courante (Active)"
+                      >
+                        Courant (25-26)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGlobalAnneeScolaire("2026-2027")}
+                        className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                          globalAnneeScolaire === "2026-2027"
+                            ? "bg-blue-600 text-white shadow"
+                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                        }`}
+                        title="Année Suivante"
+                      >
+                        Suivant (26-27)
+                      </button>
+                    </div>
+
                     {/* Global Filters on Active Deep Workspace */}
                     {!showCodeExplorer && (adminActiveTab === 'etudiants' || adminActiveTab === 'cours' || adminActiveTab === 'notes' || adminActiveTab === 'bulletins' || adminActiveTab === 'autorisations') && (
                       <>
@@ -1036,9 +1119,11 @@ export default function App() {
                               onChange={e => setGlobalSemestreId(Number(e.target.value))}
                               className="bg-transparent border-none text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-0 p-0"
                             >
-                              {semestres.map(s => (
-                                <option key={s.id} value={s.id}>{s.nom_semestre}</option>
-                              ))}
+                              {filteredSemestres
+                                .filter(s => !globalFiliereId || Number(s.filiere_id) === Number(globalFiliereId))
+                                .map(s => (
+                                  <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                                ))}
                             </select>
                           </div>
                         )}
@@ -1082,9 +1167,10 @@ export default function App() {
 
                       {adminActiveTab === 'semestres' && (
                         <SemestresTab 
-                          semestres={semestres}
-                          notes={notes}
-                          cours={cours}
+                          semestres={filteredSemestres}
+                          notes={filteredNotes}
+                          cours={filteredCours}
+                          filieres={filieres}
                           anneesScolaires={anneesScolaires}
                           onAddSemestre={handleAddSemestre}
                           onDeleteSemestre={handleDeleteSemestre}
@@ -1093,10 +1179,10 @@ export default function App() {
 
                       {adminActiveTab === 'cours' && (
                         <CoursTab 
-                          cours={cours}
+                          cours={filteredCours}
                           filieres={filieres}
                           classes={classes}
-                          semestres={semestres}
+                          semestres={filteredSemestres}
                           matieres={matieres}
                           onAddCours={handleAddCours}
                           onUpdateCours={handleUpdateCours}
@@ -1108,10 +1194,10 @@ export default function App() {
 
                       {adminActiveTab === 'notes' && (
                         <NotesTab 
-                          notes={notes}
+                          notes={filteredNotes}
                           etudiants={etudiants}
-                          cours={cours}
-                          semestres={semestres}
+                          cours={filteredCours}
+                          semestres={filteredSemestres}
                           matieres={matieres}
                           filieres={filieres}
                           onAddNote={handleAddNote}
@@ -1126,9 +1212,9 @@ export default function App() {
                       {adminActiveTab === 'bulletins' && (
                         <BulletinsTab 
                           etudiants={etudiants}
-                          notes={notes}
-                          cours={cours}
-                          semestres={semestres}
+                          notes={filteredNotes}
+                          cours={filteredCours}
+                          semestres={filteredSemestres}
                           filieres={filieres}
                           classes={classes}
                           globalFiliereId={globalFiliereId}
@@ -1152,7 +1238,7 @@ export default function App() {
                         <PaiementsTab 
                           paiements={paiements}
                           etudiants={etudiants}
-                          semestres={semestres}
+                          semestres={filteredSemestres}
                           anneesScolaires={anneesScolaires}
                           onAddAnneeScolaire={(newYr) => {
                             if (newYr && !anneesScolaires.includes(newYr)) {
@@ -1164,6 +1250,7 @@ export default function App() {
                           onAddPaiement={handleAddPaiement}
                           onUpdatePaiementStatus={handleUpdatePaiementStatus}
                           onDeletePaiement={handleDeletePaiement}
+                          globalAnneeScolaire={globalAnneeScolaire}
                         />
                       )}
 
@@ -1188,6 +1275,46 @@ export default function App() {
                     <p className="text-xs text-gray-500 mt-1">Plateforme moderne de gestion scolaire unifiée.</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
+                    {/* SÉLECTEUR GLOBAL D'ANNÉE ACADÉMIQUE */}
+                    <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 space-x-0.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setGlobalAnneeScolaire("2024-2025")}
+                        className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                          globalAnneeScolaire === "2024-2025"
+                            ? "bg-blue-600 text-white shadow"
+                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                        }`}
+                        title="Année Précédente"
+                      >
+                        Précédent (24-25)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGlobalAnneeScolaire("2025-2026")}
+                        className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                          globalAnneeScolaire === "2025-2026"
+                            ? "bg-blue-600 text-white shadow"
+                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                        }`}
+                        title="Année Courante (Active)"
+                      >
+                        Courant (25-26)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGlobalAnneeScolaire("2026-2027")}
+                        className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                          globalAnneeScolaire === "2026-2027"
+                            ? "bg-blue-600 text-white shadow"
+                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                        }`}
+                        title="Année Suivante"
+                      >
+                        Suivant (26-27)
+                      </button>
+                    </div>
+
                     <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
                       <span className="font-extrabold uppercase text-slate-400 tracking-wider">Filière active :</span>
                       <select
@@ -1209,7 +1336,7 @@ export default function App() {
                         onChange={e => setGlobalSemestreId(Number(e.target.value))}
                         className="bg-transparent border-none text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-0 p-0"
                       >
-                        {semestres.map(s => (
+                        {filteredSemestres.map(s => (
                           <option key={s.id} value={s.id}>{s.nom_semestre}</option>
                         ))}
                       </select>
@@ -1225,9 +1352,9 @@ export default function App() {
                   <AdminDashboard 
                     etudiants={etudiants} 
                     filieres={filieres} 
-                    cours={cours} 
-                    notes={notes} 
-                    semestres={semestres}
+                    cours={filteredCours} 
+                    notes={filteredNotes} 
+                    semestres={filteredSemestres}
                     logs={logs}
                     onNavigate={(tab) => setAdminActiveTab(tab)}
                     globalFiliereId={globalFiliereId}
@@ -1387,9 +1514,9 @@ export default function App() {
 
           <StudentPortal 
             activeStudent={activeStudent}
-            notes={notes}
-            cours={cours}
-            semestres={semestres}
+            notes={filteredNotes}
+            cours={filteredCours}
+            semestres={filteredSemestres}
             anneesScolaires={anneesScolaires}
             filieres={filieres}
             classes={classes}
@@ -1400,6 +1527,8 @@ export default function App() {
             onLogAccess={handleLogAccess}
             onUpdatePassword={handleUpdatePassword}
             onLogout={handleLogout}
+            globalAnneeScolaire={globalAnneeScolaire}
+            onAnneeScolaireChange={setGlobalAnneeScolaire}
           />
         </div>
       )}
