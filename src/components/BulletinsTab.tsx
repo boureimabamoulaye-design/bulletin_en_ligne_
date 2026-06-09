@@ -1,6 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Etudiant, Note, Cours, Semestre, Filiere, Classe } from '../types';
-import { Award, Printer, Download, BookOpen, User, Calendar, GraduationCap } from 'lucide-react';
+import { Etudiant, Note, Cours, Semestre, Filiere, Classe, Matiere } from '../types';
+import { 
+  Award, Printer, Download, BookOpen, User, Calendar, 
+  GraduationCap, Pencil, Save, X, Check, Trash2, AlertCircle 
+} from 'lucide-react';
+
+const getValidationInfo = (valStr: string) => {
+  const trimmed = valStr.trim();
+  if (trimmed === "") {
+    return {
+      isValid: true,
+      className: "border-slate-300 bg-white text-gray-800",
+      helperText: "",
+      isError: false
+    };
+  }
+  const num = parseFloat(trimmed);
+  if (isNaN(num) || num < 0 || num > 20) {
+    return {
+      isValid: false,
+      className: "!border-rose-500 !bg-rose-50 !text-rose-900 focus:!ring-rose-500",
+      helperText: "Invalide (0-20)",
+      isError: true
+    };
+  }
+  return {
+    isValid: true,
+    className: "!border-emerald-500 !bg-emerald-50 !text-emerald-900 focus:!ring-emerald-500",
+    helperText: "Valide ✓",
+    isError: false
+  };
+};
 
 interface BulletinsTabProps {
   etudiants: Etudiant[];
@@ -9,11 +39,41 @@ interface BulletinsTabProps {
   semestres: Semestre[];
   filieres: Filiere[];
   classes: Classe[];
+  matieres: Matiere[];
+  onUpdateNote: (id: number, updatedFields: Partial<Note>) => void;
+  onAddNotes: (notesData: {
+    etudiant_id: number;
+    semestre_id: number;
+    credits: number;
+    note: number;
+    note_classe: number;
+    note_examen: number;
+    matiere_nom: string;
+    matiere_code: string;
+  }[]) => void;
+  onDeleteNote: (id: number) => void;
   globalFiliereId?: number;
   globalSemestreId?: number;
+  onSemestreChange?: (id: number) => void;
+  onFiliereChange?: (id: number) => void;
 }
 
-export default function BulletinsTab({ etudiants, notes, cours, semestres, filieres, classes, globalFiliereId, globalSemestreId }: BulletinsTabProps) {
+export default function BulletinsTab({ 
+  etudiants, 
+  notes, 
+  cours, 
+  semestres, 
+  filieres, 
+  classes,
+  matieres,
+  onUpdateNote,
+  onAddNotes,
+  onDeleteNote,
+  globalFiliereId,
+  globalSemestreId,
+  onSemestreChange,
+  onFiliereChange
+}: BulletinsTabProps) {
   const [localStudentId, setLocalStudentId] = useState<number>(0);
   const [localSemestreId, setLocalSemestreId] = useState<number>(semestres[0]?.id || 0);
 
@@ -47,10 +107,84 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
 
   const activeSem = semestres.find(s => s.id === selectedSemestreId);
 
-  // 1. Filter student grades for the active semester
+  // --- LOCAL EDIT STATES ---
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedGrades, setEditedGrades] = useState<Record<number, { note_classe: string; note_examen: string }>>({});
+
+  // Reset / cancel edit mode if selected student or semester changes
+  useEffect(() => {
+    setIsEditing(false);
+    setEditedGrades({});
+  }, [selectedStudentId, selectedSemestreId]);
+
+  // Scheduled subjects of the current semester/filiere
+  const studentMatieresOfSem = activeStudent
+    ? matieres.filter(m => 
+        Number(m.filiere_id) === Number(activeStudent.filiere_id) && 
+        Number(m.semestre_id) === Number(selectedSemestreId)
+      )
+    : [];
+
+  // Filter student grades from general source of truth
   const studentGrades = notes.filter(n => n.etudiant_id === selectedStudentId && n.semestre_id === selectedSemestreId);
 
-  // 2. Compute dynamic average (weighted with credits)
+  // Define structured grades list to render, adapting if in edit mode
+  const gradesToRender = isEditing
+    ? studentMatieresOfSem.map(m => {
+        const inputs = editedGrades[m.id] || { note_classe: "", note_examen: "" };
+        const cc = parseFloat(inputs.note_classe);
+        const ds = parseFloat(inputs.note_examen);
+        const hasValues = !isNaN(cc) && cc >= 0 && cc <= 20 && !isNaN(ds) && ds >= 0 && ds <= 20;
+        const weighted = hasValues ? (cc * 0.6) + (ds * 0.4) : null;
+
+        const existingGrade = studentGrades.find(g => {
+          const course = cours.find(c => c.id === g.cours_id);
+          return course?.titre === m.nom_matiere;
+        });
+
+        return {
+          id: existingGrade?.id,
+          matiere_id: m.id,
+          nom_matiere: m.nom_matiere,
+          code_matiere: m.code_matiere,
+          credits: m.credits,
+          note_classe: isNaN(cc) ? null : cc,
+          note_examen: isNaN(ds) ? null : ds,
+          note: weighted,
+          isGradesValid: hasValues
+        };
+      })
+    : studentGrades.map(g => {
+        const courseObj = cours.find(c => c.id === g.cours_id);
+        const matiereObj = matieres.find(m => m.nom_matiere === courseObj?.titre && m.filiere_id === activeStudent?.filiere_id);
+        return {
+          id: g.id,
+          matiere_id: matiereObj?.id || 0,
+          nom_matiere: courseObj ? courseObj.titre : "Enseignement Général",
+          code_matiere: matiereObj ? matiereObj.code_matiere : "GEN-01",
+          credits: g.credits,
+          note_classe: g.note_classe !== undefined ? g.note_classe : null,
+          note_examen: g.note_examen !== undefined ? g.note_examen : null,
+          note: Number(g.note),
+          isGradesValid: true
+        };
+      });
+
+  // 2. Compute dynamic average (weighted with credits) - reacts to live typing if editing!
+  const activeGPA = (() => {
+    const validGrades = gradesToRender.filter(g => g.note !== null);
+    if (validGrades.length === 0) return 0;
+    
+    let sumNotes = 0;
+    let sumCredits = 0;
+    validGrades.forEach(g => {
+      sumNotes += g.note! * Number(g.credits);
+      sumCredits += Number(g.credits);
+    });
+
+    return sumCredits > 0 ? (sumNotes / sumCredits) : 0;
+  })();
+
   const calculateGPA = (studentId: number, semId: number) => {
     const grades = notes.filter(n => n.etudiant_id === studentId && n.semestre_id === semId);
     if (grades.length === 0) return 0;
@@ -65,8 +199,6 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
     return sumCredits > 0 ? (sumNotes / sumCredits) : 0;
   };
 
-  const activeGPA = calculateGPA(selectedStudentId, selectedSemestreId);
-
   // 3. Dynamic ranking calculation relative to students in the same level/class
   const getStudentRank = (studentId: number, semId: number) => {
     const studentObj = etudiants.find(e => e.id === studentId);
@@ -77,6 +209,9 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
     
     // Compute GPA for all classmates in this semester
     const rankList = classmates.map(c => {
+      if (c.id === studentId) {
+        return { id: c.id, gpa: activeGPA };
+      }
       return {
         id: c.id,
         gpa: calculateGPA(c.id, semId)
@@ -104,6 +239,102 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
 
   const activeMention = getMention(activeGPA);
   const activeDecision = activeGPA >= 10 ? "Admis" : "Ajourné";
+
+  // Initialize edit mode inputs
+  const handleStartEditing = () => {
+    const initialValues: Record<number, { note_classe: string; note_examen: string }> = {};
+    studentMatieresOfSem.forEach(m => {
+      const g = studentGrades.find(grade => {
+        const c = cours.find(x => x.id === grade.cours_id);
+        return c ? c.titre === m.nom_matiere : false;
+      });
+      initialValues[m.id] = {
+        note_classe: g && g.note_classe !== undefined ? g.note_classe.toString() : "",
+        note_examen: g && g.note_examen !== undefined ? g.note_examen.toString() : ""
+      };
+    });
+    setEditedGrades(initialValues);
+    setIsEditing(true);
+  };
+
+  // Save modified grades
+  const handleSaveChanges = () => {
+    if (!activeStudent || !activeSem) return;
+
+    let hasInvalid = false;
+    const notesToAdd: {
+      etudiant_id: number;
+      semestre_id: number;
+      credits: number;
+      note: number;
+      note_classe: number;
+      note_examen: number;
+      matiere_nom: string;
+      matiere_code: string;
+    }[] = [];
+
+    studentMatieresOfSem.forEach(m => {
+      const input = editedGrades[m.id];
+      if (!input) return;
+
+      const ccStr = input.note_classe.trim();
+      const dsStr = input.note_examen.trim();
+
+      const existingGrade = studentGrades.find(g => {
+        const c = cours.find(x => x.id === g.cours_id);
+        return c ? c.titre === m.nom_matiere : false;
+      });
+
+      // Clear both = delete
+      if (ccStr === "" && dsStr === "") {
+        if (existingGrade) {
+          onDeleteNote(existingGrade.id);
+        }
+        return;
+      }
+
+      const cc = parseFloat(ccStr);
+      const ds = parseFloat(dsStr);
+
+      if (isNaN(cc) || cc < 0 || cc > 20 || isNaN(ds) || ds < 0 || ds > 20) {
+        hasInvalid = true;
+        return;
+      }
+
+      const weighted = (cc * 0.6) + (ds * 0.4);
+
+      if (existingGrade) {
+        onUpdateNote(existingGrade.id, {
+          note_classe: cc,
+          note_examen: ds,
+          note: Number(weighted.toFixed(2))
+        });
+      } else {
+        notesToAdd.push({
+          etudiant_id: activeStudent.id,
+          semestre_id: selectedSemestreId,
+          credits: m.credits,
+          note: Number(weighted.toFixed(2)),
+          note_classe: cc,
+          note_examen: ds,
+          matiere_nom: m.nom_matiere,
+          matiere_code: m.code_matiere
+        });
+      }
+    });
+
+    if (hasInvalid) {
+      alert("Erreur de validation : Toutes les notes saisies doivent être de vrais nombres compris entre 0 et 20.");
+      return;
+    }
+
+    if (notesToAdd.length > 0) {
+      onAddNotes(notesToAdd);
+    }
+
+    setIsEditing(false);
+    alert("Le relevé de notes et le bulletin de l'étudiant ont été mis à jour avec succès !");
+  };
 
   const handlePrint = () => {
     window.print();
@@ -175,42 +406,72 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
           <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5 text-blue-600" /> Période Semestrielle
           </label>
-          {globalSemestreId && globalSemestreId > 0 ? (
-            <div className="bg-slate-50 border border-slate-200 p-2.5 rounded text-xs font-semibold text-slate-850 h-10 flex items-center">
-              {semestres.find(s => s.id === globalSemestreId)?.nom_semestre}
-            </div>
-          ) : (
-            <select 
-              value={selectedSemestreId}
-              onChange={e => setLocalSemestreId(Number(e.target.value))}
-              className="form-control"
-            >
-              {semestres
-                .filter(sem => !activeFiliereFilter || Number(sem.filiere_id) === Number(activeFiliereFilter))
-                .map(sem => (
-                  <option key={sem.id} value={sem.id}>{sem.nom_semestre} ({sem.annee_scolaire})</option>
-                ))}
-            </select>
-          )}
+          <select 
+            value={selectedSemestreId}
+            onChange={e => {
+              const val = Number(e.target.value);
+              if (onSemestreChange) {
+                onSemestreChange(val);
+              } else {
+                setLocalSemestreId(val);
+              }
+            }}
+            className="form-control font-bold"
+          >
+            {semestres
+              .filter(sem => !activeFiliereFilter || Number(sem.filiere_id) === Number(activeFiliereFilter))
+              .map(sem => (
+                <option key={sem.id} value={sem.id}>{sem.nom_semestre} ({sem.annee_scolaire})</option>
+              ))}
+          </select>
         </div>
 
         <div className="flex gap-2">
-          <button 
-            onClick={handlePrint}
-            disabled={selectedStudentId === 0}
-            className="btn bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Lancer l'impression"
-          >
-            <Printer className="w-4 h-4" /> Imprimer
-          </button>
-          <button 
-            onClick={handleDownloadReport}
-            disabled={selectedStudentId === 0}
-            className="btn btn-primary font-bold disabled:opacity-40 disabled:cursor-not-allowed"
-            title="Télécharger le bulletin textuel"
-          >
-            <Download className="w-4 h-4" /> Certificat PDF
-          </button>
+          {isEditing ? (
+            <>
+              <button 
+                onClick={handleSaveChanges}
+                className="btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5"
+                title="Enregistrer toutes les modifications de notes"
+              >
+                <Save className="w-4 h-4" /> Enregistrer
+              </button>
+              <button 
+                onClick={() => setIsEditing(false)}
+                className="btn bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-semibold flex items-center gap-1.5"
+                title="Annuler les modifications en cours"
+              >
+                <X className="w-4 h-4" /> Annuler
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={handleStartEditing}
+                disabled={selectedStudentId === 0}
+                className="btn bg-amber-500 hover:bg-amber-600 text-white font-black disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                title="Passer en mode d'édition directe pour ce bulletin"
+              >
+                <Pencil className="w-4 h-4" /> Modifier les notes
+              </button>
+              <button 
+                onClick={handlePrint}
+                disabled={selectedStudentId === 0}
+                className="btn bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-semibold disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                title="Lancer l'impression"
+              >
+                <Printer className="w-4 h-4" /> Imprimer
+              </button>
+              <button 
+                onClick={handleDownloadReport}
+                disabled={selectedStudentId === 0}
+                className="btn btn-primary font-bold disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                title="Télécharger le bulletin textuel"
+              >
+                <Download className="w-4 h-4" /> Certificat PDF
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -274,8 +535,8 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
                 <thead>
                   <tr className="bg-slate-900 text-slate-100">
                     <th className="font-bold py-2.5 px-4 uppercase text-[10px] text-left">Modules / Cours Validés</th>
-                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (60%)</th>
-                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (40%)</th>
+                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note CC / Classe (60%)</th>
+                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note Examen (40%)</th>
                     <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Moyenne Finale</th>
                     <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
                     <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Total pondéré</th>
@@ -284,18 +545,18 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
                   </tr>
                 </thead>
                 <tbody>
-                  {studentGrades.length === 0 ? (
+                  {gradesToRender.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-gray-500 font-medium">Aucune note n'a été introduite ce semestre.</td>
+                      <td colSpan={8} className="p-8 text-center text-gray-500 font-medium font-bold">Aucune note n'a été introduite ce semestre.</td>
                     </tr>
                   ) : (
-                    studentGrades.map(g => {
-                      const courseObj = cours.find(c => c.id === g.cours_id);
-                      const finalNote = Number(g.note);
-                      const notePonderated = finalNote * Number(g.credits);
+                    gradesToRender.map(g => {
+                      const finalNote = g.note;
+                      const notePonderated = finalNote !== null ? finalNote * Number(g.credits) : null;
 
                       // Calculate individual mention
-                      const getSubjMention = (val: number) => {
+                      const getSubjMention = (val: number | null) => {
+                        if (val === null) return "En attente";
                         if (val >= 16) return "Très Bien";
                         if (val >= 14) return "Bien";
                         if (val >= 12) return "Assez Bien";
@@ -307,48 +568,150 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
                       let subjStatus = "Rattrapage (R.A.)";
                       let badgeStyle = "bg-rose-100 text-rose-850 border border-rose-250";
                       
-                      if (finalNote >= 10) {
-                        subjStatus = "Capitalisé (V.A.)";
-                        badgeStyle = "bg-emerald-100 text-emerald-850 border border-emerald-250";
-                      } else if (activeGPA >= 10) {
-                        subjStatus = "Compensé (V.Comp)";
-                        badgeStyle = "bg-sky-100 text-sky-850 border border-sky-200";
+                      if (finalNote !== null) {
+                        if (finalNote >= 10) {
+                          subjStatus = "Capitalisé (V.A.)";
+                          badgeStyle = "bg-emerald-100 text-emerald-850 border border-emerald-250";
+                        } else if (activeGPA >= 10) {
+                          subjStatus = "Compensé (V.Comp)";
+                          badgeStyle = "bg-sky-100 text-sky-850 border border-sky-200";
+                        }
+                      } else {
+                        subjStatus = "Non saisi";
+                        badgeStyle = "bg-gray-100 text-gray-600 border border-gray-200";
                       }
 
                       const subjMention = getSubjMention(finalNote);
 
-                      return (
-                        <tr key={g.id} className="border-b border-gray-150 hover:bg-slate-50 transition text-center">
-                          <td className="font-bold text-slate-900 py-3 px-4 text-left">
-                            <div>{courseObj ? courseObj.titre : "Enseignement Général"}</div>
-                          </td>
-                          <td className="font-medium text-gray-700">
-                            {g.note_classe !== undefined ? `${g.note_classe.toFixed(2)}/20` : "-"}
-                          </td>
-                          <td className="font-medium text-gray-700">
-                            {g.note_examen !== undefined ? `${g.note_examen.toFixed(2)}/20` : "-"}
-                          </td>
-                          <td className="font-bold text-slate-950 text-sm">
-                            {finalNote.toFixed(2)}/20
-                          </td>
-                          <td className="font-semibold text-gray-550">{g.credits}</td>
-                          <td className="font-bold text-slate-850">{notePonderated.toFixed(2)}</td>
-                          <td className="font-medium">
-                            <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                              finalNote >= 14 ? "bg-emerald-50 text-emerald-700" :
-                              finalNote >= 10 ? "bg-blue-50 text-blue-700" :
-                              "bg-rose-50 text-rose-700"
-                            }`}>
-                              {subjMention}
-                            </span>
-                          </td>
-                          <td>
-                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
-                              {subjStatus}
-                            </span>
-                          </td>
-                        </tr>
-                      );
+                      if (isEditing) {
+                        const ccVal = editedGrades[g.matiere_id]?.note_classe ?? "";
+                        const examVal = editedGrades[g.matiere_id]?.note_examen ?? "";
+
+                        const ccValInfo = getValidationInfo(ccVal);
+                        const examValInfo = getValidationInfo(examVal);
+
+                        return (
+                          <tr key={g.matiere_id} className="border-b border-gray-150 hover:bg-slate-50 transition text-center">
+                            <td className="font-bold text-slate-900 py-3 px-4 text-left">
+                              <div>{g.nom_matiere}</div>
+                              <div className="text-[10px] font-mono text-gray-400 font-normal">{g.code_matiere}</div>
+                            </td>
+                            <td className="p-2 w-36">
+                              <div className="space-y-1">
+                                <input
+                                  type="text"
+                                  value={ccVal}
+                                  placeholder="Vide ou 0-20"
+                                  onChange={e => {
+                                    setEditedGrades(prev => ({
+                                      ...prev,
+                                      [g.matiere_id]: {
+                                        ...prev[g.matiere_id],
+                                        note_classe: e.target.value
+                                      }
+                                    }));
+                                  }}
+                                  className={`w-full text-center text-xs font-semibold py-1 px-2 border rounded-md focus:outline-none focus:ring-1 ${ccValInfo.className}`}
+                                />
+                                {ccValInfo.helperText && (
+                                  <div className={`text-[8px] font-bold ${ccValInfo.isError ? "text-rose-600" : "text-emerald-600"}`}>
+                                    {ccValInfo.helperText}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-2 w-36">
+                              <div className="space-y-1">
+                                <input
+                                  type="text"
+                                  value={examVal}
+                                  placeholder="Vide ou 0-20"
+                                  onChange={e => {
+                                    setEditedGrades(prev => ({
+                                      ...prev,
+                                      [g.matiere_id]: {
+                                        ...prev[g.matiere_id],
+                                        note_examen: e.target.value
+                                      }
+                                    }));
+                                  }}
+                                  className={`w-full text-center text-xs font-semibold py-1 px-2 border rounded-md focus:outline-none focus:ring-1 ${examValInfo.className}`}
+                                />
+                                {examValInfo.helperText && (
+                                  <div className={`text-[8px] font-bold ${examValInfo.isError ? "text-rose-600" : "text-emerald-600"}`}>
+                                    {examValInfo.helperText}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="font-bold text-slate-950 text-sm">
+                              {finalNote !== null ? `${finalNote.toFixed(2)}/20` : "-"}
+                            </td>
+                            <td className="font-semibold text-gray-550">{g.credits}</td>
+                            <td className="font-bold text-slate-850">
+                              {notePonderated !== null ? notePonderated.toFixed(2) : "-"}
+                            </td>
+                            <td className="font-medium">
+                              {finalNote !== null ? (
+                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                                  finalNote >= 14 ? "bg-emerald-50 text-emerald-700" :
+                                  finalNote >= 10 ? "bg-blue-50 text-blue-700" :
+                                  "bg-rose-50 text-rose-700"
+                                }`}>
+                                  {subjMention}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 font-normal italic">Non saisi</span>
+                              )}
+                            </td>
+                            <td>
+                              <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
+                                {subjStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      } else {
+                        return (
+                          <tr key={g.matiere_id} className="border-b border-gray-150 hover:bg-slate-50 transition text-center">
+                            <td className="font-bold text-slate-900 py-3 px-4 text-left">
+                              <div>{g.nom_matiere}</div>
+                              <div className="text-[10px] font-mono text-gray-400 font-normal">{g.code_matiere}</div>
+                            </td>
+                            <td className="font-medium text-gray-700">
+                              {g.note_classe !== null ? `${g.note_classe.toFixed(2)}/20` : "-"}
+                            </td>
+                            <td className="font-medium text-gray-700">
+                              {g.note_examen !== null ? `${g.note_examen.toFixed(2)}/20` : "-"}
+                            </td>
+                            <td className="font-bold text-slate-950 text-sm">
+                              {finalNote !== null ? `${finalNote.toFixed(2)}/20` : "-"}
+                            </td>
+                            <td className="font-semibold text-gray-550">{g.credits}</td>
+                            <td className="font-bold text-slate-850">
+                              {notePonderated !== null ? notePonderated.toFixed(2) : "-"}
+                            </td>
+                            <td className="font-medium">
+                              {finalNote !== null ? (
+                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                                  finalNote >= 14 ? "bg-emerald-50 text-emerald-700" :
+                                  finalNote >= 10 ? "bg-blue-50 text-blue-700" :
+                                  "bg-rose-50 text-rose-700"
+                                }`}>
+                                  {subjMention}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 font-normal italic">Non saisi</span>
+                              )}
+                            </td>
+                            <td>
+                              <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
+                                {subjStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      }
                     })
                   )}
                 </tbody>
@@ -357,9 +720,9 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
           </div>
 
           {/* LMD Credits Balance Section */}
-          {studentGrades.length > 0 && (() => {
-            const totalSemCredits = studentGrades.reduce((sum, g) => sum + Number(g.credits), 0);
-            const capCredits = studentGrades.filter(g => Number(g.note) >= 10).reduce((sum, g) => sum + Number(g.credits), 0);
+          {gradesToRender.length > 0 && (() => {
+            const totalSemCredits = gradesToRender.reduce((sum, g) => sum + Number(g.credits), 0);
+            const capCredits = gradesToRender.filter(g => g.note !== null && Number(g.note) >= 10).reduce((sum, g) => sum + Number(g.credits), 0);
             const isComp = activeGPA >= 10;
             const valCredits = isComp ? totalSemCredits : capCredits;
             const compCredits = isComp ? (totalSemCredits - capCredits) : 0;
@@ -409,7 +772,7 @@ export default function BulletinsTab({ etudiants, notes, cours, semestres, filie
                     ></div>
                   </div>
                   <p className="text-[9px] text-gray-400 italic leading-relaxed">
-                    * Règle de l'Enseignement Supérieur : Les matières capitalisées (&ge;10/20) sont acquises définitivement. S'il y a compensation semestrielle (moyenne générale du semestre &ge;10.00), toutes les matières du semestre sont créditées. S'il n'y a pas compensation, l'étudiant doit reprendre au rattrapage uniquement les modules non-acquis.
+                     * Règle de l'Enseignement Supérieur : Les matières capitalisées (&ge;10/20) sont acquises définitivement. S'il y a compensation semestrielle (moyenne générale du semestre &ge;10.00), toutes les matières du semestre sont créditées. S'il n'y a pas compensation, l'étudiant doit reprendre au rattrapage uniquement les modules non-acquis.
                   </p>
                 </div>
               </div>

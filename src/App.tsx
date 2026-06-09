@@ -153,6 +153,8 @@ export default function App() {
 
   // Auto-sync active semester when active filiere or active academic year changes
   React.useEffect(() => {
+    if (globalSemestreId === 0) return; // Allow staying on 'Toutes les périodes' (0) if selected
+
     const filteredByYear = semestres.filter(s => s.annee_scolaire === globalAnneeScolaire);
     const filteredByFiliereAndYear = globalFiliereId > 0 
       ? filteredByYear.filter(s => Number(s.filiere_id) === Number(globalFiliereId))
@@ -486,6 +488,11 @@ export default function App() {
       setTrash(prev => [trashItem, ...prev]);
     }
     setNotes(notes.filter(n => n.id !== id));
+  };
+
+  // Update note
+  const handleUpdateNote = (id: number, updatedFields: Partial<Note>) => {
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, ...updatedFields } : n));
   };
 
   // Add inter-filière authorization
@@ -1095,7 +1102,7 @@ export default function App() {
                     </div>
 
                     {/* Global Filters on Active Deep Workspace */}
-                    {!showCodeExplorer && (adminActiveTab === 'etudiants' || adminActiveTab === 'cours' || adminActiveTab === 'notes' || adminActiveTab === 'bulletins' || adminActiveTab === 'autorisations') && (
+                    {!showCodeExplorer && adminActiveTab !== 'dashboard' && (
                       <>
                         <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
                           <span className="font-extrabold uppercase text-slate-400 tracking-wider">Filière active :</span>
@@ -1111,22 +1118,21 @@ export default function App() {
                           </select>
                         </div>
 
-                        {(adminActiveTab === 'cours' || adminActiveTab === 'notes' || adminActiveTab === 'bulletins') && (
-                          <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
-                            <span className="font-extrabold uppercase text-slate-400 tracking-wider">Période :</span>
-                            <select
-                              value={globalSemestreId}
-                              onChange={e => setGlobalSemestreId(Number(e.target.value))}
-                              className="bg-transparent border-none text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-0 p-0"
-                            >
-                              {filteredSemestres
-                                .filter(s => !globalFiliereId || Number(s.filiere_id) === Number(globalFiliereId))
-                                .map(s => (
-                                  <option key={s.id} value={s.id}>{s.nom_semestre}</option>
-                                ))}
-                            </select>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
+                          <span className="font-extrabold uppercase text-slate-400 tracking-wider">Période :</span>
+                          <select
+                            value={globalSemestreId}
+                            onChange={e => setGlobalSemestreId(Number(e.target.value))}
+                            className="bg-transparent border-none text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-0 p-0"
+                          >
+                            <option value={0}>Toutes les périodes</option>
+                            {filteredSemestres
+                              .filter(s => !globalFiliereId || Number(s.filiere_id) === Number(globalFiliereId))
+                              .map(s => (
+                                <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                              ))}
+                          </select>
+                        </div>
                       </>
                     )}
 
@@ -1207,6 +1213,8 @@ export default function App() {
                           onAddCours={handleAddCours}
                           globalFiliereId={globalFiliereId}
                           globalSemestreId={globalSemestreId}
+                          onSemestreChange={setGlobalSemestreId}
+                          onFiliereChange={setGlobalFiliereId}
                         />
                       )}
 
@@ -1218,8 +1226,14 @@ export default function App() {
                           semestres={filteredSemestres}
                           filieres={filieres}
                           classes={classes}
+                          matieres={matieres}
+                          onUpdateNote={handleUpdateNote}
+                          onAddNotes={handleAddNotesWithCourses}
+                          onDeleteNote={handleDeleteNote}
                           globalFiliereId={globalFiliereId}
                           globalSemestreId={globalSemestreId}
+                          onSemestreChange={setGlobalSemestreId}
+                          onFiliereChange={setGlobalFiliereId}
                         />
                       )}
 

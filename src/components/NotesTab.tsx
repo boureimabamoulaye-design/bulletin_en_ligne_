@@ -54,6 +54,8 @@ interface NotesTabProps {
   onAddCours: (course: Omit<Cours, 'id' | 'date_ajout'>) => void;
   globalFiliereId?: number;
   globalSemestreId?: number;
+  onSemestreChange?: (id: number) => void;
+  onFiliereChange?: (id: number) => void;
 }
 
 export default function NotesTab({ 
@@ -66,8 +68,11 @@ export default function NotesTab({
   onAddNote, 
   onAddNotes,
   onDeleteNote,
+  onAddCours,
   globalFiliereId,
-  globalSemestreId
+  globalSemestreId,
+  onSemestreChange,
+  onFiliereChange
 }: NotesTabProps) {
   // --- STATES ---
   const [localFiliereId, setLocalFiliereId] = useState<number>(filieres[0]?.id || 0);
@@ -130,8 +135,8 @@ export default function NotesTab({
       setSearchedStudent(match);
       // Retrieve subjects of their filiere and selected semester, and reset grade input map
       const studentMatieres = matieres.filter(
-        m => m.filiere_id === selectedFiliereId && 
-        (!m.semestre_id || m.semestre_id === selectedSemesterId)
+        m => Number(m.filiere_id) === Number(selectedFiliereId) && 
+        Number(m.semestre_id) === Number(selectedSemesterId)
       );
       
       if (studentMatieres.length === 0) {
@@ -171,8 +176,8 @@ export default function NotesTab({
     if (!searchedStudent) return;
 
     const studentMatieres = matieres.filter(
-      m => m.filiere_id === searchedStudent.filiere_id &&
-      (!m.semestre_id || m.semestre_id === selectedSemesterId)
+      m => Number(m.filiere_id) === Number(searchedStudent.filiere_id) &&
+      Number(m.semestre_id) === Number(selectedSemesterId)
     );
     const gradesToSubmit: {
       etudiant_id: number;
@@ -260,29 +265,28 @@ export default function NotesTab({
                 {/* Filière select dropdown */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-gray-600 tracking-wider">Filière Académique *</label>
-                  {globalFiliereId && globalFiliereId > 0 ? (
-                    <div className="bg-blue-50 border border-blue-200 p-2 rounded text-xs font-bold text-blue-900 select-none">
-                      {filieres.find(f => f.id === globalFiliereId)?.nom_filiere}
-                    </div>
-                  ) : (
-                    <select 
-                      value={selectedFiliereId} 
-                      onChange={e => {
-                        setLocalFiliereId(Number(e.target.value));
-                        // Reset search status on filière change
-                        setSearchedStudent(null);
-                        setSearchHasBeenRun(false);
-                        setMatriculeError("");
-                      }}
-                      className="form-control text-xs w-full py-2 px-3 focus:ring-1 focus:ring-blue-500 bg-white"
-                      required
-                    >
-                      <option value="">Sélectionner une filière...</option>
-                      {filieres.map(f => (
-                        <option key={f.id} value={f.id}>{f.nom_filiere}</option>
-                      ))}
-                    </select>
-                  )}
+                  <select 
+                    value={selectedFiliereId} 
+                    onChange={e => {
+                      const val = Number(e.target.value);
+                      if (onFiliereChange) {
+                        onFiliereChange(val);
+                      } else {
+                        setLocalFiliereId(val);
+                      }
+                      // Reset search status on filière change
+                      setSearchedStudent(null);
+                      setSearchHasBeenRun(false);
+                      setMatriculeError("");
+                    }}
+                    className="form-control text-xs w-full py-2 px-3 focus:ring-1 focus:ring-blue-500 bg-white font-bold"
+                    required
+                  >
+                    <option value="">Sélectionner une filière...</option>
+                    {filieres.map(f => (
+                      <option key={f.id} value={f.id}>{f.nom_filiere}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Matricule input */}
@@ -310,30 +314,29 @@ export default function NotesTab({
                 {/* Session / Semestre select dropdown */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-gray-600 tracking-wider">Session Académique *</label>
-                  {globalSemestreId && globalSemestreId > 0 ? (
-                    <div className="bg-slate-100 border border-slate-200 p-2 rounded text-xs font-bold text-slate-800 select-none">
-                      {semestres.find(s => s.id === globalSemestreId)?.nom_semestre}
-                    </div>
-                  ) : (
-                    <select 
-                      value={selectedSemesterId} 
-                      onChange={e => {
-                        setLocalSemesterId(Number(e.target.value));
-                        // Reset loaded student to refresh semester-based matching notes
-                        setSearchedStudent(null);
-                        setSearchHasBeenRun(false);
-                        setMatriculeError("");
-                      }}
-                      className="form-control text-pivoted text-xs w-full py-2 px-3 bg-white"
-                      required
-                    >
-                      {semestres
-                        .filter(s => !selectedFiliereId || Number(s.filiere_id) === Number(selectedFiliereId))
-                        .map(s => (
-                          <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
-                        ))}
-                    </select>
-                  )}
+                  <select 
+                    value={selectedSemesterId} 
+                    onChange={e => {
+                      const val = Number(e.target.value);
+                      if (onSemestreChange) {
+                        onSemestreChange(val);
+                      } else {
+                        setLocalSemesterId(val);
+                      }
+                      // Reset loaded student to refresh semester-based matching notes
+                      setSearchedStudent(null);
+                      setSearchHasBeenRun(false);
+                      setMatriculeError("");
+                    }}
+                    className="form-control text-pivoted text-xs w-full py-2 px-3 bg-white font-bold"
+                    required
+                  >
+                    {semestres
+                      .filter(s => !selectedFiliereId || Number(s.filiere_id) === Number(selectedFiliereId))
+                      .map(s => (
+                        <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
+                      ))}
+                  </select>
                 </div>
               </div>
 
@@ -386,8 +389,8 @@ export default function NotesTab({
                     .reduce((sum, n) => sum + Number(n.credits), 0);
                   
                   const studentMatieres = matieres.filter(
-                    m => m.filiere_id === searchedStudent.filiere_id &&
-                    (!m.semestre_id || m.semestre_id === selectedSemesterId)
+                    m => Number(m.filiere_id) === Number(searchedStudent.filiere_id) &&
+                    Number(m.semestre_id) === Number(selectedSemesterId)
                   );
                   let potentialNewCredits = 0;
                   const alreadySavedMatiereTitles = existingNotes.map(n => {
@@ -735,7 +738,10 @@ export default function NotesTab({
             <div className="space-y-3">
               {filteredForCredits.map(st => {
                 // Get all matieres for this filiere
-                const studentMatieres = matieres.filter(m => Number(m.filiere_id) === Number(st.filiere_id));
+                const studentMatieres = matieres.filter(m => 
+                  Number(m.filiere_id) === Number(st.filiere_id) &&
+                  Number(m.semestre_id) === Number(selectedSemesterId)
+                );
                 const totalSyllabusCredits = studentMatieres.reduce((sum, m) => sum + Number(m.credits), 0);
 
                 // Find saved grades for st in selected semester

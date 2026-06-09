@@ -15,7 +15,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ etudiants, filieres, cours, notes, semestres, logs, onNavigate, globalFiliereId, globalSemestreId }: AdminDashboardProps) {
-  const [showData, setShowData] = useState(false);
+  const [showData, setShowData] = useState(true);
 
   // Stats calculations
   const filteredStudents = globalFiliereId && globalFiliereId > 0 
@@ -226,8 +226,7 @@ export default function AdminDashboard({ etudiants, filieres, cours, notes, seme
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* KPI 1 */}
         <div 
-          onClick={() => onNavigate('etudiants')}
-          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-600 flex items-center justify-between hover:shadow-md transition cursor-pointer"
+          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-600 flex items-center justify-between"
           id="stat-students"
         >
           <div>
@@ -241,8 +240,7 @@ export default function AdminDashboard({ etudiants, filieres, cours, notes, seme
 
         {/* KPI 2 */}
         <div 
-          onClick={() => onNavigate('filieres')}
-          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-teal-600 flex items-center justify-between hover:shadow-md transition cursor-pointer"
+          className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-teal-600 flex items-center justify-between"
           id="stat-filieres"
         >
           <div>

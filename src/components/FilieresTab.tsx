@@ -395,8 +395,8 @@ export default function FilieresTab({
                                     required
                                   >
                                     <option value="">Choisir...</option>
-                                    {semestres.filter(s => s.filiere_id === f.id).map(s => (
-                                      <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                                    {semestres.filter(s => Number(s.filiere_id) === Number(f.id)).map(s => (
+                                      <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
                                     ))}
                                   </select>
                                 </div>
@@ -557,8 +557,8 @@ export default function FilieresTab({
                   required
                 >
                   <option value="">Sélectionner le semestre...</option>
-                  {semestres.filter(s => s.filiere_id === (sideFiliereId || filieres[0]?.id)).map(s => (
-                    <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                  {semestres.filter(s => Number(s.filiere_id) === Number(sideFiliereId || filieres[0]?.id)).map(s => (
+                    <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
                   ))}
                 </select>
               </div>
