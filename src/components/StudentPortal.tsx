@@ -120,20 +120,20 @@ export default function StudentPortal({
     setCourseFiliereFilter(filiereId);
     
     // If accessing another authorized major (not main), record in access logs!
-    if (filiereId !== activeStudent.filiere_id) {
+    if (Number(filiereId) !== Number(activeStudent.filiere_id)) {
       onLogAccess(activeStudent.id, filiereId);
     }
   };
 
   // Filter courses based on selections
-  const accessibleCourses = cours.filter(c => c.filiere_id === courseFiliereFilter && c.classe_id === activeStudent.classe_id);
+  const accessibleCourses = cours.filter(c => Number(c.filiere_id) === Number(courseFiliereFilter) && Number(c.classe_id) === Number(activeStudent.classe_id));
 
   // Compute stats for grades belonging to the active selected filiere
   const studentGrades = notes.filter(n => {
-    if (n.etudiant_id !== activeStudent.id) return false;
-    if (n.semestre_id !== selectedSemestreId) return false;
-    const parentCourse = cours.find(c => c.id === n.cours_id);
-    return parentCourse ? parentCourse.filiere_id === courseFiliereFilter : false;
+    if (Number(n.etudiant_id) !== Number(activeStudent.id)) return false;
+    if (Number(n.semestre_id) !== Number(selectedSemestreId)) return false;
+    const parentCourse = cours.find(c => Number(c.id) === Number(n.cours_id));
+    return parentCourse ? Number(parentCourse.filiere_id) === Number(courseFiliereFilter) : false;
   });
 
   const calculateWeightedAverage = () => {
@@ -148,7 +148,7 @@ export default function StudentPortal({
   };
 
   const currentAverage = calculateWeightedAverage();
-  const activeSem = semestres.find(s => s.id === selectedSemestreId);
+  const activeSem = semestres.find(s => Number(s.id) === Number(selectedSemestreId));
 
   const getMention = (averagedGrade: number) => {
     if (averagedGrade >= 18) return "Excellent";

@@ -719,37 +719,63 @@ export default function EtudiantsTab({
       )}
 
       {/* Filter and search utilities */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4" id="students-filter-card">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Rechercher par Nom, Prénom, Matricule, Email..." 
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="form-control pl-10"
-          />
-        </div>
-        {(!globalFiliereId || globalFiliereId === 0) ? (
-          <div className="w-full md:w-64">
-            <select 
-              value={filiereFilter}
-              onChange={e => setFiliereFilter(Number(e.target.value))}
-              className="form-control"
-            >
-              <option value={0}>Toutes les filières</option>
-              {filieres.map(f => (
-                <option key={f.id} value={f.id}>{f.nom_filiere}</option>
-              ))}
-            </select>
+      <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3" id="students-filter-card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 className="text-xs font-black uppercase text-slate-700 tracking-wider">Moteur de Recherche Globale (Temps Réel)</h4>
+            <p className="text-[11px] text-gray-550">Filtrage instantané des élèves par Nom, Prénom, Matricule, ou E-mail.</p>
           </div>
-        ) : (
-          <div className="w-full md:w-64 flex items-center justify-end px-3">
-            <span className="text-xs font-bold text-blue-900 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
-              Filière verrouillée
+          <span className="text-[10px] font-extrabold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full border border-blue-100 flex items-center gap-1.5 self-start sm:self-center">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
             </span>
+            {filteredEtudiants.length} étudiant{filteredEtudiants.length > 1 ? 's' : ''} trouvé{filteredEtudiants.length > 1 ? 's' : ''}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="md:col-span-2 relative">
+            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Rechercher par Nom, Prénom, Matricule..." 
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="form-control pl-11 py-2 bg-white border border-gray-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-100 placeholder-slate-400"
+            />
+            {search && (
+              <button 
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-2 text-[10px] bg-slate-150 hover:bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded-md transition-colors"
+                title="Effacer la recherche"
+              >
+                Vider
+              </button>
+            )}
           </div>
-        )}
+          {(!globalFiliereId || globalFiliereId === 0) ? (
+            <div>
+              <select 
+                value={filiereFilter}
+                onChange={e => setFiliereFilter(Number(e.target.value))}
+                className="form-control py-2 text-xs font-semibold border-gray-300 bg-white"
+              >
+                <option value={0}>Toutes les filières académiques</option>
+                {filieres.map(f => (
+                  <option key={f.id} value={f.id}>{f.nom_filiere}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex items-center justify-end">
+              <span className="text-xs font-bold text-blue-900 bg-blue-50 px-3 py-2 rounded-xl border border-blue-150 w-full text-center">
+                Filière : {filieres.find(f => f.id === globalFiliereId)?.nom_filiere || "Verrouillée"}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Student List View */}

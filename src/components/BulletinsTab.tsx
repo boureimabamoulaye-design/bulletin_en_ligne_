@@ -78,25 +78,25 @@ export default function BulletinsTab({
   const [localSemestreId, setLocalSemestreId] = useState<number>(semestres[0]?.id || 0);
 
   const eligibleStudents = globalFiliereId && globalFiliereId > 0 
-    ? etudiants.filter(e => e.filiere_id === globalFiliereId) 
+    ? etudiants.filter(e => Number(e.filiere_id) === Number(globalFiliereId)) 
     : etudiants;
 
-  const selectedStudentId = localStudentId && eligibleStudents.some(e => e.id === localStudentId)
+  const selectedStudentId = localStudentId && eligibleStudents.some(e => Number(e.id) === Number(localStudentId))
     ? localStudentId
     : 0;
 
-  const activeStudent = etudiants.find(e => e.id === selectedStudentId);
+  const activeStudent = etudiants.find(e => Number(e.id) === Number(selectedStudentId));
 
   const activeFiliereFilter = globalFiliereId && globalFiliereId > 0 
     ? globalFiliereId 
-    : (activeStudent ? activeStudent.filiere_id : 0);
+    : (activeStudent ? Number(activeStudent.filiere_id) : 0);
 
   // Sync local semester when active filiere/student changes
   useEffect(() => {
     if (activeFiliereFilter > 0) {
-      const filtered = semestres.filter(s => Number(s.filiere_id) === Number(activeFiliereFilter));
+      const filtered = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeFiliereFilter));
       if (filtered.length > 0) {
-        if (!filtered.some(s => s.id === localSemestreId)) {
+        if (!filtered.some(s => Number(s.id) === Number(localSemestreId))) {
           setLocalSemestreId(filtered[0].id);
         }
       }
@@ -105,7 +105,7 @@ export default function BulletinsTab({
 
   const selectedSemestreId = globalSemestreId && globalSemestreId > 0 ? globalSemestreId : localSemestreId;
 
-  const activeSem = semestres.find(s => s.id === selectedSemestreId);
+  const activeSem = semestres.find(s => Number(s.id) === Number(selectedSemestreId));
 
   // --- LOCAL EDIT STATES ---
   const [isEditing, setIsEditing] = useState(false);
@@ -126,7 +126,7 @@ export default function BulletinsTab({
     : [];
 
   // Filter student grades from general source of truth
-  const studentGrades = notes.filter(n => n.etudiant_id === selectedStudentId && n.semestre_id === selectedSemestreId);
+  const studentGrades = notes.filter(n => Number(n.etudiant_id) === Number(selectedStudentId) && Number(n.semestre_id) === Number(selectedSemestreId));
 
   // Define structured grades list to render, adapting if in edit mode
   const gradesToRender = isEditing
@@ -138,7 +138,7 @@ export default function BulletinsTab({
         const weighted = hasValues ? (cc * 0.6) + (ds * 0.4) : null;
 
         const existingGrade = studentGrades.find(g => {
-          const course = cours.find(c => c.id === g.cours_id);
+          const course = cours.find(c => Number(c.id) === Number(g.cours_id));
           return course?.titre === m.nom_matiere;
         });
 
@@ -155,8 +155,8 @@ export default function BulletinsTab({
         };
       })
     : studentGrades.map(g => {
-        const courseObj = cours.find(c => c.id === g.cours_id);
-        const matiereObj = matieres.find(m => m.nom_matiere === courseObj?.titre && m.filiere_id === activeStudent?.filiere_id);
+        const courseObj = cours.find(c => Number(c.id) === Number(g.cours_id));
+        const matiereObj = matieres.find(m => m.nom_matiere === courseObj?.titre && Number(m.filiere_id) === Number(activeStudent?.filiere_id));
         return {
           id: g.id,
           matiere_id: matiereObj?.id || 0,
@@ -186,7 +186,7 @@ export default function BulletinsTab({
   })();
 
   const calculateGPA = (studentId: number, semId: number) => {
-    const grades = notes.filter(n => n.etudiant_id === studentId && n.semestre_id === semId);
+    const grades = notes.filter(n => Number(n.etudiant_id) === Number(studentId) && Number(n.semestre_id) === Number(semId));
     if (grades.length === 0) return 0;
     
     let sumNotes = 0;
@@ -205,11 +205,11 @@ export default function BulletinsTab({
     if (!studentObj) return { rank: 1, total: 1 };
 
     // Find all classmates
-    const classmates = etudiants.filter(e => e.classe_id === studentObj.classe_id);
+    const classmates = etudiants.filter(e => Number(e.classe_id) === Number(studentObj.classe_id));
     
     // Compute GPA for all classmates in this semester
     const rankList = classmates.map(c => {
-      if (c.id === studentId) {
+      if (Number(c.id) === Number(studentId)) {
         return { id: c.id, gpa: activeGPA };
       }
       return {
@@ -218,7 +218,7 @@ export default function BulletinsTab({
       };
     }).sort((a, b) => b.gpa - a.gpa);
 
-    const position = rankList.findIndex(item => item.id === studentId);
+    const position = rankList.findIndex(item => Number(item.id) === Number(studentId));
     return {
       rank: position !== -1 ? position + 1 : 1,
       total: classmates.length
@@ -419,7 +419,7 @@ export default function BulletinsTab({
             className="form-control font-bold"
           >
             {semestres
-              .filter(sem => !activeFiliereFilter || Number(sem.filiere_id) === Number(activeFiliereFilter))
+              .filter(sem => !activeFiliereFilter || !sem.filiere_id || Number(sem.filiere_id) === Number(activeFiliereFilter))
               .map(sem => (
                 <option key={sem.id} value={sem.id}>{sem.nom_semestre} ({sem.annee_scolaire})</option>
               ))}

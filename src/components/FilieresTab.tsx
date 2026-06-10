@@ -80,6 +80,13 @@ export default function FilieresTab({
   const [sideCreditMatiere, setSideCreditMatiere] = useState<number>(3);
   const [sideSemestreId, setSideSemestreId] = useState<number>(0);
 
+  // Ensure sideFiliereId is updated when filieres array loads
+  React.useEffect(() => {
+    if (filieres.length > 0 && !sideFiliereId) {
+      setSideFiliereId(filieres[0].id);
+    }
+  }, [filieres, sideFiliereId]);
+
   const resetForm = () => {
     setNomFiliere("");
     setDescription("");
@@ -272,9 +279,9 @@ export default function FilieresTab({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="filieres-grid-container">
             {filieres.map(f => {
               // Dynamic calculation of students registered
-              const enrolledStudents = etudiants.filter(e => e.filiere_id === f.id);
-              const filiereMatieres = matieres.filter(m => m.filiere_id === f.id);
-              const isExpanded = expandedFiliereId === f.id;
+              const enrolledStudents = etudiants.filter(e => Number(e.filiere_id) === Number(f.id));
+              const filiereMatieres = matieres.filter(m => Number(m.filiere_id) === Number(f.id));
+              const isExpanded = Number(expandedFiliereId) === Number(f.id);
               
               return (
                 <div key={f.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col justify-between hover:border-blue-400 hover:shadow transition">
@@ -395,7 +402,7 @@ export default function FilieresTab({
                                     required
                                   >
                                     <option value="">Choisir...</option>
-                                    {semestres.filter(s => Number(s.filiere_id) === Number(f.id)).map(s => (
+                                    {semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(f.id)).map(s => (
                                       <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
                                     ))}
                                   </select>
@@ -464,7 +471,7 @@ export default function FilieresTab({
                                         <td className="py-2.5 px-3 font-medium text-gray-700">{m.nom_matiere}</td>
                                         <td className="py-2.5 px-3 text-gray-650">
                                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-105">
-                                            {semestres.find(s => s.id === m.semestre_id)?.nom_semestre || "Non défini"}
+                                            {semestres.find(s => Number(s.id) === Number(m.semestre_id))?.nom_semestre || "Non défini"}
                                           </span>
                                         </td>
                                         <td className="py-2.5 px-3 text-center font-bold text-gray-600">{m.credits}</td>
@@ -532,7 +539,7 @@ export default function FilieresTab({
               <div className="form-group">
                 <label className="text-[10px] font-black uppercase text-gray-600 tracking-wider block mb-1">Filière Académique Cible *</label>
                 <select 
-                  value={sideFiliereId || (filieres[0]?.id || "")}
+                  value={sideFiliereId || ""}
                   onChange={e => {
                     const fid = Number(e.target.value);
                     setSideFiliereId(fid);
@@ -557,9 +564,22 @@ export default function FilieresTab({
                   required
                 >
                   <option value="">Sélectionner le semestre...</option>
-                  {semestres.filter(s => Number(s.filiere_id) === Number(sideFiliereId || filieres[0]?.id)).map(s => (
-                    <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
-                  ))}
+                  {semestres
+                    .filter(s => {
+                      const activeFid = sideFiliereId || (filieres[0]?.id || 0);
+                      if (activeFid > 0) {
+                        return !s.filiere_id || Number(s.filiere_id) === Number(activeFid);
+                      }
+                      return true;
+                    })
+                    .map(s => {
+                      const associatedFiliere = filieres.find(f => Number(f.id) === Number(s.filiere_id));
+                      return (
+                        <option key={s.id} value={s.id}>
+                          {s.nom_semestre} ({s.annee_scolaire}){associatedFiliere ? ` - ${associatedFiliere.nom_filiere}` : ""}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
 

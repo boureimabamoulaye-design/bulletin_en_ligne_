@@ -19,17 +19,17 @@ export default function AdminDashboard({ etudiants, filieres, cours, notes, seme
 
   // Stats calculations
   const filteredStudents = globalFiliereId && globalFiliereId > 0 
-    ? etudiants.filter(e => e.filiere_id === globalFiliereId) 
+    ? etudiants.filter(e => Number(e.filiere_id) === Number(globalFiliereId)) 
     : etudiants;
 
   const filteredCoursItems = globalFiliereId && globalFiliereId > 0
-    ? cours.filter(c => c.filiere_id === globalFiliereId)
+    ? cours.filter(c => Number(c.filiere_id) === Number(globalFiliereId))
     : cours;
 
   const filteredNotes = notes.filter(n => {
-    const student = etudiants.find(e => e.id === n.etudiant_id);
-    const matchesFiliere = !globalFiliereId || globalFiliereId === 0 || (student && student.filiere_id === globalFiliereId);
-    const matchesSemestre = !globalSemestreId || globalSemestreId === 0 || n.semestre_id === globalSemestreId;
+    const student = etudiants.find(e => Number(e.id) === Number(n.etudiant_id));
+    const matchesFiliere = !globalFiliereId || globalFiliereId === 0 || (student && Number(student.filiere_id) === Number(globalFiliereId));
+    const matchesSemestre = !globalSemestreId || globalSemestreId === 0 || Number(n.semestre_id) === Number(globalSemestreId);
     return matchesFiliere && matchesSemestre;
   });
 
@@ -49,8 +49,8 @@ export default function AdminDashboard({ etudiants, filieres, cours, notes, seme
       .sort((a, b) => b.id - a.id)
       .slice(0, 5)
       .map(grade => {
-        const student = etudiants.find(e => e.id === grade.etudiant_id);
-        const course = cours.find(c => c.id === grade.cours_id);
+        const student = etudiants.find(e => Number(e.id) === Number(grade.etudiant_id));
+        const course = cours.find(c => Number(c.id) === Number(grade.cours_id));
         return {
           id: grade.id,
           studentName: student ? `${student.nom} ${student.prenom}` : "Inconnu",
@@ -65,14 +65,14 @@ export default function AdminDashboard({ etudiants, filieres, cours, notes, seme
   const getRecentLogs = () => {
     return [...logs]
       .filter(log => {
-        const student = etudiants.find(e => e.id === log.etudiant_id);
-        return !globalFiliereId || globalFiliereId === 0 || (student && student.filiere_id === globalFiliereId);
+        const student = etudiants.find(e => Number(e.id) === Number(log.etudiant_id));
+        return !globalFiliereId || globalFiliereId === 0 || (student && Number(student.filiere_id) === Number(globalFiliereId));
       })
       .sort((a, b) => b.id - a.id)
       .slice(0, 5)
       .map(log => {
-        const student = etudiants.find(e => e.id === log.etudiant_id);
-        const filiere = filieres.find(f => f.id === log.filiere_id);
+        const student = etudiants.find(e => Number(e.id) === Number(log.etudiant_id));
+        const filiere = filieres.find(f => Number(f.id) === Number(log.filiere_id));
         return {
           id: log.id,
           studentName: student ? `${student.nom} ${student.prenom}` : "Inconnu",

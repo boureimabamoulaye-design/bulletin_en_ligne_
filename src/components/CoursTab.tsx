@@ -31,7 +31,7 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
   const [enseignant, setEnseignant] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
-  const currentFiliereMatieres = matieres.filter(m => m.filiere_id === filiereId);
+  const currentFiliereMatieres = matieres.filter(m => Number(m.filiere_id) === Number(filiereId));
 
   // Synchronize dynamic semester choices based on active filiereId inside course creator
   React.useEffect(() => {
@@ -172,8 +172,8 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
 
   // Filter courses dynamically based on global filters
   const filteredCours = cours.filter(course => {
-    const matchesFiliere = !globalFiliereId || globalFiliereId === 0 || course.filiere_id === globalFiliereId;
-    const matchesSemestre = !globalSemestreId || globalSemestreId === 0 || course.semestre_id === globalSemestreId;
+    const matchesFiliere = !globalFiliereId || globalFiliereId === 0 || Number(course.filiere_id) === Number(globalFiliereId);
+    const matchesSemestre = !globalSemestreId || globalSemestreId === 0 || Number(course.semestre_id) === Number(globalSemestreId);
     return matchesFiliere && matchesSemestre;
   });
 
@@ -323,7 +323,7 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
                 required
               >
                 {semestres
-                  .filter(s => !filiereId || Number(s.filiere_id) === Number(filiereId))
+                  .filter(s => !filiereId || !s.filiere_id || Number(s.filiere_id) === Number(filiereId))
                   .map(s => (
                     <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
                   ))}

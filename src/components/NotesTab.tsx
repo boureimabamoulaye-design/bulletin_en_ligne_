@@ -10,24 +10,32 @@ const getValidationInfo = (valStr: string) => {
   if (trimmed === "") {
     return {
       isValid: true,
-      className: "border-slate-700 bg-[#0d101d] text-white",
+      className: "border-gray-300 bg-white text-gray-900 focus:ring-blue-100 focus:border-blue-500",
       helperText: "",
       isError: false
     };
   }
   const num = parseFloat(trimmed);
-  if (isNaN(num) || num < 0 || num > 20) {
+  if (isNaN(num)) {
     return {
       isValid: false,
-      className: "!border-rose-500 !bg-rose-950/20 !text-rose-250 focus:!ring-rose-500/30 focus:!border-rose-450",
-      helperText: "Invalide (0-20)",
+      className: "!border-rose-500 !bg-rose-50 !text-rose-900 focus:!ring-rose-200 focus:!border-rose-500 shadow-sm shadow-rose-100 animate-pulse",
+      helperText: "Format numérique invalide",
+      isError: true
+    };
+  }
+  if (num < 0 || num > 20) {
+    return {
+      isValid: false,
+      className: "!border-rose-500 !bg-rose-50 !text-rose-900 focus:!ring-rose-200 focus:!border-rose-500 shadow-sm shadow-rose-100 animate-bounce-subtle",
+      helperText: "Doit être entre 0 et 20 !",
       isError: true
     };
   }
   return {
     isValid: true,
-    className: "!border-emerald-500 !bg-emerald-950/25 !text-emerald-250 focus:!ring-emerald-500/30 focus:!border-emerald-450",
-    helperText: "Valide ✓",
+    className: "!border-emerald-500 !bg-emerald-50/50 !text-emerald-950 focus:!ring-emerald-200 focus:!border-emerald-500",
+    helperText: "Note valide ✓",
     isError: false
   };
 };
@@ -87,7 +95,7 @@ export default function NotesTab({
   // Auto-sync local semester when selected filiere changes
   useEffect(() => {
     if (selectedFiliereId > 0) {
-      const filtered = semestres.filter(s => Number(s.filiere_id) === Number(selectedFiliereId));
+      const filtered = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(selectedFiliereId));
       if (filtered.length > 0) {
         if (!filtered.some(s => s.id === localSemesterId)) {
           setLocalSemesterId(filtered[0].id);
@@ -332,7 +340,7 @@ export default function NotesTab({
                     required
                   >
                     {semestres
-                      .filter(s => !selectedFiliereId || Number(s.filiere_id) === Number(selectedFiliereId))
+                      .filter(s => !selectedFiliereId || !s.filiere_id || Number(s.filiere_id) === Number(selectedFiliereId))
                       .map(s => (
                         <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
                       ))}
@@ -372,7 +380,7 @@ export default function NotesTab({
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-gray-600">
                       <span>Matricule: <strong className="font-mono text-black">{searchedStudent.matricule}</strong></span>
                       <span>Filière: <strong className="text-blue-900">
-                        {filieres.find(f => f.id === searchedStudent.filiere_id)?.nom_filiere || "Inconnue"}
+                        {filieres.find(f => Number(f.id) === Number(searchedStudent.filiere_id))?.nom_filiere || "Inconnue"}
                       </strong></span>
                     </div>
                   </div>
@@ -469,8 +477,8 @@ export default function NotesTab({
                         </thead>
                         <tbody>
                           {matieres.filter(m => 
-                            m.filiere_id === searchedStudent.filiere_id &&
-                            (!m.semestre_id || m.semestre_id === selectedSemesterId)
+                            Number(m.filiere_id) === Number(searchedStudent.filiere_id) &&
+                            (!m.semestre_id || Number(m.semestre_id) === Number(selectedSemesterId))
                           ).map(m => {
                             const currentInput = gradesInput[m.id] || { note_classe: "", note_examen: "" };
                             const computed = calculateLiveWeighted(currentInput.note_classe, currentInput.note_examen);
@@ -479,8 +487,8 @@ export default function NotesTab({
                             const matchingNotesForMatiere = notes.filter(n => {
                               const noteCours = cours.find(c => c.id === n.cours_id);
                               return (
-                                n.etudiant_id === searchedStudent.id && 
-                                n.semestre_id === selectedSemesterId && 
+                                Number(n.etudiant_id) === Number(searchedStudent.id) && 
+                                Number(n.semestre_id) === Number(selectedSemesterId) && 
                                 noteCours?.titre === m.nom_matiere
                               );
                             });
@@ -516,7 +524,7 @@ export default function NotesTab({
                                       className={`form-control py-1 px-2 text-center text-xs font-bold w-20 mx-auto ${getValidationInfo(currentInput.note_classe).className}`}
                                     />
                                     {getValidationInfo(currentInput.note_classe).helperText && (
-                                      <span className={`text-[9px] font-bold mt-1 block ${getValidationInfo(currentInput.note_classe).isError ? 'text-rose-400' : 'text-emerald-450'}`}>
+                                      <span className={`text-[9px] font-extrabold mt-1 block ${getValidationInfo(currentInput.note_classe).isError ? 'text-rose-600 bg-rose-50 px-1 py-0.5 rounded border border-rose-100' : 'text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100'}`}>
                                         {getValidationInfo(currentInput.note_classe).helperText}
                                       </span>
                                     )}
@@ -540,7 +548,7 @@ export default function NotesTab({
                                       className={`form-control py-1 px-2 text-center text-xs font-bold w-20 mx-auto ${getValidationInfo(currentInput.note_examen).className}`}
                                     />
                                     {getValidationInfo(currentInput.note_examen).helperText && (
-                                      <span className={`text-[9px] font-bold mt-1 block ${getValidationInfo(currentInput.note_examen).isError ? 'text-rose-400' : 'text-emerald-450'}`}>
+                                      <span className={`text-[9px] font-extrabold mt-1 block ${getValidationInfo(currentInput.note_examen).isError ? 'text-rose-600 bg-rose-50 px-1 py-0.5 rounded border border-rose-100' : 'text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100'}`}>
                                         {getValidationInfo(currentInput.note_examen).helperText}
                                       </span>
                                     )}
@@ -611,9 +619,9 @@ export default function NotesTab({
               </h4>
               <span className="text-[10px] font-bold text-gray-400 bg-white px-2 py-1 rounded border border-gray-200">
                 {notes.filter(n => {
-                  const s = etudiants.find(e => e.id === n.etudiant_id);
-                  const matchesFiliere = !selectedFiliereId || s?.filiere_id === selectedFiliereId;
-                  const matchesSem = !selectedSemesterId || n.semestre_id === selectedSemesterId;
+                  const s = etudiants.find(e => Number(e.id) === Number(n.etudiant_id));
+                  const matchesFiliere = !selectedFiliereId || Number(s?.filiere_id) === Number(selectedFiliereId);
+                  const matchesSem = !selectedSemesterId || Number(n.semestre_id) === Number(selectedSemesterId);
                   return matchesFiliere && matchesSem;
                 }).length} notes
               </span>
@@ -621,22 +629,22 @@ export default function NotesTab({
             
             <div className="divide-y divide-gray-150 max-h-[600px] overflow-y-auto">
               {notes.filter(n => {
-                const s = etudiants.find(e => e.id === n.etudiant_id);
-                const matchesFiliere = !selectedFiliereId || s?.filiere_id === selectedFiliereId;
-                const matchesSem = !selectedSemesterId || n.semestre_id === selectedSemesterId;
+                const s = etudiants.find(e => Number(e.id) === Number(n.etudiant_id));
+                const matchesFiliere = !selectedFiliereId || Number(s?.filiere_id) === Number(selectedFiliereId);
+                const matchesSem = !selectedSemesterId || Number(n.semestre_id) === Number(selectedSemesterId);
                 return matchesFiliere && matchesSem;
               }).length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-xs">Aucune évaluation correspondante pour cette sélection.</div>
               ) : (
                 [...notes].reverse().filter(note => {
-                  const s = etudiants.find(e => e.id === note.etudiant_id);
-                  const matchesFiliere = !selectedFiliereId || s?.filiere_id === selectedFiliereId;
-                  const matchesSem = !selectedSemesterId || note.semestre_id === selectedSemesterId;
+                  const s = etudiants.find(e => Number(e.id) === Number(note.etudiant_id));
+                  const matchesFiliere = !selectedFiliereId || Number(s?.filiere_id) === Number(selectedFiliereId);
+                  const matchesSem = !selectedSemesterId || Number(note.semestre_id) === Number(selectedSemesterId);
                   return matchesFiliere && matchesSem;
                 }).map(note => {
-                  const student = etudiants.find(e => e.id === note.etudiant_id);
-                  const parsedCours = cours.find(c => c.id === note.cours_id);
-                  const sem = semestres.find(s => s.id === note.semestre_id);
+                  const student = etudiants.find(e => Number(e.id) === Number(note.etudiant_id));
+                  const parsedCours = cours.find(c => Number(c.id) === Number(note.cours_id));
+                  const sem = semestres.find(s => Number(s.id) === Number(note.semestre_id));
                   
                   return (
                     <div key={note.id} className="p-4 hover:bg-slate-50 transition space-y-2 text-xs">
