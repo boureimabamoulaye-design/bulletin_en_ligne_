@@ -66,7 +66,8 @@ export const INITIAL_SEMESTRES: Semestre[] = [
 
 export const INITIAL_ADMINS: Administrateur[] = [
   { id: 1, nom: "Administrateur Général", email: "admin@ecole.com", mot_de_passe: "admin123" },
-  { id: 2, nom: "Marie Dupont", email: "marie.dupont@ecole.com", mot_de_passe: "admin123" }
+  { id: 2, nom: "Marie Dupont", email: "marie.dupont@ecole.com", mot_de_passe: "admin123" },
+  { id: 3, nom: "Bourekane Admin", email: "bourekane223@gmail.com", mot_de_passe: "admin123" }
 ];
 
 export const INITIAL_ETUDIANTS: Etudiant[] = [

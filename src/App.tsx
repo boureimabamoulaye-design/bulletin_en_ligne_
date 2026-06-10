@@ -113,7 +113,14 @@ export default function App() {
   // Multi-admin addition state
   const [adminList, setAdminList] = useState<Administrateur[]>(() => {
     const saved = localStorage.getItem('school_admins');
-    return saved ? JSON.parse(saved) : INITIAL_ADMINS;
+    let parsed: Administrateur[] = saved ? JSON.parse(saved) : INITIAL_ADMINS;
+    if (!parsed.some(a => a.email.toLowerCase().trim() === 'bourekane223@gmail.com')) {
+      parsed = [
+        ...parsed,
+        { id: 9999, nom: "Bourekane Admin", email: "bourekane223@gmail.com", mot_de_passe: "admin123" }
+      ];
+    }
+    return parsed;
   });
   const [newAdminNom, setNewAdminNom] = useState("");
   const [newAdminEmail, setNewAdminEmail] = useState("");
@@ -606,9 +613,9 @@ export default function App() {
     if (!newAdminNom || !newAdminEmail || !newAdminPass) return;
     setAdminList([...adminList, {
       id: adminList.length > 0 ? Math.max(...adminList.map(a => a.id)) + 1 : 1,
-      nom: newAdminNom,
-      email: newAdminEmail,
-      mot_de_passe: newAdminPass
+      nom: newAdminNom.trim(),
+      email: newAdminEmail.trim().toLowerCase(),
+      mot_de_passe: newAdminPass.trim()
     }]);
     setNewAdminNom("");
     setNewAdminEmail("");
@@ -645,15 +652,15 @@ export default function App() {
     
     setAdminList(adminList.map(a => a.id === editingAdminId ? {
       ...a,
-      nom: editAdminNom,
-      email: editAdminEmail,
-      mot_de_passe: editAdminPass
+      nom: editAdminNom.trim(),
+      email: editAdminEmail.trim().toLowerCase(),
+      mot_de_passe: editAdminPass.trim()
     } : a));
     
     // Update logged-in session name if editing own account
     const oldAdmin = adminList.find(a => a.id === editingAdminId);
     if (oldAdmin && oldAdmin.nom === activeAdminName) {
-      setActiveAdminName(editAdminNom);
+      setActiveAdminName(editAdminNom.trim());
     }
 
     setEditingAdminId(null);
@@ -676,18 +683,27 @@ export default function App() {
     e.preventDefault();
     setLoginError('');
 
+    const trimmedUsername = usernameInput.trim();
+    const trimmedPassword = passwordInput.trim();
+
     if (loginRole === 'admin') {
-      const foundAdmin = adminList.find(a => a.email.toLowerCase() === usernameInput.toLowerCase() && a.mot_de_passe === passwordInput);
+      const foundAdmin = adminList.find(a => 
+        a.email.toLowerCase().trim() === trimmedUsername.toLowerCase() && 
+        a.mot_de_passe.trim() === trimmedPassword
+      );
       if (foundAdmin) {
         setLoginError('');
         setUserRole('admin');
         setActiveAdminName(foundAdmin.nom);
         setAdminActiveTab('dashboard');
       } else {
-        setLoginError("Adresse E-mail ou Mot de passe Administrateur incorrect.");
+        setLoginError("Adresse E-mail ou Mot de passe Administrateur incorrect. Veuillez vérifier si l'adresse e-mail a été correctement saisie dans l'onglet Administration.");
       }
     } else {
-      const foundStudent = etudiants.find(e => e.matricule.toUpperCase() === usernameInput.toUpperCase() && e.mot_de_passe === passwordInput);
+      const foundStudent = etudiants.find(e => 
+        e.matricule.toUpperCase().trim() === trimmedUsername.toUpperCase() && 
+        e.mot_de_passe.trim() === trimmedPassword
+      );
       if (foundStudent) {
         // If they did not select a filiere, dynamically fallback to their primary one
         let targetFiliereId = selectedFiliereId;
@@ -852,10 +868,28 @@ export default function App() {
                     type="text" 
                     value={usernameInput}
                     onChange={e => setUsernameInput(e.target.value)}
-                    placeholder=""
+                    placeholder={loginRole === 'admin' ? "Ex: admin@ecole.com" : "Ex: MT-2025-01"}
                     className="form-control.text-sm w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
                     required
                   />
+                  
+                  {/* Smart Assistance Role Mismatch Helper */}
+                  {loginRole === 'student' && usernameInput.includes('@') && (
+                    <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-700 rounded-xl text-[11px] font-semibold animate-pulse flex items-center gap-2">
+                      <span className="text-sm">💡</span>
+                      <p className="leading-snug">
+                        Vous avez saisi une adresse e-mail. Veuillez cliquer sur le bouton <strong>"Administration"</strong> ci-dessus pour accéder au compte admin.
+                      </p>
+                    </div>
+                  )}
+                  {loginRole === 'admin' && usernameInput.trim() !== '' && !usernameInput.includes('@') && (
+                    <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-700 rounded-xl text-[11px] font-semibold animate-pulse flex items-center gap-2">
+                       <span className="text-sm">💡</span>
+                       <p className="leading-snug">
+                         Vous semblez saisir un matricule. Veuillez cliquer sur le bouton <strong>"Espace Étudiant"</strong> ci-dessus pour vous connecter.
+                       </p>
+                     </div>
+                  )}
                 </div>
 
                 {/* Password field */}
