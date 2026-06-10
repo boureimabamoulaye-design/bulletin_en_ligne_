@@ -1119,8 +1119,8 @@ export default function App() {
                 {adminList.map(adm => {
                   if (editingAdminId === adm.id) {
                     return (
-                      <form key={adm.id} onSubmit={handleUpdateAdmin} className="space-y-2 bg-slate-950 p-2 rounded-lg border border-blue-900 text-[10px] my-1">
-                        <div className="text-blue-400 font-bold uppercase text-[8px]">Modifier l'Admin</div>
+                      <form key={adm.id} onSubmit={handleUpdateAdmin} className="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-blue-900 text-[10px] my-1">
+                        <div className="text-blue-400 font-bold uppercase text-[8px] tracking-wide">Modifier l'Admin</div>
                         <input 
                           type="text" 
                           placeholder="Nom"
@@ -1145,6 +1145,13 @@ export default function App() {
                           className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
                           required
                         />
+                        
+                        {/* Information relative aux accès de l'administrateur */}
+                        <div className="p-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded text-[8.5px] font-medium leading-none space-y-1">
+                          <p className="font-bold flex items-center gap-1">🏆 Accès Super Admin : Actif</p>
+                          <p className="text-[8px] opacity-80 decoration-none">Autorisation totale & illimitée sur tout le site</p>
+                        </div>
+
                         <div className="flex gap-1.5 justify-end text-[9px] pt-1">
                           <button type="button" onClick={() => setEditingAdminId(null)} className="text-gray-400 hover:text-white">Annuler</button>
                           <button type="submit" className="text-blue-400 font-bold hover:text-blue-300">Enregistrer</button>
@@ -1187,10 +1194,11 @@ export default function App() {
                   + Ajouter un Admin
                 </button>
               ) : (
-                <form onSubmit={handleAddAdmin} className="space-y-2 bg-slate-950 p-2 rounded-lg border border-slate-800 text-[10px]">
+                <form onSubmit={handleAddAdmin} className="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-[10px]">
+                  <div className="text-amber-400 font-bold uppercase text-[8px] tracking-wide">Nouvel Administrateur</div>
                   <input 
                     type="text" 
-                    placeholder="Nom"
+                    placeholder="Nom complet"
                     value={newAdminNom}
                     onChange={e => setNewAdminNom(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
@@ -1198,7 +1206,7 @@ export default function App() {
                   />
                   <input 
                     type="email" 
-                    placeholder="Email"
+                    placeholder="Adresse e-mail"
                     value={newAdminEmail}
                     onChange={e => setNewAdminEmail(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
@@ -1212,9 +1220,24 @@ export default function App() {
                     className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
                     required
                   />
-                  <div className="flex gap-1 justify-end">
+
+                  {/* Accréditations par défaut et complètes des Administrateurs */}
+                  <div className="p-2 bg-slate-900 border border-amber-500/20 text-slate-300 rounded text-[8.5px] leading-relaxed space-y-1">
+                    <span className="font-extrabold uppercase text-amber-400 tracking-wider text-[8px] block">🛡️ Droits & Accréditations</span>
+                    <p className="text-slate-400">Ce compte aura par défaut un rôle de <strong>Super-Administrateur Général</strong> avec droits absolus de lecture, écriture et modifications sur :</p>
+                    <ul className="grid grid-cols-2 gap-x-1 text-[8px] text-amber-300/90 font-semibold list-none pl-0 mt-1">
+                      <li>• Vue d'Ensemble ✔</li>
+                      <li>• Gestion Élèves ✔</li>
+                      <li>• Notes & Bulletins ✔</li>
+                      <li>• Cours & Matières ✔</li>
+                      <li>• Paiements & Frais ✔</li>
+                      <li>• Droits d'Accès ✔</li>
+                    </ul>
+                  </div>
+
+                  <div className="flex gap-1 justify-end pt-1">
                     <button type="button" onClick={() => setShowAdminForm(false)} className="text-gray-400 p-1">Annuler</button>
-                    <button type="submit" className="text-blue-400 font-bold p-1">Créer</button>
+                    <button type="submit" className="text-amber-400 font-bold p-1 hover:text-amber-300">Créer</button>
                   </div>
                 </form>
               )}
