@@ -1893,6 +1893,7 @@ export default function App() {
 
           <StudentPortal 
             activeStudent={activeStudent}
+            etudiants={etudiants}
             notes={filteredNotes}
             cours={filteredCours}
             semestres={filteredSemestres}

@@ -4,6 +4,7 @@ import { GraduationCap, Award, FileText, Lock, ShieldAlert, CheckCircle, Downloa
 
 interface StudentPortalProps {
   activeStudent: Etudiant;
+  etudiants?: Etudiant[];
   notes: Note[];
   cours: Cours[];
   semestres: Semestre[];
@@ -23,6 +24,7 @@ interface StudentPortalProps {
 
 export default function StudentPortal({ 
   activeStudent, 
+  etudiants = [],
   notes, 
   cours, 
   semestres, 
@@ -159,24 +161,42 @@ export default function StudentPortal({
     return "Insuffisant";
   };
 
+  const calculateGPAForStudent = (studentId: number, semId: number) => {
+    const sGrades = notes.filter(n => Number(n.etudiant_id) === Number(studentId) && Number(n.semestre_id) === Number(semId));
+    if (sGrades.length === 0) return 0;
+    let sumVal = 0;
+    let sumCredits = 0;
+    sGrades.forEach(g => {
+      sumVal += Number(g.note) * Number(g.credits);
+      sumCredits += Number(g.credits);
+    });
+    return sumCredits > 0 ? (sumVal / sumCredits) : 0;
+  };
+
   // Dynamic ranking calculation relative to students in the same level/class
   const getStudentRank = () => {
-    const classmates = classes.find(c => c.id === activeStudent.classe_id)
-      ? classes.find(c => c.id === activeStudent.classe_id)?.id
-      : null;
-    
-    if (!classmates) return { rank: 1, total: 1 };
+    if (!etudiants || etudiants.length === 0) return { rank: 1, total: 1 };
 
-    // Get GPAs for everyone in active class
-    const classStudents = classes.find(c => c.id === activeStudent.classe_id) 
-      ? classes.find(c => c.id === activeStudent.classe_id)
-      : null;
+    // Find classmates belonging to the same class as activeStudent
+    const classmates = etudiants.filter(e => Number(e.classe_id) === Number(activeStudent.classe_id));
+    if (classmates.length === 0) return { rank: 1, total: 1 };
 
-    // Filter students belonging to this class
-    const studentList = classes ? classes : []; // fallback
+    // Compute GPA for all classmates in this semester
+    const rankList = classmates.map(c => {
+      if (Number(c.id) === Number(activeStudent.id)) {
+        return { id: c.id, gpa: currentAverage };
+      }
+      return {
+        id: c.id,
+        gpa: calculateGPAForStudent(c.id, selectedSemestreId)
+      };
+    }).sort((a, b) => b.gpa - a.gpa);
 
-    // Filter overall average
-    return { rank: 1, total: 3 };
+    const position = rankList.findIndex(item => Number(item.id) === Number(activeStudent.id));
+    return {
+      rank: position !== -1 ? position + 1 : 1,
+      total: classmates.length
+    };
   };
 
   const handlePrint = () => {
@@ -732,12 +752,28 @@ export default function StudentPortal({
                 })()}
 
                 {/* Score summary */}
-                {studentGrades.length > 0 && (
-                  <div className="bg-slate-900 text-slate-100 p-5 flex justify-between items-center text-xs font-bold leading-none shrink-0 rounded-b-xl">
-                    <span>MOYENNE PONDÉRÉE DU TRIMESTRE :</span>
-                    <span className="text-base text-blue-400 font-extrabold">{currentAverage.toFixed(2)} / 20</span>
-                  </div>
-                )}
+                {studentGrades.length > 0 && (() => {
+                  const { rank, total } = getStudentRank();
+                  return (
+                    <div className="bg-slate-900 text-slate-100 p-5 flex flex-col sm:flex-row justify-between items-center text-xs font-bold shrink-0 rounded-b-xl gap-3">
+                      <div className="flex items-center gap-2">
+                        <span>Période active :</span>
+                        <span className="text-amber-400 font-extrabold uppercase">{activeSem ? activeSem.nom_semestre : "Semestre"}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
+                        <div>
+                          <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Rang dans la classe</span>
+                          <span className="text-sm font-mono text-emerald-400 font-black">{rank === 1 ? '1er' : `${rank}ème`} / {total} {total > 1 ? 'élèves' : 'élève'}</span>
+                        </div>
+                        <div className="h-6 w-px bg-slate-800 hidden sm:block"></div>
+                        <div>
+                          <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Moyenne Pondérée</span>
+                          <span className="text-base text-blue-400 font-extrabold">{currentAverage.toFixed(2)} / 20</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -960,25 +996,34 @@ export default function StudentPortal({
                   })()}
 
                   {/* Results summarisations */}
-                  <div className="mt-6 border-t-2 border-slate-900 pt-5 flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 space-y-2 border border-dashed border-gray-300 p-4 rounded-xl text-xs font-semibold">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Moyenne trimestrielle :</span>
-                        <span className="text-slate-950 font-black">{currentAverage > 0 ? `${currentAverage.toFixed(2)}/20` : "Pas de moyenne"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Validation administrative :</span>
-                        <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${currentAverage >= 10 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
-                          {currentAverage >= 10 ? 'Admis' : 'Ajourné'}
-                        </span>
-                      </div>
-                    </div>
+                  {(() => {
+                    const { rank, total } = getStudentRank();
+                    return (
+                      <div className="mt-6 border-t-2 border-slate-900 pt-5 flex flex-col md:flex-row gap-4">
+                        <div className="flex-1 space-y-2 border border-dashed border-gray-300 p-4 rounded-xl text-xs font-semibold">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Moyenne trimestrielle :</span>
+                            <span className="text-slate-950 font-black">{currentAverage > 0 ? `${currentAverage.toFixed(2)}/20` : "Pas de moyenne"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Rang de la promotion :</span>
+                            <span className="text-emerald-700 font-extrabold">{currentAverage > 0 ? `${rank === 1 ? '1er' : `${rank}ème`} sur ${total}` : "-"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Validation administrative :</span>
+                            <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${currentAverage >= 10 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
+                              {currentAverage >= 10 ? 'Admis' : 'Ajourné'}
+                            </span>
+                          </div>
+                        </div>
 
-                    <div className="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                      <span className="text-[10px] uppercase font-bold text-gray-400">Mention Scolaire</span>
-                      <strong className="text-lg text-slate-900 uppercase mt-1">{currentAverage > 0 ? getMention(currentAverage) : "-"}</strong>
-                    </div>
-                  </div>
+                        <div className="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                          <span className="text-[10px] uppercase font-bold text-gray-400">Mention Scolaire</span>
+                          <strong className="text-lg text-slate-900 uppercase mt-1">{currentAverage > 0 ? getMention(currentAverage) : "-"}</strong>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Stamp space */}
                   <div className="mt-8 pt-8 border-t border-slate-200 grid grid-cols-2 text-center text-xs">
