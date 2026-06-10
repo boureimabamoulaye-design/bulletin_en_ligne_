@@ -101,9 +101,9 @@ export default function App() {
 
   // Login credentials states
   const [loginRole, setLoginRole] = useState<'admin' | 'student'>('admin');
-  const [usernameInput, setUsernameInput] = useState('admin@ecole.com'); // Prefilled for easy dev testing
-  const [passwordInput, setPasswordInput] = useState('admin123');
-  const [selectedFiliereId, setSelectedFiliereId] = useState<number>(1); // Default to first filiere to ensure easy experience
+  const [usernameInput, setUsernameInput] = useState(''); // Default empty as requested
+  const [passwordInput, setPasswordInput] = useState('');
+  const [selectedFiliereId, setSelectedFiliereId] = useState<number | "">(""); // Default empty
   const [loginError, setLoginError] = useState<string>('');
 
   React.useEffect(() => {
@@ -663,11 +663,18 @@ export default function App() {
       
       {/* 1. VISITOR / AUTHENTICATION LANDING SCREEN */}
       {userRole === 'guest' && (
-        <div className="flex-grow flex items-center justify-center p-4 md:p-8" id="guest-screen-parent">
-          <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-150 grid grid-cols-1 lg:grid-cols-12">
+        <div 
+          className="flex-grow flex items-center justify-center p-4 md:p-8 relative overflow-hidden bg-cover bg-center" 
+          id="guest-screen-parent"
+          style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80")' }}
+        >
+          {/* Subtle elegant dim overlay */}
+          <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-[3px]" id="guest-bg-overlay"></div>
+
+          <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-150 grid grid-cols-1 lg:grid-cols-12 relative z-10">
             
             {/* Informational banner left */}
-            <div className="lg:col-span-5 bg-gradient-to-br from-blue-900 via-blue-850 to-slate-900 p-8 md:p-12 text-slate-100 flex flex-col justify-between">
+            <div className="lg:col-span-12 xl:col-span-5 bg-gradient-to-br from-blue-900 via-blue-850 to-slate-900 p-8 md:p-12 text-slate-100 flex flex-col justify-between lg:hidden xl:flex">
               <div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white rounded-xl text-blue-900 font-extrabold text-xl flex items-center justify-center shadow">GS</div>
@@ -677,8 +684,8 @@ export default function App() {
                 <div className="mt-8 space-y-4">
                   <h2 className="text-xl md:text-2xl font-black leading-tight">Système unifié de Gestion Académique</h2>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Une solution professionnelle développée selon un cahier des charges strict : 
-                    PHP procédural sécurisé, stockage relationnel optimisé incluant des semestres paramétrables et des autorisations d'accès partagées.
+                     Une solution professionnelle développée selon un cahier des charges strict : 
+                     PHP procédural sécurisé, stockage relationnel optimisé incluant des semestres paramétrables et des autorisations d'accès partagées.
                   </p>
                 </div>
               </div>
@@ -690,13 +697,13 @@ export default function App() {
                   <span className="text-[11px] font-bold uppercase tracking-wider">Explorateur PHP intégré</span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Consultez à tout moment le code source PHP et SQL natif correspondant à chaque écran pour votre hébergement final ! Les fichiers réels sont disponibles sous <code className="bg-slate-950 px-1 py-0.5 rounded text-white text-[10px]">/school_php</code>.
+                   Consultez à tout moment le code source PHP et SQL natif correspondant à chaque écran pour votre hébergement final ! Les fichiers réels sont disponibles sous <code className="bg-slate-950 px-1 py-0.5 rounded text-white text-[10px]">/school_php</code>.
                 </p>
               </div>
             </div>
 
             {/* Standard Login right */}
-            <div className="lg:col-span-7 p-8 md:p-12 flex flex-col justify-center">
+            <div className="col-span-12 xl:col-span-7 p-8 md:p-12 flex flex-col justify-center">
               <h3 className="text-xl font-black text-gray-900 tracking-tight">Portail de Connexion</h3>
               <p className="text-xs text-slate-500 mt-1">Saisissez vos identifiants pour rejoindre l'établissement scolaire.</p>
 
@@ -715,7 +722,7 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-2">
                     <button 
                       type="button"
-                      onClick={() => { setLoginRole('student'); setUsernameInput('ETU20250001'); setPasswordInput('student123'); setSelectedFiliereId(1); }}
+                      onClick={() => { setLoginRole('student'); setUsernameInput(''); setPasswordInput(''); setSelectedFiliereId(''); }}
                       className={`py-3 text-center rounded-xl border font-bold transition flex items-center justify-center gap-2 ${loginRole === 'student' ? 'border-blue-600 bg-blue-50 text-blue-800' : 'border-gray-200 text-slate-705 hover:bg-gray-100'}`}
                     >
                       <Users className="w-4 h-4" />
@@ -723,7 +730,7 @@ export default function App() {
                     </button>
                     <button 
                       type="button"
-                      onClick={() => { setLoginRole('admin'); setUsernameInput('admin@ecole.com'); setPasswordInput('admin123'); }}
+                      onClick={() => { setLoginRole('admin'); setUsernameInput(''); setPasswordInput(''); }}
                       className={`py-3 text-center rounded-xl border font-bold transition flex items-center justify-center gap-2 ${loginRole === 'admin' ? 'border-indigo-600 bg-indigo-50/50 text-indigo-805' : 'border-gray-200 text-slate-705 hover:bg-gray-100'}`}
                     >
                       <Key className="w-4 h-4" />
@@ -741,7 +748,7 @@ export default function App() {
                     </label>
                     <select
                       value={selectedFiliereId}
-                      onChange={e => setSelectedFiliereId(Number(e.target.value))}
+                      onChange={e => setSelectedFiliereId(e.target.value === "" ? "" : Number(e.target.value))}
                       className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white text-xs font-bold"
                       required
                     >
@@ -779,7 +786,7 @@ export default function App() {
                     type="password" 
                     value={passwordInput}
                     onChange={e => setPasswordInput(e.target.value)}
-                    placeholder="Enter security password"
+                    placeholder="Saisir votre mot de passe"
                     className="form-control.text-sm w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
                     required
                   />
@@ -792,31 +799,6 @@ export default function App() {
                   Confirmer et se connecter
                 </button>
               </form>
-
-              {/* Developer Assist presets */}
-              <div className="mt-8 pt-6 border-t border-gray-150">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                  Gabarits Rapides de Démonstration (Bac à sable)
-                </span>
-                
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                  <button 
-                    onClick={() => handleQuickLogin('admin', 'admin@ecole.com', 'admin123')}
-                    className="p-2 border rounded-lg hover:bg-blue-50 text-left transition flex justify-between items-center bg-gray-50 text-slate-700"
-                  >
-                    <span>🔑 Direct: <strong>Admin général</strong></span>
-                    <span className="text-[10px] text-gray-400 bg-white border px-1.5 rounded font-mono">admin123</span>
-                  </button>
-                  <button 
-                    onClick={() => handleQuickLogin('student', 'ETU20250001', 'student123')}
-                    className="p-2 border rounded-lg hover:bg-blue-50 text-left transition flex justify-between items-center bg-gray-50 text-slate-700"
-                  >
-                    <span>🎓 Direct: <strong>Élève (Philippe)</strong></span>
-                    <span className="text-[10px] text-gray-400 bg-white border px-1.5 rounded font-mono">student123</span>
-                  </button>
-                </div>
-              </div>
 
             </div>
 
