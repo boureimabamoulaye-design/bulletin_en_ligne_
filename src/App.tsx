@@ -764,8 +764,17 @@ export default function App() {
 
             {/* Standard Login right */}
             <div className="col-span-12 xl:col-span-7 p-8 md:p-12 flex flex-col justify-center">
-              <h3 className="text-xl font-black text-gray-900 tracking-tight">Portail de Connexion</h3>
-              <p className="text-xs text-slate-500 mt-1">Saisissez vos identifiants pour rejoindre l'établissement scolaire.</p>
+              {/* Grand Logo de l'Université */}
+              <div className="flex flex-col items-center mb-6 text-center" id="university-grand-logo">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-900 via-blue-750 to-indigo-800 rounded-full flex items-center justify-center shadow-xl mb-3 border-4 border-slate-100 ring-2 ring-blue-900/10 hover:scale-105 transition-transform duration-300">
+                  <GraduationCap className="w-12 h-12 text-white" />
+                </div>
+                <div className="font-black text-xs text-blue-900 tracking-widest uppercase">Université des Sciences & Technologies</div>
+                <div className="text-[9px] text-slate-400 font-semibold tracking-wider mt-1">Savoir • Innovation • Excellence</div>
+              </div>
+
+              <h3 className="text-xl font-black text-gray-900 tracking-tight text-center">Portail de Connexion</h3>
+              <p className="text-xs text-slate-500 mt-1 text-center">Saisissez vos identifiants pour rejoindre l'établissement scolaire.</p>
 
               {loginError && (
                 <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-start gap-2 text-xs font-semibold" id="login-error-banner">
