@@ -30,8 +30,8 @@ import StudentPortal from './components/StudentPortal';
 // Icons
 import { 
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
-  BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info, Lightbulb,
-  ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil
+  BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info,
+  ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon
 } from 'lucide-react';
 
 export default function App() {
@@ -134,9 +134,21 @@ export default function App() {
     return localStorage.getItem('school_global_annee_scolaire') || "2025-2026";
   });
 
+  const [adminTheme, setAdminTheme] = useState<'sombre-or' | 'clair-pro'>(() => {
+    return (localStorage.getItem('school_admin_theme') as 'sombre-or' | 'clair-pro') || 'sombre-or';
+  });
+
   React.useEffect(() => {
     localStorage.setItem('school_global_annee_scolaire', globalAnneeScolaire);
   }, [globalAnneeScolaire]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_admin_theme', adminTheme);
+  }, [adminTheme]);
+
+  const toggleAdminTheme = () => {
+    setAdminTheme(prev => prev === 'sombre-or' ? 'clair-pro' : 'sombre-or');
+  };
 
   // Filtered lists based on globally selected academic year
   const filteredSemestres = React.useMemo(() => {
@@ -869,6 +881,8 @@ export default function App() {
                 </button>
               </form>
 
+
+
             </div>
 
           </div>
@@ -877,7 +891,14 @@ export default function App() {
 
       {/* 2. ADMIN PANEL CONTAINER WRAPPER */}
       {userRole === 'admin' && (
-        <div className={`flex-grow flex pt-[60px] lg:pt-0 ${(adminActiveTab !== 'dashboard' || showCodeExplorer) ? 'flex-col bg-slate-50' : 'flex-col lg:flex-row'}`} id="admin-workspace-layer">
+        <div 
+          className={`flex-grow flex pt-[60px] lg:pt-0 transition-colors duration-300 ${
+            (adminActiveTab !== 'dashboard' || showCodeExplorer) 
+              ? `flex-col ${adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'}` 
+              : `flex-col lg:flex-row ${adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'}`
+          }`} 
+          id="admin-workspace-layer"
+        >
           
           {/* Main Lateral Sidebar as requested ("Menu latéral") */}
           {(adminActiveTab === 'dashboard' && !showCodeExplorer) && (
@@ -885,12 +906,18 @@ export default function App() {
             <div>
               {/* Brand icon */}
               <div className="logo-area flex items-center gap-3 border-b border-slate-800 pb-4 mb-6" id="dashboard-brand-header">
-                <div className="w-11 h-11 bg-gradient-to-br from-blue-650 to-indigo-750 rounded-xl flex items-center justify-center shadow-lg border border-slate-750 shrink-0">
-                  <GraduationCap className="w-6 h-6 text-white" />
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-lg border shrink-0 transition-all ${
+                  adminTheme === 'sombre-or' 
+                    ? 'bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400/40 shadow-amber-500/10' 
+                    : 'bg-gradient-to-br from-blue-650 to-indigo-750 border-slate-750'
+                }`}>
+                  <GraduationCap className={`w-6 h-6 ${adminTheme === 'sombre-or' ? 'text-slate-950' : 'text-white'}`} />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-black text-xs tracking-wider text-slate-100 uppercase truncate">Université des Sciences</h3>
-                  <span className="text-[9px] text-blue-400 font-bold block uppercase tracking-wide leading-none mt-0.5">Administration</span>
+                  <span className={`text-[9px] font-bold block uppercase tracking-wide leading-none mt-0.5 ${
+                    adminTheme === 'sombre-or' ? 'text-amber-400 animate-pulse' : 'text-blue-400'
+                  }`}>Administration</span>
                 </div>
               </div>
 
@@ -900,7 +927,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('dashboard'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'dashboard' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'dashboard' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <LayoutDashboard className="w-4 h-4" />
                       Vue d'Ensemble
@@ -909,7 +942,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('etudiants'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'etudiants' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'etudiants' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <Users className="w-4 h-4" />
                       Gestion Étudiants
@@ -918,7 +957,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('filieres'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'filieres' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'filieres' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <GraduationCap className="w-4 h-4" />
                       Filières Académiques
@@ -927,7 +972,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('semestres'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'semestres' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'semestres' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <Calendar className="w-4 h-4" />
                       Semestres d'Études
@@ -936,7 +987,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('cours'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'cours' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'cours' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <FileText className="w-4 h-4" />
                       Supports de Cours
@@ -945,7 +1002,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('notes'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'notes' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'notes' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <Award className="w-4 h-4" />
                       Saisie des Notes
@@ -954,7 +1017,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('bulletins'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'bulletins' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'bulletins' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <BookOpen className="w-4 h-4" />
                       Génération Bulletins
@@ -963,7 +1032,13 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('autorisations'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'autorisations' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'autorisations' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
                       <ShieldCheck className="w-4 h-4" />
                       Autorisations d'Accès
@@ -972,18 +1047,30 @@ export default function App() {
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('paiements'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'paiements' && !showCodeExplorer ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'paiements' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
                     >
-                      <CreditCard className="w-4 h-4 text-emerald-400" />
+                      <CreditCard className="w-4 h-4" />
                       Gestion des Paiements
                     </button>
                   </li>
                   <li>
                     <button 
                       onClick={() => { setAdminActiveTab('corbeille'); setShowCodeExplorer(false); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition ${adminActiveTab === 'corbeille' && !showCodeExplorer ? 'bg-red-650 text-white font-bold' : 'text-slate-400 hover:bg-slate-800 hover:text-red-400'}`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'corbeille' && !showCodeExplorer 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-red-650 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-red-400'
+                      }`}
                     >
-                      <Trash2 className="w-4 h-4 text-rose-500" />
+                      <Trash2 className="w-4 h-4" />
                       Corbeille ({trash.length})
                     </button>
                   </li>
@@ -1120,22 +1207,32 @@ export default function App() {
               <div className="flex-grow p-6 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto select-none animate-fade-in space-y-6 pb-8 md:pb-8">
                 
                 {/* Custom minimalist path header with back button */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-gray-150 rounded-xl p-5 shadow-sm">
+                <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-xl p-5 border transition-all duration-300 shadow-sm ${
+                  adminTheme === 'sombre-or' 
+                    ? 'bg-slate-900 border-amber-500/20 text-white shadow-amber-950/20 shadow-md' 
+                    : 'bg-white border-gray-150 shadow-sm'
+                }`}>
                   <div className="flex items-center gap-4">
                     <button 
                       onClick={() => {
                         setAdminActiveTab('dashboard');
                         setShowCodeExplorer(false);
                       }} 
-                      className="group flex items-center gap-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-md whitespace-nowrap shrink-0"
+                      className={`group flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition shadow-md whitespace-nowrap shrink-0 ${
+                        adminTheme === 'sombre-or'
+                          ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-amber-500/10'
+                          : 'bg-slate-900 hover:bg-slate-800 text-white'
+                      }`}
                       id="btn-back-to-dashboard"
                     >
                       <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                       <span>Retour Tableau de Bord</span>
                     </button>
-                    <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
+                    <div className={`h-8 w-px hidden sm:block ${adminTheme === 'sombre-or' ? 'bg-amber-500/15' : 'bg-gray-200'}`}></div>
                     <div>
-                      <h2 className="text-sm font-black text-slate-905 tracking-tight uppercase">
+                      <h2 className={`text-sm font-black tracking-tight uppercase ${
+                        adminTheme === 'sombre-or' ? 'text-amber-400' : 'text-slate-905'
+                      }`}>
                         {showCodeExplorer ? "Explorateur de Code PHP & SQL Natifs" : (
                           <>
                             {adminActiveTab === 'etudiants' && "Inscriptions & Gestion Élèves"}
@@ -1150,7 +1247,9 @@ export default function App() {
                           </>
                         )}
                       </h2>
-                      <p className="text-[10px] text-gray-500 font-semibold mt-0.5">
+                      <p className={`text-[10px] font-semibold mt-0.5 ${
+                        adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-500'
+                      }`}>
                         {showCodeExplorer ? "Aperçu de la structure et du code source exact des fichiers PHP et SQL réels." : (
                           <>
                             {adminActiveTab === 'etudiants' && "Registre de gestion des élèves, classes et parcours."}
@@ -1169,15 +1268,41 @@ export default function App() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
+                    {/* THÈME TOGGLE SWITCH */}
+                    <button
+                      type="button"
+                      onClick={toggleAdminTheme}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all duration-200 outline-none active:scale-95 cursor-pointer shrink-0 ${
+                        adminTheme === 'sombre-or'
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20 shadow-sm shadow-amber-950/20'
+                          : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                      }`}
+                      title={adminTheme === 'sombre-or' ? "Activer le Thème Clair Professionnel" : "Activer le Thème Sombre & Or"}
+                    >
+                      {adminTheme === 'sombre-or' ? (
+                        <>
+                          <Moon className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                          <span>Mode Sombre & Or</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sun className="w-3.5 h-3.5 text-amber-500" />
+                          <span>Mode Clair Pro</span>
+                        </>
+                      )}
+                    </button>
+
                     {/* SÉLECTEUR GLOBAL D'ANNÉE ACADÉMIQUE */}
-                    <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 space-x-0.5 shrink-0">
+                    <div className={`flex items-center border rounded-xl p-0.5 space-x-0.5 shrink-0 transition-opacity duration-300 ${
+                      adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-100 border-slate-200'
+                    }`}>
                       <button
                         type="button"
                         onClick={() => setGlobalAnneeScolaire("2024-2025")}
                         className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                           globalAnneeScolaire === "2024-2025"
-                            ? "bg-blue-600 text-white shadow"
-                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                            ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                            : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                         }`}
                         title="Année Précédente"
                       >
@@ -1188,8 +1313,8 @@ export default function App() {
                         onClick={() => setGlobalAnneeScolaire("2025-2026")}
                         className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                           globalAnneeScolaire === "2025-2026"
-                            ? "bg-blue-600 text-white shadow"
-                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                            ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                            : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                         }`}
                         title="Année Courante (Active)"
                       >
@@ -1200,8 +1325,8 @@ export default function App() {
                         onClick={() => setGlobalAnneeScolaire("2026-2027")}
                         className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                           globalAnneeScolaire === "2026-2027"
-                            ? "bg-blue-600 text-white shadow"
-                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                            ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                            : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                         }`}
                         title="Année Suivante"
                       >
@@ -1212,46 +1337,66 @@ export default function App() {
                     {/* Global Filters on Active Deep Workspace */}
                     {!showCodeExplorer && adminActiveTab !== 'dashboard' && (
                       <>
-                        <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
-                          <span className="font-extrabold uppercase text-slate-400 tracking-wider">Filière active :</span>
+                        <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
+                          adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <span className={`font-extrabold uppercase tracking-wider ${
+                            adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
+                          }`}>Filière active :</span>
                           <select
                             value={globalFiliereId}
                             onChange={e => setGlobalFiliereId(Number(e.target.value))}
-                            className="bg-transparent border-none text-xs font-bold text-blue-900 outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[160px]"
+                            className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[160px] ${
+                              adminTheme === 'sombre-or' ? 'text-white' : 'text-blue-900'
+                            }`}
                           >
-                            <option value={0}>Toutes les filières</option>
+                            <option value={0} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>Toutes les filières</option>
                             {filieres.map(f => (
-                              <option key={f.id} value={f.id}>{f.nom_filiere}</option>
+                              <option key={f.id} value={f.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{f.nom_filiere}</option>
                             ))}
                           </select>
                         </div>
 
-                        <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
-                          <span className="font-extrabold uppercase text-slate-400 tracking-wider">Période :</span>
+                        <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
+                          adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <span className={`font-extrabold uppercase tracking-wider ${
+                            adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
+                          }`}>Période :</span>
                           <select
                             value={globalSemestreId}
                             onChange={e => setGlobalSemestreId(Number(e.target.value))}
-                            className="bg-transparent border-none text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-0 p-0"
+                            className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 ${
+                              adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-800'
+                            }`}
                           >
-                            <option value={0}>Toutes les périodes</option>
+                            <option value={0} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>Toutes les périodes</option>
                             {filteredSemestres
                               .filter(s => !globalFiliereId || Number(s.filiere_id) === Number(globalFiliereId))
                               .map(s => (
-                                <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                                <option key={s.id} value={s.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{s.nom_semestre}</option>
                               ))}
                           </select>
                         </div>
                       </>
                     )}
 
-                    <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg font-semibold tracking-wide">
+                    <span className={`text-[10px] uppercase font-bold border px-3 py-1.5 rounded-lg font-semibold tracking-wide ${
+                      adminTheme === 'sombre-or' 
+                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
+                        : 'bg-slate-100 border-slate-200 text-slate-400'
+                    }`}>
                       Enregistrement session : Actif ✔
                     </span>
                   </div>
                 </div>
 
                 {/* Sub-container wrapper for the actual active component content */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <div className={`rounded-xl border p-6 shadow-sm transition-all duration-300 ${
+                  adminTheme === 'sombre-or' 
+                    ? 'bg-slate-900 border-amber-500/15 text-slate-100 shadow-amber-950/10 shadow-md' 
+                    : 'bg-white border-gray-200 shadow-sm'
+                }`}>
                   {adminActiveTab === 'etudiants' && (
                         <EtudiantsTab 
                           etudiants={etudiants}
@@ -1393,23 +1538,57 @@ export default function App() {
             ) : (
               // Standard layout for Dashboard: lateral navigation sidebar + general stats
               <>
-                <header className="bg-white border-b border-gray-150 px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+                <header className={`border-b px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 transition-all duration-300 ${
+                  adminTheme === 'sombre-or' 
+                    ? 'bg-slate-900 border-amber-500/20 text-white shadow-amber-950/20 shadow-sm' 
+                    : 'bg-white border-gray-150 shadow-sm'
+                }`}>
                   <div>
-                    <h2 className="text-lg font-black text-gray-900 tracking-tight">
+                    <h2 className={`text-lg font-black tracking-tight ${
+                      adminTheme === 'sombre-or' ? 'text-amber-400' : 'text-gray-900'
+                    }`}>
                       Tableau de Bord Administratif
                     </h2>
-                    <p className="text-xs text-gray-500 mt-1">Plateforme moderne de gestion scolaire unifiée.</p>
+                    <p className={`text-xs mt-1 ${
+                      adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-500'
+                    }`}>Plateforme moderne de gestion scolaire unifiée.</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
+                    {/* THÈME TOGGLE SWITCH */}
+                    <button
+                      type="button"
+                      onClick={toggleAdminTheme}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all duration-200 outline-none active:scale-95 cursor-pointer shrink-0 ${
+                        adminTheme === 'sombre-or'
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20 shadow-sm shadow-amber-950/20'
+                          : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                      }`}
+                      title={adminTheme === 'sombre-or' ? "Activer le Thème Clair Professionnel" : "Activer le Thème Sombre & Or"}
+                    >
+                      {adminTheme === 'sombre-or' ? (
+                        <>
+                          <Moon className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                          <span>Mode Sombre & Or</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sun className="w-3.5 h-3.5 text-amber-500" />
+                          <span>Mode Clair Pro</span>
+                        </>
+                      )}
+                    </button>
+
                     {/* SÉLECTEUR GLOBAL D'ANNÉE ACADÉMIQUE */}
-                    <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 space-x-0.5 shrink-0">
+                    <div className={`flex items-center border rounded-xl p-0.5 space-x-0.5 shrink-0 transition-opacity duration-300 ${
+                      adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-100 border-slate-200'
+                    }`}>
                       <button
                         type="button"
                         onClick={() => setGlobalAnneeScolaire("2024-2025")}
                         className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                           globalAnneeScolaire === "2024-2025"
-                            ? "bg-blue-600 text-white shadow"
-                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                            ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                            : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                         }`}
                         title="Année Précédente"
                       >
@@ -1420,8 +1599,8 @@ export default function App() {
                         onClick={() => setGlobalAnneeScolaire("2025-2026")}
                         className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                           globalAnneeScolaire === "2025-2026"
-                            ? "bg-blue-600 text-white shadow"
-                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                            ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                            : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                         }`}
                         title="Année Courante (Active)"
                       >
@@ -1432,8 +1611,8 @@ export default function App() {
                         onClick={() => setGlobalAnneeScolaire("2026-2027")}
                         className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                           globalAnneeScolaire === "2026-2027"
-                            ? "bg-blue-600 text-white shadow"
-                            : "text-slate-650 hover:text-slate-900 hover:bg-white/50"
+                            ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                            : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                         }`}
                         title="Année Suivante"
                       >
@@ -1441,34 +1620,50 @@ export default function App() {
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
-                      <span className="font-extrabold uppercase text-slate-400 tracking-wider">Filière active :</span>
+                    <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
+                      adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <span className={`font-extrabold uppercase tracking-wider ${
+                        adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
+                      }`}>Filière active :</span>
                       <select
                         value={globalFiliereId}
                         onChange={e => setGlobalFiliereId(Number(e.target.value))}
-                        className="bg-transparent border-none text-xs font-bold text-blue-900 outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[160px]"
+                        className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[160px] ${
+                          adminTheme === 'sombre-or' ? 'text-white' : 'text-blue-900'
+                        }`}
                       >
-                        <option value={0}>Toutes les filières</option>
+                        <option value={0} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>Toutes les filières</option>
                         {filieres.map(f => (
-                          <option key={f.id} value={f.id}>{f.nom_filiere}</option>
+                          <option key={f.id} value={f.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{f.nom_filiere}</option>
                         ))}
                       </select>
                     </div>
 
-                    <div className="flex items-center gap-1 text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-1.5 px-3">
-                      <span className="font-extrabold uppercase text-slate-400 tracking-wider">Période :</span>
+                    <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
+                      adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <span className={`font-extrabold uppercase tracking-wider ${
+                        adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
+                      }`}>Période :</span>
                       <select
                         value={globalSemestreId}
                         onChange={e => setGlobalSemestreId(Number(e.target.value))}
-                        className="bg-transparent border-none text-xs font-bold text-slate-800 outline-none cursor-pointer focus:ring-0 p-0"
+                        className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 ${
+                          adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-800'
+                        }`}
                       >
                         {filteredSemestres.map(s => (
-                          <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                          <option key={s.id} value={s.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{s.nom_semestre}</option>
                         ))}
                       </select>
                     </div>
 
-                    <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-105 border border-slate-200 px-3 py-1 rounded-sm font-semibold tracking-wide">
+                    <span className={`text-[10px] uppercase font-bold border px-3 py-1 rounded-sm font-semibold tracking-wide ${
+                      adminTheme === 'sombre-or' 
+                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
+                        : 'bg-slate-105 border-slate-200 text-slate-450'
+                    }`}>
                       Enregistrement session : Actif ✔
                     </span>
                   </div>
@@ -1485,6 +1680,7 @@ export default function App() {
                     onNavigate={(tab) => setAdminActiveTab(tab)}
                     globalFiliereId={globalFiliereId}
                     globalSemestreId={globalSemestreId}
+                    theme={adminTheme}
                   />
                 </div>
               </>
