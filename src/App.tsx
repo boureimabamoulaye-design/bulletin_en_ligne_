@@ -672,7 +672,7 @@ export default function App() {
         setActiveAdminName(foundAdmin.nom);
         setAdminActiveTab('dashboard');
       } else {
-        setLoginError("Adresse E-mail ou Mot de passe Administrateur incorrect. Saisissez admin@ecole.com et admin123 pour tester.");
+        setLoginError("Adresse E-mail ou Mot de passe Administrateur incorrect.");
       }
     } else {
       const foundStudent = etudiants.find(e => e.matricule.toUpperCase() === usernameInput.toUpperCase() && e.mot_de_passe === passwordInput);
@@ -884,11 +884,13 @@ export default function App() {
             <aside className="hidden lg:flex w-full lg:w-64 bg-slate-900 text-slate-100 shrink-0 flex-col justify-between border-r border-slate-800 p-4">
             <div>
               {/* Brand icon */}
-              <div className="logo-area flex items-center gap-3 border-b border-slate-800 pb-4 mb-6">
-                <div className="w-9 h-9 bg-white text-slate-900 rounded-lg flex items-center justify-center font-black text-lg">GS</div>
-                <div>
-                  <h3 className="font-extrabold text-sm leading-tight text-white">Scolaire Direction</h3>
-                  <span className="text-[10px] text-gray-400">Rôle : Administration</span>
+              <div className="logo-area flex items-center gap-3 border-b border-slate-800 pb-4 mb-6" id="dashboard-brand-header">
+                <div className="w-11 h-11 bg-gradient-to-br from-blue-650 to-indigo-750 rounded-xl flex items-center justify-center shadow-lg border border-slate-750 shrink-0">
+                  <GraduationCap className="w-6 h-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-black text-xs tracking-wider text-slate-100 uppercase truncate">Université des Sciences</h3>
+                  <span className="text-[9px] text-blue-400 font-bold block uppercase tracking-wide leading-none mt-0.5">Administration</span>
                 </div>
               </div>
 
@@ -1260,6 +1262,9 @@ export default function App() {
                           onDeleteEtudiant={handleDeleteEtudiant}
                           onAddPaiement={handleAddPaiement}
                           globalFiliereId={globalFiliereId}
+                          paiements={paiements}
+                          globalAnneeScolaire={globalAnneeScolaire}
+                          scolariteAnnuelle={scolariteAnnuelle}
                         />
                       )}
 

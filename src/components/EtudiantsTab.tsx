@@ -11,6 +11,9 @@ interface EtudiantsTabProps {
   onDeleteEtudiant: (id: number) => void;
   onAddPaiement?: (paiement: Omit<Paiement, 'id'>) => void;
   globalFiliereId?: number;
+  paiements?: Paiement[];
+  globalAnneeScolaire?: string;
+  scolariteAnnuelle?: number;
 }
 
 export default function EtudiantsTab({ 
@@ -21,7 +24,10 @@ export default function EtudiantsTab({
   onUpdateEtudiant, 
   onDeleteEtudiant, 
   onAddPaiement,
-  globalFiliereId 
+  globalFiliereId,
+  paiements = [],
+  globalAnneeScolaire = "2025-2026",
+  scolariteAnnuelle = 1500000
 }: EtudiantsTabProps) {
   const [search, setSearch] = useState("");
   const [filiereFilter, setFiliereFilter] = useState<number>(0);
@@ -789,61 +795,114 @@ export default function EtudiantsTab({
                 <th>Sexe</th>
                 <th>Filière de Base</th>
                 <th>Classe</th>
+                <th>Scolarité ({globalAnneeScolaire})</th>
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredEtudiants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center p-8 text-gray-500 text-sm">
+                  <td colSpan={7} className="text-center p-8 text-gray-500 text-sm">
                     Aucun étudiant ne correspond à vos filtres de recherche.
                   </td>
                 </tr>
               ) : (
-                filteredEtudiants.map(student => {
-                  const f = filieres.find(x => x.id === student.filiere_id);
-                  const c = classes.find(x => x.id === student.classe_id);
-                  return (
-                    <tr key={student.id} className="hover:bg-slate-50 transition">
-                      <td>
-                        <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded text-xs select-all">
-                          {student.matricule}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="font-semibold text-gray-950">{student.nom}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{student.prenom}</div>
-                      </td>
-                      <td className="text-xs text-gray-500">{student.sexe}</td>
-                      <td className="text-sm font-medium text-blue-700">{f ? f.nom_filiere : "Inconnue"}</td>
-                      <td>
-                        <span className="text-xs font-semibold bg-blue-50 text-blue-800 px-2.5 py-1 rounded">
-                          {c ? c.nom_classe : "L1"}
-                        </span>
-                      </td>
-                      <td className="text-right">
-                        <div className="inline-flex gap-2">
-                          <button 
-                            onClick={() => handleEdit(student)}
-                            className="p-1 px-2.5 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition text-xs flex items-center gap-1 font-semibold"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                            Mod
-                          </button>
-                          <button 
-                            onClick={() => {
-                              onDeleteEtudiant(student.id);
-                            }}
-                            className="p-1 px-2 bg-red-50 text-red-600 hover:bg-red-100 rounded transition text-xs flex items-center gap-1 font-semibold"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Suppr
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                (() => {
+                  const formatCFA = (val: number) => {
+                    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val).replace('XOF', 'CFA');
+                  };
+
+                  return filteredEtudiants.map(student => {
+                    const f = filieres.find(x => x.id === student.filiere_id);
+                    const c = classes.find(x => x.id === student.classe_id);
+                    
+                    // Calculate student payment stats for selected academic year
+                    const studentPayments = paiements.filter(p => p.etudiant_id === student.id && p.statut === 'Payé' && p.annee_scolaire === globalAnneeScolaire);
+                    const totalPaid = studentPayments.reduce((sum, p) => sum + p.montant, 0);
+                    const remainingDues = scolariteAnnuelle - totalPaid;
+                    const isLate = totalPaid < scolariteAnnuelle;
+
+                    return (
+                      <tr key={student.id} className="hover:bg-slate-50 transition">
+                        <td>
+                          <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded text-xs select-all">
+                            {student.matricule}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="font-semibold text-gray-950">{student.nom}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{student.prenom}</div>
+                        </td>
+                        <td className="text-xs text-gray-500">{student.sexe}</td>
+                        <td className="text-sm font-medium text-blue-700">{f ? f.nom_filiere : "Inconnue"}</td>
+                        <td>
+                          <span className="text-xs font-semibold bg-blue-50 text-blue-800 px-2.5 py-1 rounded">
+                            {c ? c.nom_classe : "L1"}
+                          </span>
+                        </td>
+                        <td>
+                          {isLate ? (
+                            <div className="flex flex-col gap-1 items-start">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition ${
+                                totalPaid > 0 
+                                  ? 'bg-amber-50 text-amber-800 border-amber-200 shadow-sm' 
+                                  : 'bg-rose-50 text-rose-800 border-rose-200 shadow-sm'
+                              }`}>
+                                <span className="relative flex h-2 w-2">
+                                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${totalPaid > 0 ? 'bg-amber-400' : 'bg-rose-400'}`}></span>
+                                  <span className={`relative inline-flex rounded-full h-2 w-2 ${totalPaid > 0 ? 'bg-amber-500' : 'bg-rose-500'}`}></span>
+                                </span>
+                                <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${totalPaid > 0 ? 'text-amber-600' : 'text-rose-600'}`} />
+                                <span className="uppercase tracking-wider">
+                                  {totalPaid > 0 ? "Retard (Partiel)" : "Retard (Impayé)"}
+                                </span>
+                              </span>
+                              <div className="text-[10px] text-slate-500 mt-0.5 font-semibold">
+                                Reste : <strong className="font-mono text-rose-600 font-extrabold">{formatCFA(remainingDues)}</strong>
+                              </div>
+                              <div className="text-[9px] text-slate-400 font-mono">
+                                Validé: {formatCFA(totalPaid)} / {formatCFA(scolariteAnnuelle)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-1 items-start">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-250 shadow-sm">
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                <span>RÉGLÉ</span>
+                              </span>
+                              <div className="text-[10px] text-slate-550 mt-0.5 font-semibold">
+                                Solde de scolarité apuré
+                              </div>
+                              <div className="text-[9px] text-slate-400 font-mono">
+                                {formatCFA(totalPaid)} / {formatCFA(scolariteAnnuelle)}
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                        <td className="text-right">
+                          <div className="inline-flex gap-2">
+                            <button 
+                              onClick={() => handleEdit(student)}
+                              className="p-1 px-2.5 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition text-xs flex items-center gap-1 font-semibold"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                              Mod
+                            </button>
+                            <button 
+                              onClick={() => {
+                                onDeleteEtudiant(student.id);
+                              }}
+                              className="p-1 px-2 bg-red-50 text-red-600 hover:bg-red-100 rounded transition text-xs flex items-center gap-1 font-semibold"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Suppr
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()
               )}
             </tbody>
           </table>
