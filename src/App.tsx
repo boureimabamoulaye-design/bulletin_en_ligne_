@@ -31,7 +31,7 @@ import StudentPortal from './components/StudentPortal';
 import { 
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
   BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info, Lightbulb,
-  ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2
+  ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil
 } from 'lucide-react';
 
 export default function App() {
@@ -119,6 +119,12 @@ export default function App() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminPass, setNewAdminPass] = useState("");
   const [showAdminForm, setShowAdminForm] = useState(false);
+
+  // Edit Admin states
+  const [editingAdminId, setEditingAdminId] = useState<number | null>(null);
+  const [editAdminNom, setEditAdminNom] = useState("");
+  const [editAdminEmail, setEditAdminEmail] = useState("");
+  const [editAdminPass, setEditAdminPass] = useState("");
 
   // Global filters for the Administrator workspace
   const [globalFiliereId, setGlobalFiliereId] = useState<number>(0);
@@ -587,7 +593,7 @@ export default function App() {
     e.preventDefault();
     if (!newAdminNom || !newAdminEmail || !newAdminPass) return;
     setAdminList([...adminList, {
-      id: adminList.length + 1,
+      id: adminList.length > 0 ? Math.max(...adminList.map(a => a.id)) + 1 : 1,
       nom: newAdminNom,
       email: newAdminEmail,
       mot_de_passe: newAdminPass
@@ -597,6 +603,60 @@ export default function App() {
     setNewAdminPass("");
     setShowAdminForm(false);
     alert("Compte Administrateur enregistré avec succès !");
+  };
+
+  const handleDeleteAdmin = (id: number) => {
+    const adminToDelete = adminList.find(a => a.id === id);
+    if (!adminToDelete) return;
+    
+    // Prevent deleting when it's the last admin
+    if (adminList.length <= 1) {
+      alert("Erreur : Impossible de supprimer le dernier administrateur. Il doit y avoir au moins un compte administrateur actif.");
+      return;
+    }
+
+    if (confirm(`Êtes-vous sûr de vouloir supprimer l'administrateur "${adminToDelete.nom}" ?`)) {
+      setAdminList(adminList.filter(a => a.id !== id));
+      // If deleting the currently logged-in admin, log them out
+      if (adminToDelete.nom === activeAdminName) {
+        handleLogout();
+        alert("Votre compte administrateur a été supprimé. Vous avez été déconnecté.");
+      } else {
+        alert("Administrateur supprimé avec succès !");
+      }
+    }
+  };
+
+  const handleUpdateAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAdminId || !editAdminNom || !editAdminEmail || !editAdminPass) return;
+    
+    setAdminList(adminList.map(a => a.id === editingAdminId ? {
+      ...a,
+      nom: editAdminNom,
+      email: editAdminEmail,
+      mot_de_passe: editAdminPass
+    } : a));
+    
+    // Update logged-in session name if editing own account
+    const oldAdmin = adminList.find(a => a.id === editingAdminId);
+    if (oldAdmin && oldAdmin.nom === activeAdminName) {
+      setActiveAdminName(editAdminNom);
+    }
+
+    setEditingAdminId(null);
+    setEditAdminNom("");
+    setEditAdminEmail("");
+    setEditAdminPass("");
+    alert("Compte Administrateur mis à jour avec succès !");
+  };
+
+  const startEditAdmin = (admin: Administrateur) => {
+    setEditingAdminId(admin.id);
+    setEditAdminNom(admin.nom);
+    setEditAdminEmail(admin.email);
+    setEditAdminPass(admin.mot_de_passe);
+    setShowAdminForm(false); // hide create form if open
   };
 
   // --- LOGIN VALIDATION ---
@@ -771,7 +831,7 @@ export default function App() {
                     type="text" 
                     value={usernameInput}
                     onChange={e => setUsernameInput(e.target.value)}
-                    placeholder={loginRole === 'admin' ? "Ex: admin@ecole.com" : "Ex: ETU20250001"}
+                    placeholder=""
                     className="form-control.text-sm w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
                     required
                   />
@@ -786,7 +846,7 @@ export default function App() {
                     type="password" 
                     value={passwordInput}
                     onChange={e => setPasswordInput(e.target.value)}
-                    placeholder="Saisir votre mot de passe"
+                    placeholder=""
                     className="form-control.text-sm w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
                     required
                   />
@@ -924,17 +984,72 @@ export default function App() {
             <div className="mt-8 border-t border-slate-800 pt-4">
               <span className="text-[10px] text-gray-500 uppercase block tracking-wider font-bold mb-2">Administrateurs :</span>
               <div className="flex flex-col gap-1 text-[11px] text-gray-400 mb-3">
-                {adminList.map(adm => (
-                  <div key={adm.id} className="flex justify-between items-center py-1">
-                    <span className="text-slate-200 truncate pr-2">👤 {adm.nom}</span>
-                    <span className="text-[9px] text-gray-500 truncate">{adm.email}</span>
-                  </div>
-                ))}
+                {adminList.map(adm => {
+                  if (editingAdminId === adm.id) {
+                    return (
+                      <form key={adm.id} onSubmit={handleUpdateAdmin} className="space-y-2 bg-slate-950 p-2 rounded-lg border border-blue-900 text-[10px] my-1">
+                        <div className="text-blue-400 font-bold uppercase text-[8px]">Modifier l'Admin</div>
+                        <input 
+                          type="text" 
+                          placeholder="Nom"
+                          value={editAdminNom}
+                          onChange={e => setEditAdminNom(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
+                          required
+                        />
+                        <input 
+                          type="email" 
+                          placeholder="Email"
+                          value={editAdminEmail}
+                          onChange={e => setEditAdminEmail(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
+                          required
+                        />
+                        <input 
+                          type="password" 
+                          placeholder="Mot de passe"
+                          value={editAdminPass}
+                          onChange={e => setEditAdminPass(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
+                          required
+                        />
+                        <div className="flex gap-1.5 justify-end text-[9px] pt-1">
+                          <button type="button" onClick={() => setEditingAdminId(null)} className="text-gray-400 hover:text-white">Annuler</button>
+                          <button type="submit" className="text-blue-400 font-bold hover:text-blue-300">Enregistrer</button>
+                        </div>
+                      </form>
+                    );
+                  }
+                  return (
+                    <div key={adm.id} className="flex justify-between items-center py-1 group/adm hover:bg-slate-850 px-1 rounded transition">
+                      <div className="flex flex-col min-w-0 pr-1">
+                        <span className="text-slate-200 truncate font-semibold">👤 {adm.nom}</span>
+                        <span className="text-[9px] text-gray-500 truncate">{adm.email}</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover/adm:opacity-100 transition">
+                        <button 
+                          onClick={() => startEditAdmin(adm)}
+                          className="p-1 text-slate-400 hover:text-blue-400 transition"
+                          title="Modifier"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAdmin(adm.id)}
+                          className="p-1 text-slate-400 hover:text-rose-500 transition"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {!showAdminForm ? (
                 <button 
-                  onClick={() => setShowAdminForm(true)}
+                  onClick={() => { setShowAdminForm(true); setEditingAdminId(null); }}
                   className="w-full text-center py-1 bg-slate-800 text-slate-200 rounded text-[10px] font-bold"
                 >
                   + Ajouter un Admin
