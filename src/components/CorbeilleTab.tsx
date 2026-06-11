@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TrashItem } from '../types';
-import { Trash2, RotateCcw, Search, Eye, AlertTriangle, ArrowUpDown } from 'lucide-react';
+import { Trash2, RotateCcw, Search, AlertTriangle, ArrowUpDown, X } from 'lucide-react';
 
 interface CorbeilleTabProps {
   trash: TrashItem[];
@@ -18,7 +18,7 @@ export default function CorbeilleTab({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);
-  const [activePreview, setActivePreview] = useState<TrashItem | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<TrashItem | null>(null);
 
   // Sorting
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
@@ -65,41 +65,13 @@ export default function CorbeilleTab({
         </div>
 
         {trash.length > 0 && (
-          <div className="relative">
-            {!showEmptyConfirm ? (
-              <button
-                onClick={() => setShowEmptyConfirm(true)}
-                className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition whitespace-nowrap shadow-sm"
-              >
-                <Trash2 className="w-4 h-4" />
-                Vider la corbeille ({trash.length})
-              </button>
-            ) : (
-              <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 shadow-lg flex flex-col gap-2 max-w-xs animate-fade-in">
-                <span className="text-[11px] text-rose-900 font-bold flex items-center gap-1">
-                  <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                  Cette action est définitive ! Confirmer ?
-                </span>
-                <div className="flex gap-2 justify-end">
-                  <button
-                    onClick={() => setShowEmptyConfirm(false)}
-                    className="px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-700 text-[10px] font-bold rounded border border-gray-200"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={() => {
-                      onEmptyTrash();
-                      setShowEmptyConfirm(false);
-                    }}
-                    className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold rounded"
-                  >
-                    Confirmer
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => setShowEmptyConfirm(true)}
+            className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition whitespace-nowrap shadow-sm"
+          >
+            <Trash2 className="w-4 h-4" />
+            Vider la corbeille ({trash.length})
+          </button>
         )}
       </div>
 
@@ -204,16 +176,6 @@ export default function CorbeilleTab({
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex justify-end gap-2">
-                              {/* Preview JSON button */}
-                              <button
-                                onClick={() => setActivePreview(activePreview?.id === item.id ? null : item)}
-                                className="p-1.5 hover:bg-slate-100 text-gray-600 hover:text-slate-900 rounded-lg transition"
-                                title="Voir les détails techniques"
-                                aria-label="Aperçu"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-
                               {/* Restore button */}
                               <button
                                 onClick={() => onRestore(item)}
@@ -226,7 +188,7 @@ export default function CorbeilleTab({
 
                               {/* Delete Forever button */}
                               <button
-                                onClick={() => onPermanentDelete(item.id)}
+                                onClick={() => setDeleteConfirmItem(item)}
                                 className="p-1 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 rounded-lg transition border border-rose-100 flex justify-center items-center gap-1 text-[11px] font-bold"
                                 title="Supprimer définitivement"
                               >
@@ -244,22 +206,146 @@ export default function CorbeilleTab({
             </div>
           </div>
 
-          {/* JSON Preview Sidebar/Overlay */}
-          {activePreview && (
-            <div className="bg-slate-950 text-slate-350 p-4 rounded-xl border border-slate-800 space-y-2 animate-fade-in text-[11px] font-mono shadow-inner relative">
-              <button
-                onClick={() => setActivePreview(null)}
-                className="absolute top-2 right-2 hover:bg-slate-800 text-gray-400 p-1 rounded font-sans font-bold"
-              >
-                ✕
-              </button>
-              <h4 className="text-slate-200 font-bold font-sans text-xs flex items-center gap-1.5">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                Métadonnées de l'élément supprimé :
-              </h4>
-              <pre className="overflow-x-auto text-[10px] text-emerald-400 py-2">
-                {JSON.stringify(activePreview.originalData, null, 2)}
-              </pre>
+
+
+          {/* MODAL: CONFIRM EMPTY TRASH */}
+          {showEmptyConfirm && (
+            <div className="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-xs">
+              <div className="bg-white rounded-2xl border border-rose-100 shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-zoom-in">
+                {/* Header */}
+                <div className="bg-rose-950 px-5 py-4 text-white flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-rose-400 animate-pulse" />
+                    <h3 className="font-extrabold text-xs uppercase tracking-wider text-rose-100">
+                      Vider la corbeille définitivement
+                    </h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowEmptyConfirm(false)}
+                    className="p-1 rounded-full hover:bg-rose-900 text-rose-300 hover:text-white transition cursor-pointer"
+                    aria-label="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-5 space-y-4 text-slate-800">
+                  <p className="text-xs text-slate-600 font-semibold leading-relaxed font-sans">
+                    Vous êtes sur le point de supprimer définitivement <strong className="text-slate-900">{trash.length} élément(s)</strong> de la corbeille.
+                    <span className="text-rose-600 font-bold block mt-1">
+                      Cette action est irréversible et aucun de ces éléments ne pourra plus être restauré !
+                    </span>
+                  </p>
+                </div>
+
+                {/* Footer buttons */}
+                <div className="bg-slate-50 px-5 py-3.5 border-t border-gray-150 flex gap-2 justify-end">
+                  <button
+                    onClick={() => setShowEmptyConfirm(false)}
+                    className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-750 text-xs font-bold rounded-xl border border-gray-200 transition font-sans cursor-pointer"
+                  >
+                    Annuler, Conserver
+                  </button>
+                  <button
+                    onClick={() => {
+                      onEmptyTrash();
+                      setShowEmptyConfirm(false);
+                    }}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition shadow-md shadow-rose-600/10 flex items-center gap-1.5 font-sans cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Purger définitivement ({trash.length})
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL: CONFIRM PERMANENT DELETE OF SINGLE ITEM */}
+          {deleteConfirmItem && (
+            <div className="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-xs">
+              <div className="bg-white rounded-2xl border border-rose-100 shadow-2xl w-full max-w-md flex flex-col overflow-hidden animate-zoom-in">
+                {/* Header */}
+                <div className="bg-rose-950 px-5 py-4 text-white flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-rose-400 animate-pulse" />
+                    <h3 className="font-extrabold text-xs uppercase tracking-wider text-rose-100">
+                      Confirmation de Suppression Définitive
+                    </h3>
+                  </div>
+                  <button 
+                    onClick={() => setDeleteConfirmItem(null)}
+                    className="p-1 rounded-full hover:bg-rose-900 text-rose-300 hover:text-white transition cursor-pointer"
+                    aria-label="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-5 space-y-4 text-slate-800">
+                  <p className="text-xs text-slate-600 font-semibold leading-relaxed">
+                    Vous êtes sur le point de supprimer définitivement cet élément de la corbeille. 
+                    <span className="text-rose-600 font-bold block mt-1">
+                      Cette action est irréversible et l'élément ne pourra plus du tout être récupéré !
+                    </span>
+                  </p>
+
+                  <div className="bg-rose-50/50 border border-rose-150 p-3.5 rounded-xl space-y-2">
+                    <div>
+                      <span className="text-[10px] text-rose-800 font-extrabold block uppercase tracking-wide">Élément :</span>
+                      <span className="text-xs text-slate-900 font-black block mt-0.5 break-words">
+                        {deleteConfirmItem.itemName}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-rose-100">
+                      <div>
+                        <span className="text-[10px] text-rose-800 font-extrabold block uppercase tracking-wide">Type :</span>
+                        <span className="text-xs text-slate-800 font-bold mt-0.5 block">
+                          {typeLabels[deleteConfirmItem.itemType]?.label || deleteConfirmItem.itemType}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-rose-800 font-extrabold block uppercase tracking-wide">Supprimé le :</span>
+                        <span className="text-xs text-slate-800 font-bold mt-0.5 block font-mono">
+                          {(() => {
+                            try {
+                              return new Date(deleteConfirmItem.deletedAt).toLocaleString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                              });
+                            } catch {
+                              return deleteConfirmItem.deletedAt;
+                            }
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer buttons */}
+                <div className="bg-slate-50 px-5 py-3.5 border-t border-gray-150 flex gap-2 justify-end">
+                  <button
+                    onClick={() => setDeleteConfirmItem(null)}
+                    className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-750 text-xs font-bold rounded-xl border border-gray-200 transition"
+                  >
+                    Annuler, Conserver
+                  </button>
+                  <button
+                    onClick={() => {
+                      onPermanentDelete(deleteConfirmItem.id);
+                      setDeleteConfirmItem(null);
+                    }}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition shadow-md shadow-rose-600/10 flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Supprimer définitivement
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

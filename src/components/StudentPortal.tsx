@@ -89,6 +89,7 @@ export default function StudentPortal({
     return initialFiliereId || activeStudent.filiere_id;
   });
 
+
   const filierePrincipale = filieres.find(f => f.id === courseFiliereFilter);
   const classeActuelle = classes.find(c => c.id === activeStudent.classe_id);
 
@@ -341,7 +342,7 @@ export default function StudentPortal({
               <select
                 value={courseFiliereFilter}
                 onChange={(e) => handleSelectFiliereCourse(Number(e.target.value))}
-                className="p-1 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-850 hover:bg-slate-50 transition focus:outline-none cursor-pointer max-w-[200px] truncate"
+                className="p-1 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-850 hover:bg-slate-50 transition focus:outline-none cursor-pointer max-w-[130px] sm:max-w-[280px] truncate"
               >
                 {allAccessibleFilieres.map(f => (
                   <option key={f.id} value={f.id} className="font-semibold text-slate-900">
@@ -587,36 +588,13 @@ export default function StudentPortal({
                   </div>
                 </div>
 
-                {/* Info Panel: How to calculate the average with credits */}
-                <div className="p-4 mx-6 my-4 bg-blue-50/70 rounded-xl border border-blue-200/55 text-xs text-slate-700">
-                  <div className="flex items-center gap-1.5 mb-2 font-bold text-blue-900 select-none">
-                    <span role="img" aria-label="info">ℹ️</span>
-                    <span>Comment est calculée ma moyenne par crédits ?</span>
-                  </div>
-                  <p className="text-slate-650 leading-relaxed mb-1.5">
-                    Chaque matière possède un nombre de <strong>Crédits</strong> déterminant son importance (poids). La moyenne semestrielle n'est plus calculée avec des coefficients fixes, mais au prorata des crédits accordés :
-                  </p>
-                  <div className="bg-[#fff] border border-blue-150 rounded-lg p-2.5 font-mono text-[11px] text-slate-800 leading-normal flex flex-col gap-1 my-2">
-                    <div className="font-bold text-blue-980">Formule :</div>
-                    <div className="text-center font-bold text-slate-900 py-1 bg-slate-50 rounded border border-gray-100">
-                      Moyenne Générale = Somme ( Note de la matière × Crédits ) ÷ Somme des Crédits Obtenus
-                    </div>
-                    <div className="mt-1 text-slate-550 italic text-[10px]">
-                      Exemple : Si vous avez 15/20 (Module de 4 crédits) et 10/20 (Module de 2 crédits) :<br />
-                      • Points accumulés = (15 × 4) + (10 × 2) = 60 + 20 = 80 points.<br />
-                      • Total des crédits = 4 + 2 = 6 crédits.<br />
-                      • Votre moyenne = 80 ÷ 6 = 13.33 / 20.
-                    </div>
-                  </div>
-                </div>
-
                 <div className="overflow-x-auto w-full">
                   <table className="custom-table text-xs">
                     <thead>
                       <tr className="bg-slate-900 text-slate-100 font-bold">
                         <th className="py-2.5 px-4 uppercase text-[10px] text-left">Intitulé de la Matière / Module</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (60%)</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (40%)</th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (40%)</th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (60%)</th>
                         <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Moyenne Finale</th>
                         <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
                         <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Grade Pondéré</th>
@@ -858,8 +836,8 @@ export default function StudentPortal({
                         <thead>
                           <tr className="bg-slate-900 text-slate-100 font-bold">
                             <th className="py-2.5 px-4 font-bold text-left">Cours module</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (60%)</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (40%)</th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (40%)</th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (60%)</th>
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Moyenne Finale</th>
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
                             <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Total</th>
@@ -1215,7 +1193,7 @@ export default function StudentPortal({
           {/* Hamburger Menu Icon */}
           <button 
             onClick={() => setMenuOpen(!menuOpen)}
-            className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 transition active:scale-95 text-slate-200 outline-none"
+            className="w-11 h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 transition active:scale-95 text-slate-200 outline-none"
             aria-label="Menu"
           >
             {menuOpen ? (

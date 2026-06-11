@@ -110,11 +110,27 @@ export default function BulletinsTab({
   // --- LOCAL EDIT STATES ---
   const [isEditing, setIsEditing] = useState(false);
   const [editedGrades, setEditedGrades] = useState<Record<number, { note_classe: string; note_examen: string }>>({});
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [validationSuccess, setValidationSuccess] = useState<string | null>(null);
+
+  const hasValidationErrors = Object.values(editedGrades).some((input: any) => {
+    if (input.note_classe && input.note_classe.trim() !== "") {
+      const cc = parseFloat(input.note_classe);
+      if (isNaN(cc) || cc < 0 || cc > 20) return true;
+    }
+    if (input.note_examen && input.note_examen.trim() !== "") {
+      const ds = parseFloat(input.note_examen);
+      if (isNaN(ds) || ds < 0 || ds > 20) return true;
+    }
+    return false;
+  });
 
   // Reset / cancel edit mode if selected student or semester changes
   useEffect(() => {
     setIsEditing(false);
     setEditedGrades({});
+    setValidationError(null);
+    setValidationSuccess(null);
   }, [selectedStudentId, selectedSemestreId]);
 
   // Scheduled subjects of the current semester/filiere
@@ -135,7 +151,7 @@ export default function BulletinsTab({
         const cc = parseFloat(inputs.note_classe);
         const ds = parseFloat(inputs.note_examen);
         const hasValues = !isNaN(cc) && cc >= 0 && cc <= 20 && !isNaN(ds) && ds >= 0 && ds <= 20;
-        const weighted = hasValues ? (cc * 0.6) + (ds * 0.4) : null;
+        const weighted = hasValues ? (cc * 0.4) + (ds * 0.6) : null;
 
         const existingGrade = studentGrades.find(g => {
           const course = cours.find(c => Number(c.id) === Number(g.cours_id));
@@ -242,6 +258,8 @@ export default function BulletinsTab({
 
   // Initialize edit mode inputs
   const handleStartEditing = () => {
+    setValidationError(null);
+    setValidationSuccess(null);
     const initialValues: Record<number, { note_classe: string; note_examen: string }> = {};
     studentMatieresOfSem.forEach(m => {
       const g = studentGrades.find(grade => {
@@ -259,6 +277,8 @@ export default function BulletinsTab({
 
   // Save modified grades
   const handleSaveChanges = () => {
+    setValidationError(null);
+    setValidationSuccess(null);
     if (!activeStudent || !activeSem) return;
 
     let hasInvalid = false;
@@ -301,7 +321,7 @@ export default function BulletinsTab({
         return;
       }
 
-      const weighted = (cc * 0.6) + (ds * 0.4);
+      const weighted = (cc * 0.4) + (ds * 0.6);
 
       if (existingGrade) {
         onUpdateNote(existingGrade.id, {
@@ -324,7 +344,7 @@ export default function BulletinsTab({
     });
 
     if (hasInvalid) {
-      alert("Erreur de validation : Toutes les notes saisies doivent être de vrais nombres compris entre 0 et 20.");
+      setValidationError("Erreur de validation : Toutes les notes saisies doivent être de vrais nombres compris entre 0 et 20.");
       return;
     }
 
@@ -333,7 +353,7 @@ export default function BulletinsTab({
     }
 
     setIsEditing(false);
-    alert("Le relevé de notes et le bulletin de l'étudiant ont été mis à jour avec succès !");
+    setValidationSuccess("Le relevé de notes et le bulletin de l'étudiant ont été mis à jour avec succès !");
   };
 
   const handlePrint = () => {
@@ -431,8 +451,13 @@ export default function BulletinsTab({
             <>
               <button 
                 onClick={handleSaveChanges}
-                className="btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5"
-                title="Enregistrer toutes les modifications de notes"
+                disabled={hasValidationErrors}
+                className={`btn font-bold flex items-center gap-1.5 transition-all ${
+                  hasValidationErrors
+                    ? '!bg-rose-100 !text-rose-700 !border-rose-300 cursor-not-allowed opacity-80'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
+                title={hasValidationErrors ? "Certaines notes saisies sont hors limites (0-20)" : "Enregistrer toutes les modifications de notes"}
               >
                 <Save className="w-4 h-4" /> Enregistrer
               </button>
@@ -528,6 +553,20 @@ export default function BulletinsTab({
             </div>
           </div>
 
+          {validationError && (
+            <div className="mb-4 bg-rose-50 border border-rose-300 text-rose-800 p-4 rounded-xl text-xs flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+              <span className="font-bold">{validationError}</span>
+            </div>
+          )}
+
+          {validationSuccess && (
+            <div className="mb-4 bg-emerald-50 border border-emerald-250 text-emerald-850 p-4 rounded-xl text-xs flex items-center gap-2">
+              <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span className="font-bold">{validationSuccess}</span>
+            </div>
+          )}
+
           {/* Marks table detail */}
           <div className="border border-slate-300 rounded-xl overflow-hidden mt-6">
             <div className="overflow-x-auto w-full">
@@ -535,8 +574,8 @@ export default function BulletinsTab({
                 <thead>
                   <tr className="bg-slate-900 text-slate-100">
                     <th className="font-bold py-2.5 px-4 uppercase text-[10px] text-left">Modules / Cours Validés</th>
-                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note CC / Classe (60%)</th>
-                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note Examen (40%)</th>
+                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note CC / Classe (40%)</th>
+                    <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note Examen (60%)</th>
                     <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Moyenne Finale</th>
                     <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
                     <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Total pondéré</th>

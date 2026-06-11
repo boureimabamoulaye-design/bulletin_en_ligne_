@@ -772,20 +772,19 @@ export default function App() {
                 <div className="mt-8 space-y-4">
                   <h2 className="text-xl md:text-2xl font-black leading-tight">Système unifié de Gestion Académique</h2>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                     Une solution professionnelle développée selon un cahier des charges strict : 
-                     PHP procédural sécurisé, stockage relationnel optimisé incluant des semestres paramétrables et des autorisations d'accès partagées.
+                     Une plateforme académique intégrée offrant un suivi complet de la scolarité, de la saisie des notes, du calcul des moyennes pondérées par crédits LMD, ainsi que du recouvrement des frais de scolarité.
                   </p>
                 </div>
               </div>
 
-              {/* PHP Code Info card */}
+              {/* Professional Welcome Information Card */}
               <div className="bg-white/10 p-5 rounded-2xl border border-white/10 mt-8">
                 <div className="flex items-center gap-2 mb-2 text-blue-300">
-                  <Terminal className="w-4 h-4 shrink-0" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Explorateur PHP intégré</span>
+                  <GraduationCap className="w-4 h-4 shrink-0" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Session sécurisée</span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed">
-                   Consultez à tout moment le code source PHP et SQL natif correspondant à chaque écran pour votre hébergement final ! Les fichiers réels sont disponibles sous <code className="bg-slate-950 px-1 py-0.5 rounded text-white text-[10px]">/school_php</code>.
+                   Connectez-vous à l'aide de vos identifiants pour accéder à vos services et consulter vos documents académiques en temps réel.
                 </p>
               </div>
             </div>
@@ -1290,36 +1289,28 @@ export default function App() {
                       <h2 className={`text-sm font-black tracking-tight uppercase ${
                         adminTheme === 'sombre-or' ? 'text-amber-400' : 'text-slate-905'
                       }`}>
-                        {showCodeExplorer ? "Explorateur de Code PHP & SQL Natifs" : (
-                          <>
-                            {adminActiveTab === 'etudiants' && "Inscriptions & Gestion Élèves"}
-                            {adminActiveTab === 'filieres' && "Modélisation des Filières Académiques"}
-                            {adminActiveTab === 'semestres' && "Gestion des Périodes Pédagogiques"}
-                            {adminActiveTab === 'cours' && "Supports Didactiques Multi-Filières"}
-                            {adminActiveTab === 'notes' && "Gestionnaire de Bulletins & Notes"}
-                            {adminActiveTab === 'bulletins' && "Génération Dynamique de Bulletins"}
-                            {adminActiveTab === 'autorisations' && "Liaisons Inter-parcours & Droits"}
-                            {adminActiveTab === 'paiements' && "Suivi Énergique des Paiements"}
-                            {adminActiveTab === 'corbeille' && "Corbeille & Récupération de Données"}
-                          </>
-                        )}
+                        {adminActiveTab === 'etudiants' && "Inscriptions & Gestion Élèves"}
+                        {adminActiveTab === 'filieres' && "Modélisation des Filières Académiques"}
+                        {adminActiveTab === 'semestres' && "Gestion des Périodes Pédagogiques"}
+                        {adminActiveTab === 'cours' && "Supports Didactiques Multi-Filières"}
+                        {adminActiveTab === 'notes' && "Gestionnaire de Bulletins & Notes"}
+                        {adminActiveTab === 'bulletins' && "Génération Dynamique de Bulletins"}
+                        {adminActiveTab === 'autorisations' && "Liaisons Inter-parcours & Droits"}
+                        {adminActiveTab === 'paiements' && "Suivi Énergique des Paiements"}
+                        {adminActiveTab === 'corbeille' && "Corbeille & Récupération de Données"}
                       </h2>
                       <p className={`text-[10px] font-semibold mt-0.5 ${
                         adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-500'
                       }`}>
-                        {showCodeExplorer ? "Aperçu de la structure et du code source exact des fichiers PHP et SQL réels." : (
-                          <>
-                            {adminActiveTab === 'etudiants' && "Registre de gestion des élèves, classes et parcours."}
-                            {adminActiveTab === 'filieres' && "Configuration des filières et définition des matières pédagogiques par filière."}
-                            {adminActiveTab === 'semestres' && "Suivi temporel, définition des années scolaires et des semestres d'évaluation."}
-                            {adminActiveTab === 'cours' && "Partage, catégorisation et mise en ligne des supports d'études par matière."}
-                            {adminActiveTab === 'notes' && "Saisie des évaluations et notes d'examen par matière."}
-                            {adminActiveTab === 'bulletins' && "Visualisation et édition des relevés de notes semestriels."}
-                            {adminActiveTab === 'autorisations' && "Accréditations exceptionnelles d'accès de consultation inter-filières pour étudiants."}
-                            {adminActiveTab === 'paiements' && "Suivi de la scolarité et encaissement des frais scolaires."}
-                            {adminActiveTab === 'corbeille' && "Restaurez ou purgez définitivement vos enregistrements supprimés."}
-                          </>
-                        )}
+                        {adminActiveTab === 'etudiants' && "Registre de gestion des élèves, classes et parcours."}
+                        {adminActiveTab === 'filieres' && "Configuration des filières et définition des matières pédagogiques par filière."}
+                        {adminActiveTab === 'semestres' && "Suivi temporel, définition des années scolaires et des semestres d'évaluation."}
+                        {adminActiveTab === 'cours' && "Partage, catégorisation et mise en ligne des supports d'études par matière."}
+                        {adminActiveTab === 'notes' && "Saisie des évaluations et notes d'examen par matière."}
+                        {adminActiveTab === 'bulletins' && "Visualisation et édition des relevés de notes semestriels."}
+                        {adminActiveTab === 'autorisations' && "Accréditations exceptionnelles d'accès de consultation inter-filières pour étudiants."}
+                        {adminActiveTab === 'paiements' && "Suivi de la scolarité et encaissement des frais scolaires."}
+                        {adminActiveTab === 'corbeille' && "Restaurez ou purgez définitivement vos enregistrements supprimés."}
                       </p>
                     </div>
                   </div>
@@ -1686,7 +1677,7 @@ export default function App() {
                       <select
                         value={globalFiliereId}
                         onChange={e => setGlobalFiliereId(Number(e.target.value))}
-                        className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[160px] ${
+                        className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[130px] sm:max-w-[260px] ${
                           adminTheme === 'sombre-or' ? 'text-white' : 'text-blue-900'
                         }`}
                       >
@@ -1753,8 +1744,7 @@ export default function App() {
             <span className="text-white font-extrabold text-xs sm:text-sm flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
               <span>
-                {showCodeExplorer ? "Code Source PHP/SQL" :
-                 adminActiveTab === 'dashboard' ? "Admin - Vue d'Ensemble" :
+                {adminActiveTab === 'dashboard' ? "Admin - Vue d'Ensemble" :
                  adminActiveTab === 'etudiants' ? "Admin - Élèves" :
                  adminActiveTab === 'filieres' ? "Admin - Filières" :
                  adminActiveTab === 'semestres' ? "Admin - Semestres" :
@@ -1768,7 +1758,7 @@ export default function App() {
             {/* Hamburger Menu Icon */}
             <button 
               onClick={() => setAdminMenuOpen(!adminMenuOpen)}
-              className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 transition active:scale-95 text-slate-200 outline-none"
+              className="w-11 h-11 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700/60 transition active:scale-95 text-slate-200 outline-none"
               aria-label="Menu"
             >
               {adminMenuOpen ? (
