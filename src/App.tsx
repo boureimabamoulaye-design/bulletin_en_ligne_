@@ -31,7 +31,8 @@ import StudentPortal from './components/StudentPortal';
 import { 
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
   BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info,
-  ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon
+  ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon,
+  Lock, ShieldAlert
 } from 'lucide-react';
 
 export default function App() {
@@ -96,8 +97,10 @@ export default function App() {
   
   // Navigation
   const [adminActiveTab, setAdminActiveTab] = useState<string>('dashboard');
-  const [showCodeExplorer, setShowCodeExplorer] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const [adminsUnlocked, setAdminsUnlocked] = useState(false);
+  const [unlockPassword, setUnlockPassword] = useState("");
+  const [unlockError, setUnlockError] = useState("");
 
   // Login credentials states
   const [loginRole, setLoginRole] = useState<'admin' | 'student'>('admin');
@@ -248,6 +251,10 @@ export default function App() {
 
   const handleUpdatePaiementStatus = (id: number, newStatus: 'Payé' | 'En attente' | 'Remboursé') => {
     setPaiements(paiements.map(p => p.id === id ? { ...p, statut: newStatus } : p));
+  };
+
+  const handleUpdatePaiement = (updatedP: Paiement) => {
+    setPaiements(paiements.map(p => p.id === updatedP.id ? updatedP : p));
   };
 
   const handleDeletePaiement = (id: number) => {
@@ -743,7 +750,6 @@ export default function App() {
   const handleLogout = () => {
     setUserRole('guest');
     setActiveStudent(null);
-    setShowCodeExplorer(false);
   };
 
   return (
@@ -925,17 +931,14 @@ export default function App() {
       {/* 2. ADMIN PANEL CONTAINER WRAPPER */}
       {userRole === 'admin' && (
         <div 
-          className={`flex-grow flex pt-[60px] lg:pt-0 transition-colors duration-300 ${
-            (adminActiveTab !== 'dashboard' || showCodeExplorer) 
-              ? `flex-col ${adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'}` 
-              : `flex-col lg:flex-row ${adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'}`
+          className={`flex-grow flex pt-[60px] lg:pt-0 transition-colors duration-300 flex-col lg:flex-row ${
+            adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'
           }`} 
           id="admin-workspace-layer"
         >
           
           {/* Main Lateral Sidebar as requested ("Menu latéral") */}
-          {(adminActiveTab === 'dashboard' && !showCodeExplorer) && (
-            <aside className="hidden lg:flex w-full lg:w-64 bg-slate-900 text-slate-100 shrink-0 flex-col justify-between border-r border-slate-800 p-4">
+          <aside className="hidden lg:flex w-full lg:w-64 bg-slate-900 text-slate-100 shrink-0 flex-col justify-between border-r border-slate-800 p-4">
             <div>
               {/* Brand icon */}
               <div className="logo-area flex items-center gap-3 border-b border-slate-800 pb-4 mb-6" id="dashboard-brand-header">
@@ -959,9 +962,9 @@ export default function App() {
                 <ul className="space-y-1">
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('dashboard'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('dashboard'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'dashboard' && !showCodeExplorer 
+                        adminActiveTab === 'dashboard' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
@@ -974,9 +977,9 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('etudiants'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('etudiants'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'etudiants' && !showCodeExplorer 
+                        adminActiveTab === 'etudiants' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
@@ -989,9 +992,9 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('filieres'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('filieres'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'filieres' && !showCodeExplorer 
+                        adminActiveTab === 'filieres' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
@@ -1004,13 +1007,13 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('semestres'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('semestres'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'semestres' && !showCodeExplorer 
+                        adminActiveTab === 'semestres' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-205'
                       }`}
                     >
                       <Calendar className="w-4 h-4" />
@@ -1019,13 +1022,13 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('cours'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('cours'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'cours' && !showCodeExplorer 
+                        adminActiveTab === 'cours' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
                       }`}
                     >
                       <FileText className="w-4 h-4" />
@@ -1034,13 +1037,13 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('notes'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('notes'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'notes' && !showCodeExplorer 
+                        adminActiveTab === 'notes' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
                       }`}
                     >
                       <Award className="w-4 h-4" />
@@ -1049,13 +1052,13 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('bulletins'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('bulletins'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'bulletins' && !showCodeExplorer 
+                        adminActiveTab === 'bulletins' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
                       }`}
                     >
                       <BookOpen className="w-4 h-4" />
@@ -1064,13 +1067,13 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('autorisations'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('autorisations'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'autorisations' && !showCodeExplorer 
+                        adminActiveTab === 'autorisations' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
                       }`}
                     >
                       <ShieldCheck className="w-4 h-4" />
@@ -1079,9 +1082,9 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('paiements'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('paiements'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'paiements' && !showCodeExplorer 
+                        adminActiveTab === 'paiements' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
@@ -1094,9 +1097,9 @@ export default function App() {
                   </li>
                   <li>
                     <button 
-                      onClick={() => { setAdminActiveTab('corbeille'); setShowCodeExplorer(false); }}
+                      onClick={() => { setAdminActiveTab('corbeille'); }}
                       className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'corbeille' && !showCodeExplorer 
+                        adminActiveTab === 'corbeille' 
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-red-650 text-white font-bold shadow')
@@ -1113,133 +1116,190 @@ export default function App() {
 
             {/* Quick Administrator credentials panel */}
             <div className="mt-8 border-t border-slate-800 pt-4">
-              <span className="text-[10px] text-gray-500 uppercase block tracking-wider font-bold mb-2">Administrateurs :</span>
-              <div className="flex flex-col gap-1 text-[11px] text-gray-400 mb-3">
-                {adminList.map(adm => {
-                  if (editingAdminId === adm.id) {
-                    return (
-                      <form key={adm.id} onSubmit={handleUpdateAdmin} className="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-blue-900 text-[10px] my-1">
-                        <div className="text-blue-400 font-bold uppercase text-[8px] tracking-wide">Modifier l'Admin</div>
-                        <input 
-                          type="text" 
-                          placeholder="Nom"
-                          value={editAdminNom}
-                          onChange={e => setEditAdminNom(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
-                          required
-                        />
-                        <input 
-                          type="email" 
-                          placeholder="Email"
-                          value={editAdminEmail}
-                          onChange={e => setEditAdminEmail(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
-                          required
-                        />
-                        <input 
-                          type="password" 
-                          placeholder="Mot de passe"
-                          value={editAdminPass}
-                          onChange={e => setEditAdminPass(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
-                          required
-                        />
-                        
-                        {/* Information relative aux accès de l'administrateur */}
-                        <div className="p-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded text-[8.5px] font-medium leading-none space-y-1">
-                          <p className="font-bold flex items-center gap-1">🏆 Accès Super Admin : Actif</p>
-                          <p className="text-[8px] opacity-80 decoration-none">Autorisation totale & illimitée sur tout le site</p>
-                        </div>
-
-                        <div className="flex gap-1.5 justify-end text-[9px] pt-1">
-                          <button type="button" onClick={() => setEditingAdminId(null)} className="text-gray-400 hover:text-white">Annuler</button>
-                          <button type="submit" className="text-blue-400 font-bold hover:text-blue-300">Enregistrer</button>
-                        </div>
-                      </form>
-                    );
-                  }
-                  return (
-                    <div key={adm.id} className="flex justify-between items-center py-1 group/adm hover:bg-slate-850 px-1 rounded transition">
-                      <div className="flex flex-col min-w-0 pr-1">
-                        <span className="text-slate-200 truncate font-semibold">👤 {adm.nom}</span>
-                        <span className="text-[9px] text-gray-500 truncate">{adm.email}</span>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover/adm:opacity-100 transition">
-                        <button 
-                          onClick={() => startEditAdmin(adm)}
-                          className="p-1 text-slate-400 hover:text-blue-400 transition"
-                          title="Modifier"
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteAdmin(adm.id)}
-                          className="p-1 text-slate-400 hover:text-rose-500 transition"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] text-gray-500 uppercase block tracking-wider font-bold">Administrateurs :</span>
+                {adminsUnlocked && (
+                  <button 
+                    onClick={() => { setAdminsUnlocked(false); setUnlockPassword(""); setUnlockError(""); }}
+                    className="text-[9px] text-[#c5a880] hover:underline flex items-center gap-1 cursor-pointer"
+                    title="Verrouiller la liste"
+                  >
+                    <Lock className="w-2.5 h-2.5" />
+                    Verrouiller
+                  </button>
+                )}
               </div>
 
-              {!showAdminForm ? (
-                <button 
-                  onClick={() => { setShowAdminForm(true); setEditingAdminId(null); }}
-                  className="w-full text-center py-1 bg-slate-800 text-slate-200 rounded text-[10px] font-bold"
-                >
-                  + Ajouter un Admin
-                </button>
+              {!adminsUnlocked ? (
+                <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-850 text-center space-y-2">
+                  <div className="flex justify-center mb-1">
+                    <ShieldAlert className="w-5 h-5 text-amber-500/80 animate-pulse" />
+                  </div>
+                  <p className="text-[9.5px] text-slate-400 font-medium leading-normal">
+                    Accès sécurisé. Saisissez votre mot de passe pour gérer les administrateurs.
+                  </p>
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      setUnlockError("");
+                      const currentAdminAcc = adminList.find(a => a.nom === activeAdminName);
+                      if (currentAdminAcc && unlockPassword.trim() === currentAdminAcc.mot_de_passe.trim()) {
+                        setAdminsUnlocked(true);
+                        setUnlockError("");
+                      } else {
+                        setUnlockError("Mot de passe incorrect.");
+                      }
+                    }}
+                    className="space-y-1.5"
+                  >
+                    <input 
+                      type="password" 
+                      placeholder="Mot de passe admin"
+                      value={unlockPassword}
+                      onChange={e => setUnlockPassword(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-100 outline-none text-[10px] text-center"
+                      required
+                    />
+                    {unlockError && <p className="text-[8.5px] text-rose-500 font-semibold leading-none">{unlockError}</p>}
+                    <button 
+                      type="submit"
+                      className="w-full bg-[#c5a880] text-slate-950 rounded py-1 text-[10px] font-black hover:opacity-90 active:scale-[0.98] transition cursor-pointer"
+                    >
+                      Déverrouiller
+                    </button>
+                  </form>
+                </div>
               ) : (
-                <form onSubmit={handleAddAdmin} className="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-[10px]">
-                  <div className="text-amber-400 font-bold uppercase text-[8px] tracking-wide">Nouvel Administrateur</div>
-                  <input 
-                    type="text" 
-                    placeholder="Nom complet"
-                    value={newAdminNom}
-                    onChange={e => setNewAdminNom(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
-                    required
-                  />
-                  <input 
-                    type="email" 
-                    placeholder="Adresse e-mail"
-                    value={newAdminEmail}
-                    onChange={e => setNewAdminEmail(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
-                    required
-                  />
-                  <input 
-                    type="password" 
-                    placeholder="Mot de passe"
-                    value={newAdminPass}
-                    onChange={e => setNewAdminPass(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
-                    required
-                  />
+                <>
+                  <div className="flex flex-col gap-1 text-[11px] text-gray-400 mb-3 block">
+                    {adminList.map(adm => {
+                      if (editingAdminId === adm.id) {
+                        return (
+                          <form key={adm.id} onSubmit={handleUpdateAdmin} className="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-blue-900 text-[10px] my-1">
+                            <div className="text-blue-400 font-bold uppercase text-[8px] tracking-wide">Modifier l'Admin</div>
+                            <input 
+                              type="text" 
+                              placeholder="Nom"
+                              value={editAdminNom}
+                              onChange={e => setEditAdminNom(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
+                              required
+                            />
+                            <input 
+                              type="email" 
+                              placeholder="Email"
+                              value={editAdminEmail}
+                              onChange={e => setEditAdminEmail(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
+                              required
+                            />
+                            <input 
+                              type="password" 
+                              placeholder="Mot de passe"
+                              value={editAdminPass}
+                              onChange={e => setEditAdminPass(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-slate-100 outline-none text-[10px]"
+                              required
+                            />
+                            
+                            {/* Information relative aux accès de l'administrateur */}
+                            <div className="p-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded text-[8.5px] font-medium leading-none space-y-1">
+                              <p className="font-bold flex items-center gap-1">🏆 Accès Super Admin : Actif</p>
+                              <p className="text-[8px] opacity-80 decoration-none">Autorisation totale & illimitée sur tout le site</p>
+                            </div>
 
-                  {/* Accréditations par défaut et complètes des Administrateurs */}
-                  <div className="p-2 bg-slate-900 border border-amber-500/20 text-slate-300 rounded text-[8.5px] leading-relaxed space-y-1">
-                    <span className="font-extrabold uppercase text-amber-400 tracking-wider text-[8px] block">🛡️ Droits & Accréditations</span>
-                    <p className="text-slate-400">Ce compte aura par défaut un rôle de <strong>Super-Administrateur Général</strong> avec droits absolus de lecture, écriture et modifications sur :</p>
-                    <ul className="grid grid-cols-2 gap-x-1 text-[8px] text-amber-300/90 font-semibold list-none pl-0 mt-1">
-                      <li>• Vue d'Ensemble ✔</li>
-                      <li>• Gestion Élèves ✔</li>
-                      <li>• Notes & Bulletins ✔</li>
-                      <li>• Cours & Matières ✔</li>
-                      <li>• Paiements & Frais ✔</li>
-                      <li>• Droits d'Accès ✔</li>
-                    </ul>
+                            <div className="flex gap-1.5 justify-end text-[9px] pt-1">
+                              <button type="button" onClick={() => setEditingAdminId(null)} className="text-gray-400 hover:text-white">Annuler</button>
+                              <button type="submit" className="text-blue-400 font-bold hover:text-blue-300">Enregistrer</button>
+                            </div>
+                          </form>
+                        );
+                      }
+                      return (
+                        <div key={adm.id} className="flex justify-between items-center py-1 group/adm hover:bg-slate-850 px-1 rounded transition">
+                          <div className="flex flex-col min-w-0 pr-1">
+                            <span className="text-slate-200 truncate font-semibold">👤 {adm.nom}</span>
+                            <span className="text-[9px] text-gray-500 truncate">{adm.email}</span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover/adm:opacity-100 transition">
+                            <button 
+                              onClick={() => startEditAdmin(adm)}
+                              className="p-1 text-slate-400 hover:text-blue-400 transition"
+                              title="Modifier"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteAdmin(adm.id)}
+                              className="p-1 text-slate-400 hover:text-rose-500 transition"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  <div className="flex gap-1 justify-end pt-1">
-                    <button type="button" onClick={() => setShowAdminForm(false)} className="text-gray-400 p-1">Annuler</button>
-                    <button type="submit" className="text-amber-400 font-bold p-1 hover:text-amber-300">Créer</button>
-                  </div>
-                </form>
+                  {!showAdminForm ? (
+                    <button 
+                      onClick={() => { setShowAdminForm(true); setEditingAdminId(null); }}
+                      className="w-full text-center py-1 bg-slate-800 text-slate-200 rounded text-[10px] font-bold cursor-pointer"
+                    >
+                      + Ajouter un Admin
+                    </button>
+                  ) : (
+                    <form onSubmit={handleAddAdmin} className="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-[10px]">
+                      <div className="text-amber-400 font-bold uppercase text-[8px] tracking-wide">Nouvel Administrateur</div>
+                      <input 
+                        type="text" 
+                        placeholder="Nom complet"
+                        value={newAdminNom}
+                        onChange={e => setNewAdminNom(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
+                        required
+                      />
+                      <input 
+                        type="email" 
+                        placeholder="Adresse e-mail"
+                        value={newAdminEmail}
+                        onChange={e => setNewAdminEmail(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
+                        required
+                      />
+                      <input 
+                        type="password" 
+                        placeholder="Mot de passe"
+                        value={newAdminPass}
+                        onChange={e => setNewAdminPass(e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-850 rounded px-2 py-1 text-slate-100 outline-none"
+                        required
+                      />
+
+                      {/* Accréditations par défaut et complètes des Administrateurs */}
+                      <div className="p-2 bg-slate-900 border border-amber-500/20 text-slate-300 rounded text-[8.5px] leading-relaxed space-y-1">
+                        <span className="font-extrabold uppercase text-amber-400 tracking-wider text-[8px] block">🛡️ Droits & Accréditations</span>
+                        <p className="text-slate-400">Ce compte aura par défaut un rôle de <strong>Super-Administrateur Général</strong> avec droits absolus de lecture, écriture et modifications sur :</p>
+                        <ul className="grid grid-cols-2 gap-x-1 text-[8px] text-amber-300/90 font-semibold list-none pl-0 mt-1">
+                          <li>• Vue d'Ensemble ✔</li>
+                          <li>• Gestion Élèves ✔</li>
+                          <li>• Notes & Bulletins ✔</li>
+                          <li>• Cours & Matières ✔</li>
+                          <li>• Paiements & Frais ✔</li>
+                          <li>• Droits d'Accès ✔</li>
+                        </ul>
+                      </div>
+
+                      <div className="flex gap-1 justify-end pt-1">
+                        <button type="button" onClick={() => setShowAdminForm(false)} className="text-gray-400 p-1">Annuler</button>
+                        <button type="submit" className="text-amber-400 font-bold p-1 hover:text-amber-300">Créer</button>
+                      </div>
+                    </form>
+                  )}
+                </>
               )}
+            </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-slate-800 pt-3">
                 <span className="text-xs text-slate-300 font-bold truncate pr-2">👤 {activeAdminName}</span>
@@ -1252,13 +1312,11 @@ export default function App() {
                   Quitter
                 </button>
               </div>
-            </div>
           </aside>
-          )}
 
           {/* Right Work Panel layout */}
           <main className="flex-1 flex flex-col min-w-0">
-            {adminActiveTab !== 'dashboard' || showCodeExplorer ? (
+            {adminActiveTab !== 'dashboard' ? (
               // Focused full-screen workspace layout for deep work on any individual tab
               <div className="flex-grow p-6 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto select-none animate-fade-in space-y-6 pb-8 md:pb-8">
                 
@@ -1272,7 +1330,6 @@ export default function App() {
                     <button 
                       onClick={() => {
                         setAdminActiveTab('dashboard');
-                        setShowCodeExplorer(false);
                       }} 
                       className={`group flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition shadow-md whitespace-nowrap shrink-0 ${
                         adminTheme === 'sombre-or'
@@ -1383,7 +1440,7 @@ export default function App() {
                     </div>
 
                     {/* Global Filters on Active Deep Workspace */}
-                    {!showCodeExplorer && adminActiveTab !== 'dashboard' && (
+                    {adminActiveTab !== 'dashboard' && (
                       <>
                         <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
                           adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
@@ -1568,6 +1625,7 @@ export default function App() {
                           onUpdateScolariteAnnuelle={setScolariteAnnuelle}
                           onAddPaiement={handleAddPaiement}
                           onUpdatePaiementStatus={handleUpdatePaiementStatus}
+                          onUpdatePaiement={handleUpdatePaiement}
                           onDeletePaiement={handleDeletePaiement}
                           globalAnneeScolaire={globalAnneeScolaire}
                         />
@@ -1777,72 +1835,72 @@ export default function App() {
               </p>
               
               <button 
-                onClick={() => { setAdminActiveTab('dashboard'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'dashboard' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('dashboard'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'dashboard' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <LayoutDashboard className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Tableau de Bord / Vue d'Ensemble</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('etudiants'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'etudiants' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('etudiants'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'etudiants' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <Users className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Inscriptions & Gestion Élèves</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('filieres'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'filieres' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('filieres'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'filieres' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <GraduationCap className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Configuration des Filières</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('semestres'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'semestres' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('semestres'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'semestres' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <Calendar className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Semestres & Cycles</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('cours'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'cours' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('cours'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'cours' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <FileText className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Partage des Supports d'Étude</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('notes'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'notes' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('notes'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'notes' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <Award className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Saisie des Notes / Évals</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('bulletins'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'bulletins' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('bulletins'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'bulletins' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <BookOpen className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Génération des Bulletins</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('autorisations'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'autorisations' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('autorisations'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'autorisations' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <ShieldCheck className="w-4 h-4 shrink-0 text-blue-400" />
                 <span>Crédits d'Accès Inter-filières</span>
               </button>
 
               <button 
-                onClick={() => { setAdminActiveTab('paiements'); setShowCodeExplorer(false); setAdminMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'paiements' && !showCodeExplorer ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
+                onClick={() => { setAdminActiveTab('paiements'); setAdminMenuOpen(false); }}
+                className={`flex items-center gap-3 w-full px-4 py-2 rounded-lg text-xs font-bold transition ${adminActiveTab === 'paiements' ? 'bg-blue-600 text-white shadow-md font-extrabold' : 'text-slate-300 hover:bg-slate-800'}`}
               >
                 <CreditCard className="w-4 h-4 shrink-0 text-emerald-400" />
                 <span>Gestion des Paiements</span>

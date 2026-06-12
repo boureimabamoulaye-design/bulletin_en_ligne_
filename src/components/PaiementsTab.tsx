@@ -18,7 +18,8 @@ import {
   Check,
   CreditCard,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Edit2
 } from 'lucide-react';
 
 interface PaiementsTabProps {
@@ -31,6 +32,7 @@ interface PaiementsTabProps {
   onUpdateScolariteAnnuelle: (newAmount: number) => void;
   onAddPaiement: (paiement: Omit<Paiement, 'id'>) => void;
   onUpdatePaiementStatus: (id: number, newStatus: 'Payé' | 'En attente' | 'Remboursé') => void;
+  onUpdatePaiement: (paiement: Paiement) => void;
   onDeletePaiement: (id: number) => void;
   globalAnneeScolaire?: string;
 }
@@ -45,6 +47,7 @@ export default function PaiementsTab({
   onUpdateScolariteAnnuelle,
   onAddPaiement, 
   onUpdatePaiementStatus, 
+  onUpdatePaiement,
   onDeletePaiement,
   globalAnneeScolaire
 }: PaiementsTabProps) {
@@ -93,6 +96,59 @@ export default function PaiementsTab({
   const [modalAnneeScolaire, setModalAnneeScolaire] = useState("2025-2026");
   const [datePaiement, setDatePaiement] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState("");
+
+  // Edit payment modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editSelectedEtudiantId, setEditSelectedEtudiantId] = useState<number>(0);
+  const [editModalSearchQuery, setEditModalSearchQuery] = useState("");
+  const [editShowModalDropdown, setEditShowModalDropdown] = useState(false);
+  const [editMontant, setEditMontant] = useState<number>(0);
+  const [editTypeFrais, setEditTypeFrais] = useState<'Scolarité' | 'Inscription' | 'Examen' | 'Autre'>('Scolarité');
+  const [editMethode, setEditMethode] = useState<'Carte' | 'Espèces' | 'Chèque' | 'Virement' | 'Mobile Money'>('Mobile Money');
+  const [editStatut, setEditStatut] = useState<'Payé' | 'En attente' | 'Remboursé'>('Payé');
+  const [editRecuNumero, setEditRecuNumero] = useState("");
+  const [editModalAnneeScolaire, setEditModalAnneeScolaire] = useState("");
+  const [editDatePaiement, setEditDatePaiement] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editPaiementId, setEditPaiementId] = useState<number | null>(null);
+
+  const openEditModal = (p: Paiement) => {
+    setEditPaiementId(p.id);
+    setEditSelectedEtudiantId(p.etudiant_id);
+    const student = etudiants.find(e => e.id === p.etudiant_id);
+    setEditModalSearchQuery(student ? `${student.nom.toUpperCase()} ${student.prenom} (${student.matricule})` : "");
+    setEditShowModalDropdown(false);
+    setEditMontant(p.montant);
+    setEditTypeFrais(p.type_frais);
+    setEditMethode(p.methode);
+    setEditStatut(p.statut);
+    setEditRecuNumero(p.recu_numero);
+    setEditModalAnneeScolaire(p.annee_scolaire);
+    setEditDatePaiement(p.date_paiement);
+    setEditNotes(p.notes || "");
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPaiementId || !editSelectedEtudiantId || !editMontant) return;
+
+    onUpdatePaiement({
+      id: editPaiementId,
+      etudiant_id: Number(editSelectedEtudiantId),
+      montant: Number(editMontant),
+      date_paiement: editDatePaiement,
+      type_frais: editTypeFrais,
+      methode: editMethode,
+      statut: editStatut,
+      recu_numero: editRecuNumero,
+      annee_scolaire: editModalAnneeScolaire,
+      notes: editNotes
+    });
+
+    setEditModalOpen(false);
+    setEditPaiementId(null);
+  };
 
   // Print view state for receipt modal
   const [selectedReceipt, setSelectedReceipt] = useState<Paiement | null>(null);
@@ -557,6 +613,15 @@ export default function PaiementsTab({
                                 </button>
                               )}
                               
+                              {/* Edit Payment Button */}
+                              <button
+                                onClick={() => openEditModal(p)}
+                                title="Modifier le paiement"
+                                className="p-1 text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded transition cursor-pointer"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+
                               {/* View Receipt Button */}
                               <button
                                 onClick={() => setSelectedReceipt(p)}
@@ -960,6 +1025,308 @@ export default function PaiementsTab({
                   }`}
                 >
                   Valider l'Enregistrement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT VERSEMENT */}
+      {editModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden animate-zoom-in">
+            <div className="bg-slate-900 px-5 py-3.5 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-teal-400 stroke-[2.5]" />
+                <h3 className="font-extrabold text-sm uppercase tracking-wider">Modifier le Versement</h3>
+              </div>
+              <button 
+                onClick={() => setEditModalOpen(false)}
+                className="p-1 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="flex flex-col flex-1 overflow-hidden">
+              {/* Scrollable Form Body Container */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs font-semibold scrollbar-thin">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2 space-y-2 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200 relative">
+                    <div className="flex justify-between items-center text-slate-700">
+                      <label className="font-extrabold flex items-center gap-1">
+                        <span>👤 Choisir l'Élève Payeur</span>
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <span className="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600 font-bold">
+                        Saisie filtre activée
+                      </span>
+                    </div>
+
+                    {/* Saisie textuelle de recherche avec bouton de bascule */}
+                    <div className="relative flex gap-2">
+                      <div className="relative flex-1">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                        <input
+                          type="text"
+                          value={editModalSearchQuery}
+                          onFocus={() => setEditShowModalDropdown(true)}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setEditModalSearchQuery(val);
+                            setEditShowModalDropdown(true);
+                            
+                            // Auto-select the first match if any, otherwise reset if query is empty
+                            const lower = val.toLowerCase().trim();
+                            if (lower === "") {
+                              setEditSelectedEtudiantId(0);
+                            } else {
+                              const matches = etudiants.filter(x => 
+                                x.nom.toLowerCase().includes(lower) || 
+                                x.prenom.toLowerCase().includes(lower) || 
+                                x.matricule.toLowerCase().includes(lower)
+                              );
+                              if (matches.length > 0) {
+                                setEditSelectedEtudiantId(matches[0].id);
+                              } else {
+                                setEditSelectedEtudiantId(0);
+                              }
+                            }
+                          }}
+                          placeholder="Saisissez son nom, prénom, ou matricule..."
+                          className="w-full pl-9 pr-8 py-2 bg-white border border-slate-250 rounded-lg text-xs font-semibold placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-teal-600 select-text"
+                        />
+                        {editModalSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditModalSearchQuery("");
+                              setEditSelectedEtudiantId(0);
+                              setEditShowModalDropdown(true);
+                            }}
+                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Toggle explicite pour afficher/masquer la liste */}
+                      <button
+                        type="button"
+                        onClick={() => setEditShowModalDropdown(!editShowModalDropdown)}
+                        className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-250 rounded-lg text-slate-600 transition flex items-center gap-1 font-bold shadow-sm cursor-pointer"
+                        title={editShowModalDropdown ? "Masquer la liste" : "Afficher la liste"}
+                      >
+                        <span className="text-[10px] hidden sm:inline font-bold">Liste</span>
+                        {editShowModalDropdown ? (
+                          <ChevronUp className="w-4 h-4 text-slate-500" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-slate-500" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Liste déroulante masquée par défaut (Floating Suggestions Panel) */}
+                    {editShowModalDropdown && (
+                      <div className="absolute left-3.5 right-3.5 mt-1 bg-white border border-slate-250 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-slate-100">
+                        {(() => {
+                          const filtered = etudiants.filter(etu => {
+                            const lower = editModalSearchQuery.toLowerCase();
+                            return etu.nom.toLowerCase().includes(lower) || 
+                                   etu.prenom.toLowerCase().includes(lower) || 
+                                   etu.matricule.toLowerCase().includes(lower);
+                          });
+
+                          if (filtered.length === 0) {
+                            return (
+                              <div className="p-3 text-center text-slate-400 italic">
+                                Aucun élève trouvé
+                              </div>
+                            );
+                          }
+
+                          return filtered.map(etu => {
+                            const isSelected = etu.id === editSelectedEtudiantId;
+                            return (
+                              <button
+                                key={etu.id}
+                                type="button"
+                                onClick={() => {
+                                  setEditSelectedEtudiantId(etu.id);
+                                  setEditModalSearchQuery(`${etu.nom.toUpperCase()} ${etu.prenom} (${etu.matricule})`);
+                                  setEditShowModalDropdown(false);
+                                }}
+                                className={`w-full text-left p-2.5 text-xs hover:bg-slate-50 transition flex items-center justify-between font-bold ${
+                                  isSelected ? 'bg-teal-50 text-teal-950' : 'text-slate-700'
+                                }`}
+                              >
+                                <div className="flex flex-col">
+                                  <span className={isSelected ? 'text-teal-700 font-extrabold' : 'text-slate-900'}>
+                                    {etu.nom.toUpperCase()} {etu.prenom}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-medium">
+                                    Matricule : {etu.matricule}
+                                  </span>
+                                </div>
+                                {isSelected && (
+                                  <span className="text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded text-[10px] font-extrabold flex items-center gap-1 leading-none shrink-0">
+                                    Sélectionné
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+                    )}
+
+                    {/* Mini fiche récapitulative de l'élève choisi */}
+                    {(() => {
+                      const selEtu = etudiants.find(x => x.id === editSelectedEtudiantId);
+                      if (!selEtu) {
+                        return (
+                          <div className="p-2 bg-amber-50/60 border border-amber-200 rounded-lg text-[10.5px] text-amber-800 font-bold mt-1.5 flex items-center gap-1.5 font-bold">
+                            <span>⚠️ Aucun élève sélectionné. Saisissez son nom ci-dessus ou cliquez sur "Liste" pour le repérer.</span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="p-2 bg-teal-50/50 border border-teal-200/60 rounded-lg flex items-center justify-between text-[11px] text-slate-700 font-bold mt-1.5">
+                          <span>
+                            🌍 Sélectionné : <strong className="text-teal-800 uppercase">{selEtu.nom} {selEtu.prenom}</strong> ({selEtu.matricule})
+                          </span>
+                          <span className="text-[10px] bg-teal-600 text-white px-2 py-0.5 rounded font-extrabold font-mono leading-none shrink-0">
+                            Confirmé
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1 font-bold">Numéro du Reçu <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={editRecuNumero}
+                      onChange={e => setEditRecuNumero(e.target.value)}
+                      placeholder="REC-YYYY-XXX"
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-600 font-mono font-bold select-text"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1 font-bold">Montant Perçu (CFA) <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      value={editMontant || ''}
+                      onChange={e => setEditMontant(Number(e.target.value))}
+                      placeholder="Montant total perçu"
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-600 font-mono font-bold select-text"
+                      min="1"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1 font-bold">Date du Versement <span className="text-red-500">*</span></label>
+                    <input
+                      type="date"
+                      value={editDatePaiement}
+                      onChange={e => setEditDatePaiement(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1 font-bold">Rubrique / Type de Frais</label>
+                    <select
+                      value={editTypeFrais}
+                      onChange={e => setEditTypeFrais(e.target.value as any)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none font-bold"
+                    >
+                      <option value="Scolarité">Scolarité</option>
+                      <option value="Inscription">Inscription</option>
+                      <option value="Examen">Examen / Evaluation</option>
+                      <option value="Autre">Autre Frais</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1">Canal de Règlement</label>
+                    <select
+                      value={editMethode}
+                      onChange={e => setEditMethode(e.target.value as any)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none font-bold"
+                    >
+                      <option value="Mobile Money">Mobile Money (Orange/Wave...)</option>
+                      <option value="Espèces">Espèces (Guichet)</option>
+                      <option value="Chèque">Chèque d'Établissement</option>
+                      <option value="Virement">Virement Bancaire (Compte principal)</option>
+                      <option value="Carte">Carte Bancaire / En ligne</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1">Statut du paiement</label>
+                    <select
+                      value={editStatut}
+                      onChange={e => setEditStatut(e.target.value as any)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none font-bold"
+                    >
+                      <option value="Payé">Payé (Encaissé)</option>
+                      <option value="En attente">En attente de validation</option>
+                      <option value="Remboursé">Remboursé</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-500 block mb-1">Année Scolaire <span className="text-red-500">*</span></label>
+                    <select
+                      value={editModalAnneeScolaire}
+                      onChange={e => setEditModalAnneeScolaire(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none font-bold text-teal-950"
+                    >
+                      {uniqueAnneeScolaires.map(yr => (
+                        <option key={yr} value={yr}>Année Académique {yr}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="text-slate-500 block mb-1">Remarques / Notes complémentaires</label>
+                    <textarea
+                      value={editNotes}
+                      onChange={e => setEditNotes(e.target.value)}
+                      placeholder="Ex: Premier versement..."
+                      className="w-full p-2.5 bg-slate-50 border border-slate-250 rounded-xl focus:outline-none resize-none h-16 select-text"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Fixed Non-Scrolling Button bar */}
+              <div className="flex gap-3 justify-end px-5 py-3.5 bg-slate-50 border-t border-slate-150 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="px-4 py-2 hover:bg-slate-250 text-slate-600 rounded-xl font-bold transition cursor-pointer select-none"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editSelectedEtudiantId}
+                  className={`px-5 py-2 rounded-xl font-extrabold uppercase shadow-sm transition flex items-center justify-center text-xs select-none ${
+                    !editSelectedEtudiantId
+                      ? 'bg-slate-250 text-slate-400 cursor-not-allowed shadow-none border border-slate-200'
+                      : 'bg-teal-600 hover:bg-teal-550 text-white cursor-pointer shadow-md'
+                  }`}
+                >
+                  Enregistrer les modifications
                 </button>
               </div>
             </form>
