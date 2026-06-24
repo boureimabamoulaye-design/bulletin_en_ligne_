@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Etudiant, Note, Cours, Semestre, Filiere, Classe, Matiere } from '../types';
 import { 
   Award, Printer, Download, BookOpen, User, Calendar, 
-  GraduationCap, Pencil, Save, X, Check, Trash2, AlertCircle 
+  GraduationCap, Pencil, Save, X, Check, Trash2, AlertCircle, FileText
 } from 'lucide-react';
 
 const getValidationInfo = (valStr: string) => {
@@ -30,6 +30,11 @@ const getValidationInfo = (valStr: string) => {
     helperText: "Valide ✓",
     isError: false
   };
+};
+
+const shortenSemester = (name: string): string => {
+  if (!name) return "";
+  return name.replace(/semestre\s*/i, "S");
 };
 
 interface BulletinsTabProps {
@@ -400,6 +405,119 @@ export default function BulletinsTab({
 
   return (
     <div className="space-y-6" id="bulletins-container">
+      {/* Dynamic Global Print Styles for Perfect PDF Export */}
+      <style>{`
+        @media print {
+          /* 1. Hide everything by default except the bulletin paper container */
+          body, html {
+            background: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          /* Hide typical navigation panels, mobile drawers, dashboard sidebars, and filters */
+          aside,
+          header,
+          nav,
+          footer,
+          .logo-area,
+          .sidebar-menu,
+          #bulletins-selectors,
+          #btn-back-to-dashboard,
+          .btn,
+          button,
+          select,
+          input,
+          .no-print {
+            display: none !important;
+          }
+
+          /* Hide path header at the top of the main admin container in App.tsx */
+          div[class*="justify-between"][class*="rounded-xl"][class*="p-5"],
+          div[id="dashboard-brand-header"],
+          div[class*="pt-[60px]"],
+          header[class*="border-b"],
+          #header-control-strip {
+            display: none !important;
+          }
+
+          /* 2. Reset container wrappers to let print take full A4 area */
+          #admin-workspace-layer,
+          main,
+          #bulletins-container,
+          div[class*="overflow-y-auto"],
+          div[class*="max-w-7xl"],
+          #student-portal-wrapper,
+          #student-bulletins-tab {
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+          }
+
+          /* 3. Style the printable bulletin sheet beautifully */
+          #bulletin-official-canvas,
+          #student-pdf-bulletin {
+            border: 4px double #000000 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 1.2cm !important;
+            margin: 0 auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          /* Ensure table has real border lines */
+          table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+          }
+          th, td, tr {
+            border: 1px solid #1e293b !important;
+            color: #000000 !important;
+          }
+          th {
+            background-color: #f1f5f9 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Sub-badge structures in print */
+          span[class*="rounded"] {
+            border: 1px solid #1e293b !important;
+            background: transparent !important;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Configure specific page break guidelines */
+          tr {
+            page-break-inside: avoid !important;
+          }
+          
+          @page {
+            size: A4 portrait;
+            margin: 1cm;
+          }
+        }
+      `}</style>
+
       {/* Selector ribbon */}
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-end" id="bulletins-selectors">
          <div className="flex-1 space-y-1">
@@ -441,7 +559,7 @@ export default function BulletinsTab({
             {semestres
               .filter(sem => !activeFiliereFilter || !sem.filiere_id || Number(sem.filiere_id) === Number(activeFiliereFilter))
               .map(sem => (
-                <option key={sem.id} value={sem.id}>{sem.nom_semestre} ({sem.annee_scolaire})</option>
+                <option key={sem.id} value={sem.id}>{shortenSemester(sem.nom_semestre)} ({sem.annee_scolaire})</option>
               ))}
           </select>
         </div>
@@ -474,26 +592,19 @@ export default function BulletinsTab({
               <button 
                 onClick={handleStartEditing}
                 disabled={selectedStudentId === 0}
-                className="btn bg-amber-500 hover:bg-amber-600 text-white font-black disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="btn bg-amber-500 hover:bg-amber-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition duration-200 cursor-pointer"
                 title="Passer en mode d'édition directe pour ce bulletin"
               >
-                <Pencil className="w-4 h-4" /> Modifier les notes
+                <Pencil className="w-4 h-4 text-white" /> Modifier les notes
               </button>
-              <button 
-                onClick={handlePrint}
-                disabled={selectedStudentId === 0}
-                className="btn bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 font-semibold disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                title="Lancer l'impression"
-              >
-                <Printer className="w-4 h-4" /> Imprimer
-              </button>
+
               <button 
                 onClick={handleDownloadReport}
                 disabled={selectedStudentId === 0}
-                className="btn btn-primary font-bold disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                title="Télécharger le bulletin textuel"
+                className="btn bg-sky-950 hover:bg-sky-900 border border-sky-800 text-slate-100 font-medium disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition duration-200 cursor-pointer text-xs"
+                title="Télécharger le bulletin textuel certifié brut"
               >
-                <Download className="w-4 h-4" /> Certificat PDF
+                <FileText className="w-4 h-4 text-sky-400" /> Certificat Brut (TXT)
               </button>
             </>
           )}
@@ -521,7 +632,7 @@ export default function BulletinsTab({
             
             <div className="text-center md:text-right border-l-0 md:border-l border-gray-200 pl-0 md:pl-6 shrink-0 font-mono text-xs">
               <strong className="text-slate-950 block">BULLETIN DE NOTES</strong>
-              <span className="text-gray-550 block mt-1 bg-slate-100 text-slate-800 py-1 px-3 rounded font-bold uppercase">{activeSem.nom_semestre}</span>
+              <span className="text-gray-550 block mt-1 bg-slate-100 text-slate-800 py-1 px-3 rounded font-bold uppercase">{shortenSemester(activeSem.nom_semestre)}</span>
               <span className="text-gray-400 block mt-1">Année {activeSem.annee_scolaire}</span>
             </div>
           </div>
@@ -570,7 +681,7 @@ export default function BulletinsTab({
           {/* Marks table detail */}
           <div className="border border-slate-300 rounded-xl overflow-hidden mt-6">
             <div className="overflow-x-auto w-full">
-              <table className="custom-table w-full text-xs" style={{ boxShadow: 'none' }}>
+              <table className="custom-table min-w-[850px] w-full text-xs" style={{ boxShadow: 'none' }}>
                 <thead>
                   <tr className="bg-slate-900 text-slate-100">
                     <th className="font-bold py-2.5 px-4 uppercase text-[10px] text-left">Modules / Cours Validés</th>

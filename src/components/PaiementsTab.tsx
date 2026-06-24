@@ -546,7 +546,7 @@ export default function PaiementsTab({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="min-w-[850px] w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-150 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider select-none">
                     <th className="py-3 px-4">N° Reçu</th>

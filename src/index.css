@@ -112,9 +112,9 @@ input[type="number"],
 select, 
 textarea,
 .form-control {
-  background-color: #0d1021 !important;
-  color: #ffffff !important;
-  border: 1px solid #23294b !important;
+  background-color: #0d1021;
+  color: #ffffff;
+  border: 1px solid #23294b;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 10px;
   padding: 10px 14px;
@@ -142,8 +142,8 @@ input[type="number"]:hover,
 select:hover, 
 textarea:hover,
 .form-control:hover {
-  border-color: rgba(197, 168, 128, 0.45) !important;
-  background-color: #11152a !important;
+  border-color: rgba(197, 168, 128, 0.45);
+  background-color: #11152a;
 }
 
 /* Beautiful elite focus state */
@@ -154,10 +154,10 @@ input[type="number"]:focus,
 select:focus, 
 textarea:focus,
 .form-control:focus {
-  border-color: #c5a880 !important;
-  background-color: #0e1227 !important;
-  box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.18), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  outline: none !important;
+  border-color: #c5a880;
+  background-color: #0e1227;
+  box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.18), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  outline: none;
 }
 
 /* Custom premium gold arrow chevron in dropdown menus */

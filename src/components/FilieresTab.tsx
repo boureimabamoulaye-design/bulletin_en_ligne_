@@ -5,6 +5,11 @@ import {
   ChevronDown, ChevronUp, Save, X, Layers, Sparkles 
 } from 'lucide-react';
 
+const shortenSemester = (name: string): string => {
+  if (!name) return "";
+  return name.replace(/semestre\s*/i, "S");
+};
+
 const getCreditValidationInfo = (val: number | string) => {
   const valStr = String(val).trim();
   if (valStr === "") {
@@ -454,12 +459,12 @@ export default function FilieresTab({
                           ) : (
                             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-xs">
                               <div className="overflow-x-auto w-full">
-                                <table className="custom-table w-full text-xs">
+                                <table className="custom-table min-w-[650px] w-full text-xs">
                                   <thead>
                                     <tr className="bg-gray-55 border-b border-gray-200">
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400">Code</th>
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400">Matière</th>
-                                      <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400">Semestre</th>
+                                      <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400 text-center w-24">Semestre</th>
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400 text-center">Crédits</th>
                                       <th className="py-2.5 px-3 text-[10px] uppercase font-bold text-gray-400 text-right">Actions</th>
                                     </tr>
@@ -469,9 +474,9 @@ export default function FilieresTab({
                                       <tr key={m.id} className="hover:bg-slate-50 border-b border-gray-100 last:border-b-0">
                                         <td className="py-2.5 px-3 font-mono font-bold text-gray-800">{m.code_matiere}</td>
                                         <td className="py-2.5 px-3 font-medium text-gray-700">{m.nom_matiere}</td>
-                                        <td className="py-2.5 px-3 text-gray-650">
-                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-105">
-                                            {semestres.find(s => Number(s.id) === Number(m.semestre_id))?.nom_semestre || "Non défini"}
+                                        <td className="py-2.5 px-3 text-center w-24">
+                                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-105 whitespace-nowrap">
+                                            {shortenSemester(semestres.find(s => Number(s.id) === Number(m.semestre_id))?.nom_semestre || "Non défini")}
                                           </span>
                                         </td>
                                         <td className="py-2.5 px-3 text-center font-bold text-gray-600">{m.credits}</td>

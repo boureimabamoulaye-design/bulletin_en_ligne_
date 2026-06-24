@@ -32,8 +32,13 @@ import {
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
   BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info,
   ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon,
-  Lock, ShieldAlert
+  Lock, ShieldAlert, Eye, EyeOff
 } from 'lucide-react';
+
+const shortenSemester = (name: string): string => {
+  if (!name) return "";
+  return name.replace(/semestre\s*/i, "S");
+};
 
 export default function App() {
   // --- REAL-TIME REACT STATE ENGINE WITH LOCALSTORAGE PERSISTENCE ---
@@ -106,6 +111,7 @@ export default function App() {
   const [loginRole, setLoginRole] = useState<'admin' | 'student'>('admin');
   const [usernameInput, setUsernameInput] = useState(''); // Default empty as requested
   const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedFiliereId, setSelectedFiliereId] = useState<number | "">(""); // Default empty
   const [loginError, setLoginError] = useState<string>('');
 
@@ -160,10 +166,14 @@ export default function App() {
     setAdminTheme(prev => prev === 'sombre-or' ? 'clair-pro' : 'sombre-or');
   };
 
-  // Filtered lists based on globally selected academic year
+  // Filtered lists based on globally selected academic year and filiere filter
   const filteredSemestres = React.useMemo(() => {
-    return semestres.filter(s => s.annee_scolaire === globalAnneeScolaire);
-  }, [semestres, globalAnneeScolaire]);
+    let list = semestres.filter(s => s.annee_scolaire === globalAnneeScolaire);
+    if (globalFiliereId > 0) {
+      list = list.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(globalFiliereId));
+    }
+    return list;
+  }, [semestres, globalAnneeScolaire, globalFiliereId]);
 
   const filteredPaiements = React.useMemo(() => {
     return paiements.filter(p => !p.annee_scolaire || p.annee_scolaire === globalAnneeScolaire);
@@ -878,7 +888,7 @@ export default function App() {
                     required
                   />
                   
-                  {/* Smart Assistance Role Mismatch Helper */}
+                  {/* Role Mismatch Helper */}
                   {loginRole === 'student' && usernameInput.includes('@') && (
                     <div className="mt-2 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-700 rounded-xl text-[11px] font-semibold animate-pulse flex items-center gap-2">
                       <span className="text-sm">💡</span>
@@ -902,14 +912,27 @@ export default function App() {
                   <div className="flex justify-between items-center mb-1.5">
                     <label className="block text-xs font-bold text-gray-500 uppercase">Mot de passe de sécurité</label>
                   </div>
-                  <input 
-                    type="password" 
-                    value={passwordInput}
-                    onChange={e => setPasswordInput(e.target.value)}
-                    placeholder=""
-                    className="form-control.text-sm w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
-                    required
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      value={passwordInput}
+                      onChange={e => setPasswordInput(e.target.value)}
+                      placeholder=""
+                      className="form-control.text-sm w-full p-3 pr-10 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-blue-600"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <button 
@@ -931,14 +954,17 @@ export default function App() {
       {/* 2. ADMIN PANEL CONTAINER WRAPPER */}
       {userRole === 'admin' && (
         <div 
-          className={`flex-grow flex pt-[60px] lg:pt-0 transition-colors duration-300 flex-col lg:flex-row ${
-            adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'
+          className={`flex-grow flex pt-[60px] lg:pt-0 transition-colors duration-300 ${
+            (adminActiveTab !== 'dashboard') 
+              ? `flex-col ${adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'}` 
+              : `flex-col lg:flex-row ${adminTheme === 'sombre-or' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50'}`
           }`} 
           id="admin-workspace-layer"
         >
           
           {/* Main Lateral Sidebar as requested ("Menu latéral") */}
-          <aside className="hidden lg:flex w-full lg:w-64 bg-slate-900 text-slate-100 shrink-0 flex-col justify-between border-r border-slate-800 p-4">
+          {(adminActiveTab === 'dashboard') && (
+            <aside className="hidden lg:flex w-full lg:w-64 bg-slate-900 text-slate-100 shrink-0 flex-col justify-between border-r border-slate-800 p-4">
             <div>
               {/* Brand icon */}
               <div className="logo-area flex items-center gap-3 border-b border-slate-800 pb-4 mb-6" id="dashboard-brand-header">
@@ -1313,12 +1339,13 @@ export default function App() {
                 </button>
               </div>
           </aside>
+          )}
 
           {/* Right Work Panel layout */}
           <main className="flex-1 flex flex-col min-w-0">
             {adminActiveTab !== 'dashboard' ? (
               // Focused full-screen workspace layout for deep work on any individual tab
-              <div className="flex-grow p-6 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto select-none animate-fade-in space-y-6 pb-8 md:pb-8">
+              <div className="flex-grow p-6 md:p-8 overflow-y-auto w-full mx-auto select-none animate-fade-in space-y-6 pb-8 md:pb-8 max-w-none">
                 
                 {/* Custom minimalist path header with back button */}
                 <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-xl p-5 border transition-all duration-300 shadow-sm ${
@@ -1331,15 +1358,21 @@ export default function App() {
                       onClick={() => {
                         setAdminActiveTab('dashboard');
                       }} 
-                      className={`group flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition shadow-md whitespace-nowrap shrink-0 ${
+                      className={`group flex items-center gap-2.5 py-2 px-4 rounded-xl text-xs font-bold transition-all duration-300 transform active:scale-95 cursor-pointer whitespace-nowrap shrink-0 border ${
                         adminTheme === 'sombre-or'
-                          ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-amber-500/10'
-                          : 'bg-slate-900 hover:bg-slate-800 text-white'
+                          ? 'bg-slate-950/40 border-amber-500/20 text-slate-200 hover:bg-amber-500 hover:border-amber-400 hover:text-slate-950 hover:shadow-[0_4px_20px_rgba(245,158,11,0.25)]'
+                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-900 hover:border-slate-900 hover:text-white shadow-sm hover:shadow-[0_4px_15px_rgba(15,23,42,0.12)]'
                       }`}
                       id="btn-back-to-dashboard"
                     >
-                      <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                      <span>Retour Tableau de Bord</span>
+                      <span className={`p-1.5 rounded-lg flex items-center justify-center transition-colors duration-300 ${
+                        adminTheme === 'sombre-or' 
+                          ? 'bg-amber-500/10 group-hover:bg-slate-950/20 text-amber-400 group-hover:text-slate-950' 
+                          : 'bg-slate-100 group-hover:bg-white/20 text-slate-600 group-hover:text-white'
+                      }`}>
+                        <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-1" />
+                      </span>
+                      <span className="tracking-wide">Retour Tableau de Bord</span>
                     </button>
                     <div className={`h-8 w-px hidden sm:block ${adminTheme === 'sombre-or' ? 'bg-amber-500/15' : 'bg-gray-200'}`}></div>
                     <div>
@@ -1479,7 +1512,7 @@ export default function App() {
                             {filteredSemestres
                               .filter(s => !globalFiliereId || Number(s.filiere_id) === Number(globalFiliereId))
                               .map(s => (
-                                <option key={s.id} value={s.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{s.nom_semestre}</option>
+                                <option key={s.id} value={s.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{shortenSemester(s.nom_semestre)}</option>
                               ))}
                           </select>
                         </div>
@@ -1760,7 +1793,7 @@ export default function App() {
                         }`}
                       >
                         {filteredSemestres.map(s => (
-                          <option key={s.id} value={s.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{s.nom_semestre}</option>
+                          <option key={s.id} value={s.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>{shortenSemester(s.nom_semestre)}</option>
                         ))}
                       </select>
                     </div>
@@ -1775,7 +1808,7 @@ export default function App() {
                   </div>
                 </header>
 
-                <div className="flex-grow p-6 overflow-y-auto max-w-7xl w-full mx-auto select-none pb-6 lg:pb-6">
+                <div className="flex-grow p-6 overflow-y-auto max-w-none w-full mx-auto select-none pb-6 lg:pb-6">
                   <AdminDashboard 
                     etudiants={etudiants} 
                     filieres={filieres} 
@@ -1929,14 +1962,6 @@ export default function App() {
               <Shield className="w-3.5 h-3.5 text-emerald-400" />
               Scolarité d'étude sécurisée connectée l'étudiant
             </span>
-            <div className="flex gap-2">
-              <button 
-                onClick={handleLogout}
-                className="bg-red-650/40 hover:bg-slate-800 hover:text-red-400 p-1 px-2.5 rounded font-black transition cursor-pointer"
-              >
-                Sortir de session
-              </button>
-            </div>
           </div>
 
           <StudentPortal 

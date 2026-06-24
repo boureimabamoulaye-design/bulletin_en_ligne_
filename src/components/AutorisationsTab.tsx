@@ -178,7 +178,7 @@ export default function AutorisationsTab({ autorisations, etudiants, filieres, l
               <h4 className="font-bold text-gray-850">Accréditations d'Accès Actives (Inter-Filières)</h4>
             </div>
             <div className="overflow-x-auto w-full">
-              <table className="custom-table text-xs">
+              <table className="custom-table min-w-[700px] text-xs">
                 <thead>
                   <tr>
                     <th>Matricule</th>
@@ -240,7 +240,7 @@ export default function AutorisationsTab({ autorisations, etudiants, filieres, l
           </span>
         </div>
         <div className="overflow-x-auto w-full">
-          <table className="custom-table text-xs">
+          <table className="custom-table min-w-[800px] text-xs">
             <thead>
               <tr>
                 <th>Date de Consultation</th>

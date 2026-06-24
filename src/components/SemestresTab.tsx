@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { Semestre, Note, Cours, Filiere } from '../types';
 import { Calendar, Plus, Trash2 } from 'lucide-react';
 
+const shortenSemester = (name: string): string => {
+  if (!name) return "";
+  return name.replace(/semestre\s*/i, "S");
+};
+
 interface SemestresTabProps {
   semestres: Semestre[];
   notes: Note[];
@@ -129,10 +134,10 @@ export default function SemestresTab({
           <h4 className="font-bold text-gray-800">Semestres Enregistrés</h4>
         </div>
         <div className="overflow-x-auto w-full">
-          <table className="custom-table">
+          <table className="custom-table min-w-[750px]">
             <thead>
               <tr>
-                <th>Période d'évaluation</th>
+                <th className="w-44">Période</th>
                 <th>Filière Associée</th>
                 <th>Année Scolaire</th>
                 <th>Courses Liés</th>
@@ -149,9 +154,9 @@ export default function SemestresTab({
 
                 return (
                   <tr key={s.id} className="hover:bg-slate-50 transition">
-                    <td className="font-semibold text-gray-950 flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-blue-600" />
-                      <span>{s.nom_semestre}</span>
+                    <td className="font-semibold text-gray-950 flex items-center gap-3 w-44">
+                      <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span className="truncate">{shortenSemester(s.nom_semestre)}</span>
                     </td>
                     <td>
                       <span className="bg-indigo-50 border border-indigo-100 font-bold text-[11px] px-2.5 py-1 rounded-full text-indigo-700">

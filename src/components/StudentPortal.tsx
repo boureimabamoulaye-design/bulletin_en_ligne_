@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Etudiant, Note, Cours, Semestre, Filiere, Classe, AutorisationFiliere, HistoriqueAcces, Paiement } from '../types';
-import { GraduationCap, Award, FileText, Lock, ShieldAlert, CheckCircle, Download, Printer, User, BookOpen, Menu, X, LogOut, DollarSign } from 'lucide-react';
+import { GraduationCap, Award, FileText, Lock, ShieldAlert, CheckCircle, Download, Printer, User, BookOpen, Menu, X, LogOut, DollarSign, Eye, EyeOff } from 'lucide-react';
 
 interface StudentPortalProps {
   activeStudent: Etudiant;
@@ -22,6 +22,11 @@ interface StudentPortalProps {
   onAnneeScolaireChange?: (annee: string) => void;
 }
 
+const shortenSemester = (name: string): string => {
+  if (!name) return "";
+  return name.replace(/semestre\s*/i, "S");
+};
+
 export default function StudentPortal({ 
   activeStudent, 
   etudiants = [],
@@ -41,7 +46,7 @@ export default function StudentPortal({
   globalAnneeScolaire,
   onAnneeScolaireChange
 }: StudentPortalProps) {
-  const [activeTab, setActiveTab] = useState<'profil' | 'cours' | 'notes' | 'bulletins' | 'paiements'>('profil');
+  const [activeTab, setActiveTab] = useState<'profil' | 'cours' | 'notes' | 'bulletins' | 'paiements'>('bulletins');
   const [menuOpen, setMenuOpen] = useState(false);
   const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
   const [selectedSemestreId, setSelectedSemestreId] = useState<number>(() => {
@@ -83,6 +88,8 @@ export default function StudentPortal({
   // Password fields
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
   const [passMsg, setPassMsg] = useState({ text: "", type: "" });
 
   const [courseFiliereFilter, setCourseFiliereFilter] = useState<number>(() => {
@@ -302,38 +309,41 @@ export default function StudentPortal({
               <button
                 type="button"
                 onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2024-2025")}
-                className={`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                className={`text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
                   selectedStudentAnnee === "2024-2025"
                     ? "bg-blue-600 text-white shadow"
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
                 }`}
                 title="Année Précédente"
               >
-                Précédent (24-25)
+                <span className="hidden sm:inline">Précédent (24-25)</span>
+                <span className="sm:hidden">24-25</span>
               </button>
               <button
                 type="button"
                 onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2025-2026")}
-                className={`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                className={`text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
                   selectedStudentAnnee === "2025-2026"
                     ? "bg-blue-600 text-white shadow"
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
                 }`}
                 title="Année Courante"
               >
-                Courant (25-26)
+                <span className="hidden sm:inline">Courant (25-26)</span>
+                <span className="sm:hidden">25-26</span>
               </button>
               <button
                 type="button"
                 onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2026-2027")}
-                className={`text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                className={`text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
                   selectedStudentAnnee === "2026-2027"
                     ? "bg-blue-600 text-white shadow"
                     : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
                 }`}
                 title="Année Suivante"
               >
-                Suivant (26-27)
+                <span className="hidden sm:inline">Suivant (26-27)</span>
+                <span className="sm:hidden">26-27</span>
               </button>
             </div>
 
@@ -351,14 +361,6 @@ export default function StudentPortal({
                 ))}
               </select>
             </div>
-            
-            <button 
-              onClick={onLogout}
-              className="flex items-center gap-2 p-1.5 px-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-xs font-bold hover:bg-red-150 transition cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5 text-red-600" />
-              <span>Déconnexion</span>
-            </button>
           </div>
         </header>
 
@@ -418,23 +420,49 @@ export default function StudentPortal({
                   <form onSubmit={handlePasswordChange} className="space-y-3.5 text-xs">
                     <div className="form-group mb-0">
                       <label className="form-label">Ancien mot de passe</label>
-                      <input 
-                        type="password" 
-                        value={currentPass}
-                        onChange={e => setCurrentPass(e.target.value)}
-                        className="form-control" 
-                        required
-                      />
+                      <div className="relative">
+                        <input 
+                          type={showCurrentPass ? "text" : "password"} 
+                          value={currentPass}
+                          onChange={e => setCurrentPass(e.target.value)}
+                          className="form-control pr-10" 
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPass(!showCurrentPass)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        >
+                          {showCurrentPass ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     <div className="form-group mb-0">
                       <label className="form-label">Nouveau mot de passe</label>
-                      <input 
-                        type="password" 
-                        value={newPass}
-                        onChange={e => setNewPass(e.target.value)}
-                        className="form-control" 
-                        required
-                      />
+                      <div className="relative">
+                        <input 
+                          type={showNewPass ? "text" : "password"} 
+                          value={newPass}
+                          onChange={e => setNewPass(e.target.value)}
+                          className="form-control pr-10" 
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPass(!showNewPass)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                        >
+                          {showNewPass ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     <button type="submit" className="btn btn-primary font-bold text-xs">Enregistrer</button>
                   </form>
@@ -582,14 +610,14 @@ export default function StudentPortal({
                       {semestres
                         .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
                         .map(s => (
-                          <option key={s.id} value={s.id}>{s.nom_semestre} ({s.annee_scolaire})</option>
+                          <option key={s.id} value={s.id}>{shortenSemester(s.nom_semestre)} ({s.annee_scolaire})</option>
                         ))}
                     </select>
                   </div>
                 </div>
 
                 <div className="overflow-x-auto w-full">
-                  <table className="custom-table text-xs">
+                  <table className="custom-table min-w-[850px] text-xs">
                     <thead>
                       <tr className="bg-slate-900 text-slate-100 font-bold">
                         <th className="py-2.5 px-4 uppercase text-[10px] text-left">Intitulé de la Matière / Module</th>
@@ -736,7 +764,7 @@ export default function StudentPortal({
                     <div className="bg-slate-900 text-slate-100 p-5 flex flex-col sm:flex-row justify-between items-center text-xs font-bold shrink-0 rounded-b-xl gap-3">
                       <div className="flex items-center gap-2">
                         <span>Période active :</span>
-                        <span className="text-amber-400 font-extrabold uppercase">{activeSem ? activeSem.nom_semestre : "Semestre"}</span>
+                        <span className="text-amber-400 font-extrabold uppercase">{activeSem ? shortenSemester(activeSem.nom_semestre) : "Semestre"}</span>
                       </div>
                       <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
                         <div>
@@ -771,15 +799,10 @@ export default function StudentPortal({
                     {semestres
                       .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
                       .map(s => (
-                        <option key={s.id} value={s.id}>{s.nom_semestre}</option>
+                        <option key={s.id} value={s.id}>{shortenSemester(s.nom_semestre)}</option>
                       ))}
                   </select>
-                  <button 
-                    onClick={handlePrint}
-                    className="btn bg-gray-100 hover:bg-gray-200 text-slate-800 border border-gray-300 flex items-center gap-1 text-xs"
-                  >
-                    <Printer className="w-3.5 h-3.5" /> Imprimer
-                  </button>
+
                 </div>
               </div>
 
@@ -798,9 +821,9 @@ export default function StudentPortal({
                       <h2 className="text-lg font-black text-slate-950 tracking-tight">INSTITUT ACADÉMIQUE DE SCOLARITÉ</h2>
                       <p className="text-xs text-gray-400 mt-1 uppercase leading-none font-bold">Abidjan - Plateau | Tel: +225 01 02 03 04 05</p>
                     </div>
-                    <div className="text-center md:text-right font-mono text-xs border border-slate-200 bg-slate-50 p-2.5 rounded-lg">
+                    <div className="text-center md:text-right font-mono text-xs border border-slate-200 bg-slate-50 p-2.5 rounded-lg w-full md:w-auto">
                       <strong className="text-slate-900 block font-black uppercase">BULLETIN SCOLAIRE OFFICIEL</strong>
-                      <span className="text-blue-700 font-extrabold uppercase mt-1 block">{activeSem.nom_semestre} ({activeSem.annee_scolaire})</span>
+                      <span className="text-blue-700 font-extrabold uppercase mt-1 block">{shortenSemester(activeSem.nom_semestre)} ({activeSem.annee_scolaire})</span>
                     </div>
                   </div>
 
@@ -832,7 +855,7 @@ export default function StudentPortal({
                   {/* Grades grid */}
                   <div className="border border-slate-300 rounded-xl overflow-hidden mt-6">
                     <div className="overflow-x-auto w-full">
-                      <table className="custom-table w-full text-xs">
+                      <table className="custom-table min-w-[850px] w-full text-xs">
                         <thead>
                           <tr className="bg-slate-900 text-slate-100 font-bold">
                             <th className="py-2.5 px-4 font-bold text-left">Cours module</th>
@@ -1120,7 +1143,7 @@ export default function StudentPortal({
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
+                        <table className="min-w-[700px] w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-extrabold uppercase text-[9px] tracking-wider select-none">
                               <th className="py-3 px-4">N° Reçu</th>

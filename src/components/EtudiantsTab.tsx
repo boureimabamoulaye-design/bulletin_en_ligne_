@@ -787,7 +787,7 @@ export default function EtudiantsTab({
       {/* Student List View */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" id="students-list-card">
         <div className="overflow-x-auto w-full">
-          <table className="custom-table">
+          <table className="custom-table min-w-[850px]">
             <thead>
               <tr>
                 <th>Matricule</th>

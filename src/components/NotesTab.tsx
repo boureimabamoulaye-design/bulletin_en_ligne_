@@ -10,7 +10,7 @@ const getValidationInfo = (valStr: string) => {
   if (trimmed === "") {
     return {
       isValid: true,
-      className: "border-gray-300 bg-white text-gray-900 focus:ring-blue-100 focus:border-blue-500",
+      className: "border-[#23273e] bg-[#0d1021] text-white focus:border-[#c5a880] focus:ring-[#c5a880]/20 font-medium text-sm shadow-inner",
       helperText: "",
       isError: false
     };
@@ -19,23 +19,23 @@ const getValidationInfo = (valStr: string) => {
   if (isNaN(num)) {
     return {
       isValid: false,
-      className: "!border-rose-500 !bg-rose-50 !text-rose-900 focus:!ring-rose-200 focus:!border-rose-500 shadow-sm shadow-rose-100 animate-pulse",
-      helperText: "Format numérique invalide",
+      className: "!border-rose-500 !bg-rose-950/40 !text-rose-200 focus:!ring-rose-500/20 shadow-sm shadow-rose-900/30 animate-pulse font-bold text-sm",
+      helperText: "Format invalide",
       isError: true
     };
   }
   if (num < 0 || num > 20) {
     return {
       isValid: false,
-      className: "!border-rose-500 !bg-rose-50 !text-rose-900 focus:!ring-rose-200 focus:!border-rose-500 shadow-sm shadow-rose-100 animate-bounce-subtle",
-      helperText: "Doit être entre 0 et 20 !",
+      className: "!border-rose-500 !bg-rose-950/40 !text-rose-200 focus:!ring-rose-500/20 shadow-sm shadow-rose-900/30 font-bold text-sm",
+      helperText: "Hors intervalle (0-20)",
       isError: true
     };
   }
   return {
     isValid: true,
-    className: "!border-emerald-500 !bg-emerald-50/50 !text-emerald-950 focus:!ring-emerald-200 focus:!border-emerald-500",
-    helperText: "Note valide ✓",
+    className: "!border-emerald-500 !bg-emerald-950/40 !text-emerald-300 focus:!ring-emerald-500/20 font-bold text-sm shadow-xs",
+    helperText: "Valide ✓",
     isError: false
   };
 };
@@ -557,8 +557,8 @@ export default function NotesTab({
       {/* Primary Grid View: Saisie Left, Logs Right */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         
-        {/* LEFT COLUMN: ACTIVE WORKFLOW (7 columns) */}
-        <div className="xl:col-span-7">
+        {/* LEFT COLUMN: ACTIVE WORKFLOW (Full 12 columns for maximum screen coverage) */}
+        <div className="xl:col-span-12">
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6" id="matricule-syllabus-card">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
               <div className="flex items-center gap-2">
@@ -822,14 +822,14 @@ export default function NotesTab({
                     <form onSubmit={handleSyllabusSubmit} className="space-y-4">
                       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs">
                         <div className="overflow-x-auto w-full">
-                          <table className="custom-table w-full text-xs" style={{ boxShadow: 'none' }}>
+                          <table className="custom-table min-w-[850px] w-full" style={{ boxShadow: 'none' }}>
                             <thead>
-                              <tr className="bg-gray-55 text-gray-700">
-                                <th className="py-2.5 px-3 font-bold text-left uppercase text-[10px]">Matière obligatoire</th>
-                                <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-14">Crédits</th>
-                                <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-28">Note Classe (40%)</th>
-                                <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-28">Note Examen (60%)</th>
-                                <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-28">Note Finale Est.</th>
+                              <tr>
+                                <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Matière obligatoire</th>
+                                <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Crédits</th>
+                                <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Classe (40%)</th>
+                                <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Examen (60%)</th>
+                                <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-36">Note Finale Est.</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -851,20 +851,20 @@ export default function NotesTab({
                                 });
 
                                 return (
-                                  <tr key={m.id} className="hover:bg-slate-50 transition border-b border-gray-150 last:border-b-0">
-                                    <td className="py-3 px-3">
-                                      <div className="font-semibold text-gray-900">{m.nom_matiere}</div>
-                                      <div className="font-mono text-[9px] text-gray-400 mt-0.5">{m.code_matiere}</div>
+                                  <tr key={m.id} className="hover:bg-slate-900/40 transition border-b border-[#20253f] last:border-b-0">
+                                    <td className="py-4 px-4">
+                                      <div className="font-bold text-white text-sm">{m.nom_matiere}</div>
+                                      <div className="font-mono text-[10px] text-amber-500/85 font-semibold mt-0.5 uppercase tracking-wider">{m.code_matiere}</div>
                                       {matchingNotesForMatiere.length > 0 && (
-                                        <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-600 font-bold bg-amber-50 px-1.5 py-0.5 rounded w-fit">
-                                          <Clock className="w-3 h-3" />
+                                        <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[#cca072] font-semibold bg-[#191410] px-2 py-0.5 rounded border border-[#cca072]/20 w-fit">
+                                          <Clock className="w-3.5 h-3.5" />
                                           <span>Déjà {matchingNotesForMatiere.length} évaluation(s) saisie(s)</span>
                                         </div>
                                       )}
                                     </td>
-                                    <td className="py-3 px-3 text-center font-bold text-gray-550 font-bold text-gray-600">{m.credits} ECTS</td>
-                                    <td className="py-3 px-3 text-center">
-                                      <div className="flex flex-col items-center">
+                                    <td className="py-4 px-4 text-center font-mono font-bold text-slate-300 text-xs bg-slate-950/20">{m.credits} ECTS</td>
+                                    <td className="py-4 px-4">
+                                      <div className="flex flex-col items-center justify-center">
                                         <input 
                                           type="number"
                                           step="0.1"
@@ -878,17 +878,17 @@ export default function NotesTab({
                                               [m.id]: { ...currentInput, note_classe: e.target.value }
                                             });
                                           }}
-                                          className={`form-control py-1 px-2 text-center text-xs font-bold w-20 mx-auto ${getValidationInfo(currentInput.note_classe).className}`}
+                                          className={`py-2 px-3 text-center text-sm font-extrabold w-32 focus:ring-2 focus:outline-none rounded-xl border transition-all ${getValidationInfo(currentInput.note_classe).className}`}
                                         />
                                         {getValidationInfo(currentInput.note_classe).helperText && (
-                                          <span className={`text-[9px] font-extrabold mt-1 block ${getValidationInfo(currentInput.note_classe).isError ? 'text-rose-600 bg-rose-50 px-1 py-0.5 rounded border border-rose-100' : 'text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100'}`}>
+                                          <span className={`text-[10px] font-black uppercase tracking-wider mt-1.5 block px-2 py-0.5 rounded border text-center ${getValidationInfo(currentInput.note_classe).isError ? 'text-rose-400 bg-rose-950/40 border-rose-900/30' : 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30'}`}>
                                             {getValidationInfo(currentInput.note_classe).helperText}
                                           </span>
                                         )}
                                       </div>
                                     </td>
-                                    <td className="py-3 px-3 text-center">
-                                      <div className="flex flex-col items-center">
+                                    <td className="py-4 px-4">
+                                      <div className="flex flex-col items-center justify-center">
                                         <input 
                                           type="number"
                                           step="0.1"
@@ -902,26 +902,26 @@ export default function NotesTab({
                                               [m.id]: { ...currentInput, note_examen: e.target.value }
                                             });
                                           }}
-                                          className={`form-control py-1 px-2 text-center text-xs font-bold w-20 mx-auto ${getValidationInfo(currentInput.note_examen).className}`}
+                                          className={`py-2 px-3 text-center text-sm font-extrabold w-32 focus:ring-2 focus:outline-none rounded-xl border transition-all ${getValidationInfo(currentInput.note_examen).className}`}
                                         />
                                         {getValidationInfo(currentInput.note_examen).helperText && (
-                                          <span className={`text-[9px] font-extrabold mt-1 block ${getValidationInfo(currentInput.note_examen).isError ? 'text-rose-600 bg-rose-50 px-1 py-0.5 rounded border border-rose-100' : 'text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100'}`}>
+                                          <span className={`text-[10px] font-black uppercase tracking-wider mt-1.5 block px-2 py-0.5 rounded border text-center ${getValidationInfo(currentInput.note_examen).isError ? 'text-rose-400 bg-rose-950/40 border-rose-900/30' : 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30'}`}>
                                             {getValidationInfo(currentInput.note_examen).helperText}
                                           </span>
                                         )}
                                       </div>
                                     </td>
-                                    <td className="py-3 px-3 text-center">
+                                    <td className="py-4 px-4 text-center">
                                       {computed !== null ? (
-                                        <strong className={`font-mono text-xs px-2 py-0.5 rounded-full ${
+                                        <span className={`inline-flex items-center justify-center font-mono text-sm font-black px-3 py-1 rounded-xl border ${
                                           computed >= 10 
-                                            ? "bg-emerald-100 text-emerald-800" 
-                                            : "bg-rose-100 text-rose-800"
+                                            ? "bg-emerald-950/50 border-emerald-500/35 text-emerald-400 shadow-sm shadow-emerald-950/20" 
+                                            : "bg-rose-950/50 border-rose-500/35 text-rose-400 shadow-sm shadow-rose-950/20"
                                         }`}>
-                                          {computed.toFixed(2)}/20
-                                        </strong>
+                                          {computed.toFixed(2)} / 20
+                                        </span>
                                       ) : (
-                                        <span className="text-gray-350 italic text-[11px]">-</span>
+                                        <span className="text-slate-500 font-bold text-sm select-none">-</span>
                                       )}
                                     </td>
                                   </tr>
@@ -1089,13 +1089,13 @@ export default function NotesTab({
                     <form onSubmit={handleCollectiveSubmit} className="space-y-4">
                       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs">
                         <div className="overflow-x-auto w-full">
-                          <table className="custom-table w-full text-xs" style={{ boxShadow: 'none' }}>
+                          <table className="custom-table min-w-[750px] w-full" style={{ boxShadow: 'none' }}>
                             <thead>
-                              <tr className="bg-gray-55 text-gray-700">
-                                <th className="py-2.5 px-3 font-bold text-left uppercase text-[10px]">Étudiant</th>
-                                <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-32">Note Classe (40%)</th>
-                                <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-32">Note Examen (60%)</th>
-                                <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-32">Note Finale Est.</th>
+                              <tr>
+                                <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Étudiant</th>
+                                <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Classe (40%)</th>
+                                <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Examen (60%)</th>
+                                <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-36">Note Finale Est.</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1114,19 +1114,19 @@ export default function NotesTab({
                                 });
 
                                 return (
-                                  <tr key={st.id} className="hover:bg-slate-50 transition border-b border-gray-150 last:border-b-0">
-                                    <td className="py-3 px-3">
-                                      <div className="font-semibold text-gray-900">{st.nom} {st.prenom}</div>
-                                      <div className="font-mono text-[9px] text-gray-400 mt-0.5">{st.matricule}</div>
+                                  <tr key={st.id} className="hover:bg-slate-900/40 transition border-b border-[#20253f] last:border-b-0">
+                                    <td className="py-4 px-4">
+                                      <div className="font-bold text-white text-sm">{st.nom} {st.prenom}</div>
+                                      <div className="font-mono text-[10.5px] text-amber-500/85 font-semibold mt-0.5 uppercase tracking-wider">{st.matricule}</div>
                                       {matchingNotesForMatiere.length > 0 && (
-                                        <div className="mt-1 flex items-center gap-1 text-[9px] text-amber-600 font-bold bg-amber-50 px-1.5 py-0.5 rounded w-fit border border-amber-100">
-                                          <Clock className="w-3 h-3" />
+                                        <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[#cca072] font-semibold bg-[#191410] px-2 py-0.5 rounded border border-[#cca072]/20 w-fit">
+                                          <Clock className="w-3.5 h-3.5" />
                                           <span>Déjà évalué : {Number(matchingNotesForMatiere[0].note).toFixed(2)}/20</span>
                                         </div>
                                       )}
                                     </td>
-                                    <td className="py-3 px-3">
-                                      <div className="flex flex-col items-center">
+                                    <td className="py-4 px-4">
+                                      <div className="flex flex-col items-center justify-center">
                                         <input 
                                           type="number"
                                           step="0.1"
@@ -1140,17 +1140,17 @@ export default function NotesTab({
                                               [st.id]: { ...currentInput, note_classe: e.target.value }
                                             });
                                           }}
-                                          className={`form-control py-1 px-2 text-center text-xs font-bold w-20 mx-auto ${getValidationInfo(currentInput.note_classe).className}`}
+                                          className={`py-2 px-3 text-center text-sm font-extrabold w-32 focus:ring-2 focus:outline-none rounded-xl border transition-all ${getValidationInfo(currentInput.note_classe).className}`}
                                         />
                                         {getValidationInfo(currentInput.note_classe).helperText && (
-                                          <span className={`text-[9px] font-extrabold mt-1 block ${getValidationInfo(currentInput.note_classe).isError ? 'text-rose-600 bg-rose-50 px-1 py-0.5 rounded border border-rose-100' : 'text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100'}`}>
+                                          <span className={`text-[10px] font-black uppercase tracking-wider mt-1.5 block px-2 py-0.5 rounded border text-center ${getValidationInfo(currentInput.note_classe).isError ? 'text-rose-400 bg-rose-950/40 border-rose-900/30' : 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30'}`}>
                                             {getValidationInfo(currentInput.note_classe).helperText}
                                           </span>
                                         )}
                                       </div>
                                     </td>
-                                    <td className="py-3 px-3">
-                                      <div className="flex flex-col items-center">
+                                    <td className="py-4 px-4">
+                                      <div className="flex flex-col items-center justify-center">
                                         <input 
                                           type="number"
                                           step="0.1"
@@ -1164,26 +1164,26 @@ export default function NotesTab({
                                               [st.id]: { ...currentInput, note_examen: e.target.value }
                                             });
                                           }}
-                                          className={`form-control py-1 px-2 text-center text-xs font-bold w-20 mx-auto ${getValidationInfo(currentInput.note_examen).className}`}
+                                          className={`py-2 px-3 text-center text-sm font-extrabold w-32 focus:ring-2 focus:outline-none rounded-xl border transition-all ${getValidationInfo(currentInput.note_examen).className}`}
                                         />
                                         {getValidationInfo(currentInput.note_examen).helperText && (
-                                          <span className={`text-[9px] font-extrabold mt-1 block ${getValidationInfo(currentInput.note_examen).isError ? 'text-rose-600 bg-rose-50 px-1 py-0.5 rounded border border-rose-100' : 'text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100'}`}>
+                                          <span className={`text-[10px] font-black uppercase tracking-wider mt-1.5 block px-2 py-0.5 rounded border text-center ${getValidationInfo(currentInput.note_examen).isError ? 'text-rose-400 bg-rose-950/40 border-rose-900/30' : 'text-emerald-400 bg-emerald-950/40 border-emerald-900/30'}`}>
                                             {getValidationInfo(currentInput.note_examen).helperText}
                                           </span>
                                         )}
                                       </div>
                                     </td>
-                                    <td className="py-3 px-3 text-center">
+                                    <td className="py-4 px-4 text-center">
                                       {computed !== null ? (
-                                        <strong className={`font-mono text-xs px-2 py-0.5 rounded-full ${
+                                        <span className={`inline-flex items-center justify-center font-mono text-sm font-black px-3 py-1 rounded-xl border ${
                                           computed >= 10 
-                                            ? "bg-emerald-100 text-emerald-800" 
-                                            : "bg-rose-100 text-rose-800"
+                                            ? "bg-emerald-950/50 border-emerald-500/35 text-emerald-400 shadow-sm shadow-emerald-950/20" 
+                                            : "bg-rose-950/50 border-rose-500/35 text-rose-400 shadow-sm shadow-rose-950/20"
                                         }`}>
-                                          {computed.toFixed(2)}/20
-                                        </strong>
+                                          {computed.toFixed(2)} / 20
+                                        </span>
                                       ) : (
-                                        <span className="text-gray-350 italic text-[11px]">-</span>
+                                        <span className="text-slate-500 font-bold text-sm select-none">-</span>
                                       )}
                                     </td>
                                   </tr>
@@ -1351,16 +1351,16 @@ export default function NotesTab({
                       </button>
                     </div>
 
-                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs max-h-60 overflow-y-auto">
-                      <table className="custom-table w-full text-xs" style={{ boxShadow: 'none' }}>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs max-h-60 overflow-y-auto overflow-x-auto">
+                      <table className="custom-table min-w-[700px] w-full" style={{ boxShadow: 'none' }}>
                         <thead>
-                          <tr className="bg-gray-55 text-gray-700">
-                            <th className="py-2.5 px-3 font-bold text-left uppercase text-[10px]">Ligne / Matricule</th>
-                            <th className="py-2.5 px-3 font-bold text-left uppercase text-[10px]">Étudiant identifié</th>
-                            <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-20">Note CC</th>
-                            <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-20">Note Exam</th>
-                            <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-20">Moyenne</th>
-                            <th className="py-2.5 px-3 font-bold text-center uppercase text-[10px] w-24">Validité</th>
+                          <tr>
+                            <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Ligne / Matricule</th>
+                            <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Étudiant identifié</th>
+                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Note CC</th>
+                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Note Exam</th>
+                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Moyenne</th>
+                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-28">Validité</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1370,30 +1370,36 @@ export default function NotesTab({
                             const avgVal = row.isValid ? (cc * 0.4) + (ds * 0.6) : null;
                             
                             return (
-                              <tr key={row.id} className={`border-b border-gray-150 last:border-b-0 ${row.isValid ? 'bg-white hover:bg-slate-50' : 'bg-rose-50/30'}`}>
-                                <td className="py-2 px-3">
-                                  <div className="font-bold text-indigo-905 font-mono text-[10px]">Ligne #{row.id}</div>
-                                  <div className="font-mono text-xs font-black text-gray-900 uppercase">{row.matricule}</div>
+                              <tr key={row.id} className={`border-b border-[#20253f] last:border-b-0 transition-colors ${row.isValid ? 'bg-slate-900/40 hover:bg-slate-900/60' : 'bg-rose-950/20 hover:bg-rose-950/30'}`}>
+                                <td className="py-3 px-4">
+                                  <div className="font-extrabold text-[#cca072] font-mono text-[10.5px] uppercase tracking-wider">Ligne #{row.id}</div>
+                                  <div className="font-mono text-[11px] font-black text-amber-500 uppercase mt-0.5">{row.matricule}</div>
                                 </td>
-                                <td className="py-2 px-3 font-semibold text-gray-900">{row.studentName}</td>
-                                <td className="py-2 px-3 text-center font-bold">{row.noteClasse}/20</td>
-                                <td className="py-2 px-3 text-center font-bold">{row.noteExamen}/20</td>
-                                <td className="py-2 px-3 text-center">
+                                <td className="py-3 px-4 font-bold text-white text-xs">{row.studentName}</td>
+                                <td className="py-3 px-4 text-center font-black text-xs text-slate-200">{row.noteClasse} / 20</td>
+                                <td className="py-3 px-4 text-center font-black text-xs text-slate-200">{row.noteExamen} / 20</td>
+                                <td className="py-3 px-4 text-center">
                                   {avgVal !== null ? (
-                                    <span className="font-mono font-black text-slate-900">{avgVal.toFixed(2)}</span>
-                                  ) : "-"}
+                                    <span className={`inline-flex items-center justify-center font-mono text-xs font-black px-2 py-0.5 rounded-lg border ${
+                                      avgVal >= 10 
+                                        ? "bg-emerald-950/40 border-emerald-500/20 text-emerald-400" 
+                                        : "bg-rose-950/40 border-rose-500/20 text-rose-400"
+                                    }`}>
+                                      {avgVal.toFixed(2)}
+                                    </span>
+                                  ) : <span className="text-slate-500 font-bold text-xs select-none">-</span>}
                                 </td>
-                                <td className="py-2 px-3 text-center">
+                                <td className="py-3 px-4 text-center">
                                   {row.isValid ? (
-                                    <span className="bg-emerald-100 text-emerald-800 font-extrabold uppercase text-[9px] px-2 py-0.5 rounded-full">
+                                    <span className="bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 font-black uppercase text-[10px] tracking-wider px-2.5 py-1 rounded-lg">
                                       Prêt ✓
                                     </span>
                                   ) : (
-                                    <div className="flex flex-col items-center">
-                                      <span className="bg-rose-100 text-rose-800 font-extrabold uppercase text-[9px] px-2 py-0.5 rounded-full">
+                                    <div className="flex flex-col items-center gap-1">
+                                      <span className="bg-rose-950/60 border border-rose-500/30 text-rose-400 font-black uppercase text-[10px] tracking-wider px-2.5 py-1 rounded-lg">
                                         Rejeté ✗
                                       </span>
-                                      <span className="text-[9px] text-rose-600 font-bold block mt-1 lowercase first-letter:uppercase">{row.errorReason}</span>
+                                      <span className="text-[10px] text-rose-300 font-medium block text-center max-w-[150px] leading-tight mt-0.5">{row.errorReason}</span>
                                     </div>
                                   )}
                                 </td>
@@ -1410,8 +1416,8 @@ export default function NotesTab({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: RECENT VALIDATED EVALUATIONS LIST (5 columns) */}
-        <div className="xl:col-span-5">
+        {/* RIGHT COLUMN: RECENT VALIDATED EVALUATIONS LIST (Under the workflow, spans full 12 columns) */}
+        <div className="xl:col-span-12">
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm" id="grades-history-card">
             <div className="px-5 py-4 border-b border-gray-150 bg-gray-55 flex justify-between items-center bg-gray-50">
               <h4 className="font-bold text-gray-900 text-xs uppercase tracking-wide">
