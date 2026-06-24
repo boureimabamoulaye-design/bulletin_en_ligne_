@@ -75,6 +75,22 @@ export default function StudentPortal({
     }
   }, [globalAnneeScolaire]);
 
+  // Reset all state when the active student changes to prevent state leakage and bugs when multiple students connect
+  React.useEffect(() => {
+    setActiveTab('bulletins');
+    setMenuOpen(false);
+    
+    const sSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
+    const firstSemId = sSemestres[0]?.id || semestres[0]?.id || 0;
+    setSelectedSemestreId(firstSemId);
+    
+    setCourseFiliereFilter(initialFiliereId || activeStudent.filiere_id);
+    
+    setCurrentPass("");
+    setNewPass("");
+    setPassMsg({ text: "", type: "" });
+  }, [activeStudent.id, activeStudent.filiere_id, initialFiliereId, semestres]);
+
   // Synchronise selectedSemestreId if the semesters filtered list updates as academic year gets toggled
   React.useEffect(() => {
     const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
@@ -139,25 +155,26 @@ export default function StudentPortal({
   const accessibleCourses = cours.filter(c => Number(c.filiere_id) === Number(courseFiliereFilter) && Number(c.classe_id) === Number(activeStudent.classe_id));
 
   // Compute stats for grades belonging to the active selected filiere
-  const studentGrades = notes.filter(n => {
-    if (Number(n.etudiant_id) !== Number(activeStudent.id)) return false;
-    if (Number(n.semestre_id) !== Number(selectedSemestreId)) return false;
-    const parentCourse = cours.find(c => Number(c.id) === Number(n.cours_id));
-    return parentCourse ? Number(parentCourse.filiere_id) === Number(courseFiliereFilter) : false;
-  });
+  const studentGrades = React.useMemo(() => {
+    return notes.filter(n => {
+      if (Number(n.etudiant_id) !== Number(activeStudent.id)) return false;
+      if (Number(n.semestre_id) !== Number(selectedSemestreId)) return false;
+      const parentCourse = cours.find(c => Number(c.id) === Number(n.cours_id));
+      return parentCourse ? Number(parentCourse.filiere_id) === Number(courseFiliereFilter) : false;
+    });
+  }, [notes, activeStudent.id, selectedSemestreId, cours, courseFiliereFilter]);
 
-  const calculateWeightedAverage = () => {
+  const currentAverage = React.useMemo(() => {
     if (studentGrades.length === 0) return 0;
     let sumVal = 0;
     let sumCredits = 0;
     studentGrades.forEach(g => {
-      sumVal += Number(g.note) * Number(g.credits);
-      sumCredits += Number(g.credits);
+      sumVal += Number(g.note || 0) * Number(g.credits || 0);
+      sumCredits += Number(g.credits || 0);
     });
     return sumCredits > 0 ? (sumVal / sumCredits) : 0;
-  };
+  }, [studentGrades]);
 
-  const currentAverage = calculateWeightedAverage();
   const activeSem = semestres.find(s => Number(s.id) === Number(selectedSemestreId));
 
   const getMention = (averagedGrade: number) => {
@@ -169,20 +186,20 @@ export default function StudentPortal({
     return "Insuffisant";
   };
 
-  const calculateGPAForStudent = (studentId: number, semId: number) => {
+  const calculateGPAForStudent = React.useCallback((studentId: number, semId: number) => {
     const sGrades = notes.filter(n => Number(n.etudiant_id) === Number(studentId) && Number(n.semestre_id) === Number(semId));
     if (sGrades.length === 0) return 0;
     let sumVal = 0;
     let sumCredits = 0;
     sGrades.forEach(g => {
-      sumVal += Number(g.note) * Number(g.credits);
-      sumCredits += Number(g.credits);
+      sumVal += Number(g.note || 0) * Number(g.credits || 0);
+      sumCredits += Number(g.credits || 0);
     });
     return sumCredits > 0 ? (sumVal / sumCredits) : 0;
-  };
+  }, [notes]);
 
   // Dynamic ranking calculation relative to students in the same level/class
-  const getStudentRank = () => {
+  const studentRankInfo = React.useMemo(() => {
     if (!etudiants || etudiants.length === 0) return { rank: 1, total: 1 };
 
     // Find classmates belonging to the same class as activeStudent
@@ -205,7 +222,7 @@ export default function StudentPortal({
       rank: position !== -1 ? position + 1 : 1,
       total: classmates.length
     };
-  };
+  }, [etudiants, activeStudent.classe_id, activeStudent.id, currentAverage, selectedSemestreId, calculateGPAForStudent]);
 
   const handlePrint = () => {
     window.print();
@@ -759,7 +776,7 @@ export default function StudentPortal({
 
                 {/* Score summary */}
                 {studentGrades.length > 0 && (() => {
-                  const { rank, total } = getStudentRank();
+                  const { rank, total } = studentRankInfo;
                   return (
                     <div className="bg-slate-900 text-slate-100 p-5 flex flex-col sm:flex-row justify-between items-center text-xs font-bold shrink-0 rounded-b-xl gap-3">
                       <div className="flex items-center gap-2">
@@ -998,7 +1015,7 @@ export default function StudentPortal({
 
                   {/* Results summarisations */}
                   {(() => {
-                    const { rank, total } = getStudentRank();
+                    const { rank, total } = studentRankInfo;
                     return (
                       <div className="mt-6 border-t-2 border-slate-900 pt-5 flex flex-col md:flex-row gap-4">
                         <div className="flex-1 space-y-2 border border-dashed border-gray-300 p-4 rounded-xl text-xs font-semibold">

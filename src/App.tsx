@@ -770,7 +770,7 @@ export default function App() {
         <div 
           className="flex-grow flex items-center justify-center p-4 md:p-8 relative overflow-hidden bg-cover bg-center" 
           id="guest-screen-parent"
-          style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1920&q=80")' }}
+          style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1000&q=60")' }}
         >
           {/* Subtle elegant dim overlay */}
           <div className="absolute inset-0 bg-slate-950/55 backdrop-blur-[3px]" id="guest-bg-overlay"></div>
