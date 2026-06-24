@@ -5,7 +5,7 @@
 CREATE DATABASE IF NOT EXISTS gestion_scolaire DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE gestion_scolaire;
 
--- 1. Table des Semestres (possibilité d'ajouter des semestres ou d'en supprimer)
+-- 1. Table des Semestres (demandée)
 CREATE TABLE IF NOT EXISTS semesters (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nom_semestre VARCHAR(50) NOT NULL, -- Ex: 'Semestre 1', 'Semestre 2'

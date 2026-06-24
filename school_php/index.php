@@ -1,6 +1,6 @@
 <?php
 /**
- * Routeur principal redirigeant selon le rôle de session
+ * Page d'accueil / Routeur principal vers les espaces
  */
 session_start();
 if (isset($_SESSION['role'])) {
