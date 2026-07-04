@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Etudiant, Filiere, Cours, Note, HistoriqueAcces, Semestre } from '../types';
-import { Users, GraduationCap, FileText, TrendingUp, Award, Clock, ArrowLeft } from 'lucide-react';
+import { Users, GraduationCap, FileText, TrendingUp, Award, Clock, ArrowLeft, Lock, Unlock, Eye } from 'lucide-react';
 
 interface AdminDashboardProps {
   etudiants: Etudiant[];
@@ -13,6 +13,8 @@ interface AdminDashboardProps {
   globalFiliereId?: number;
   globalSemestreId?: number;
   theme?: 'sombre-or' | 'clair-pro';
+  isPortalLocked: boolean;
+  onTogglePortalLock: () => void;
 }
 
 export default function AdminDashboard({ 
@@ -25,7 +27,9 @@ export default function AdminDashboard({
   onNavigate, 
   globalFiliereId, 
   globalSemestreId,
-  theme = 'sombre-or'
+  theme = 'sombre-or',
+  isPortalLocked,
+  onTogglePortalLock
 }: AdminDashboardProps) {
   const [showData, setShowData] = useState(true);
 
@@ -295,6 +299,59 @@ export default function AdminDashboard({
           <div className={`p-3 rounded-lg transition ${theme === 'sombre-or' ? 'bg-amber-500/10 text-amber-400' : 'bg-teal-50 text-teal-600'}`}>
             <GraduationCap className="w-6 h-6" />
           </div>
+        </div>
+      </div>
+
+      {/* Student Portal Access Lock Control */}
+      <div className={`p-6 rounded-xl border shadow-sm transition-all duration-300 ${
+        theme === 'sombre-or'
+          ? 'bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/20 border-amber-500/20 text-white shadow-amber-950/10'
+          : 'bg-white border-gray-200 text-slate-900'
+      }`} id="student-portal-lock-control">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <h4 className={`font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 ${
+              theme === 'sombre-or' ? 'text-amber-400' : 'text-blue-900'
+            }`}>
+              <span className={`w-2.5 h-2.5 rounded-full ${isPortalLocked ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`}></span>
+              <span>Statut de l'Espace Étudiant</span>
+            </h4>
+            <p className={`text-xs leading-relaxed font-semibold ${theme === 'sombre-or' ? 'text-slate-350' : 'text-slate-705'}`}>
+              {isPortalLocked 
+                ? "L'accès à l'espace étudiant est temporairement fermé par la direction."
+                : "L'espace étudiant est ouvert. Les étudiants peuvent se connecter normalement."}
+            </p>
+            <p className={`text-[11px] leading-relaxed ${theme === 'sombre-or' ? 'text-slate-500' : 'text-gray-500'}`}>
+              {isPortalLocked
+                ? "Aucun étudiant ne peut s'authentifier ou accéder à ses notes, cours et historiques."
+                : "Les connexions, consultations de bulletins et téléchargements de cours sont actifs."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onTogglePortalLock}
+            className={`w-full sm:w-auto px-5 py-3 font-bold text-xs tracking-wider uppercase rounded-xl transition duration-150 shadow-md flex items-center justify-center gap-2 hover:-translate-y-0.5 cursor-pointer whitespace-nowrap shrink-0 ${
+              isPortalLocked
+                ? (theme === 'sombre-or'
+                    ? 'bg-emerald-650 hover:bg-emerald-600 text-slate-950 shadow-emerald-500/10 font-black'
+                    : 'bg-emerald-750 hover:bg-emerald-700 text-white shadow-emerald-750/10')
+                : (theme === 'sombre-or'
+                    ? 'bg-rose-650 hover:bg-rose-600 text-white shadow-rose-950/20'
+                    : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/10')
+            }`}
+          >
+            {isPortalLocked ? (
+              <>
+                <Unlock className="w-4 h-4" />
+                <span>Réouvrir l'Espace Étudiant</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-4 h-4" />
+                <span>Fermer l'Espace Étudiant</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 

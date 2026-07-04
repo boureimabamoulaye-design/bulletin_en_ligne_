@@ -216,14 +216,16 @@ export default function FilieresTab({
   return (
     <div className="space-y-6" id="filieres-management-container">
       {/* Header bar */}
-      <div className="flex justify-between items-center bg-transparent">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-150">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Programmes Académiques & Filières</h3>
-          <p className="text-xs text-gray-500 mt-1">Structurez l'offre éducative en gérant les filières et leurs matières obligatoires.</p>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#c5a880] bg-[#c5a880]/10 px-2.5 py-1 rounded-md border border-[#c5a880]/20">
+            Programmes Académiques & Filières
+          </span>
+          <p className="text-xs text-slate-400 mt-1.5 font-medium">Structurez l'offre éducative en gérant les filières et leurs matières obligatoires.</p>
         </div>
         <button 
           onClick={() => { setShowFiliereForm(!showFiliereForm); if (showFiliereForm) resetForm(); }}
-          className="btn btn-primary inline-flex items-center gap-2"
+          className="btn btn-primary inline-flex items-center gap-2 cursor-pointer select-none"
           id="btn-toggle-filiere"
         >
           <Plus className="w-4 h-4" />
@@ -234,7 +236,7 @@ export default function FilieresTab({
       {/* Editor addition/modification of filiére */}
       {showFiliereForm && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4" id="filiere-editor-card">
-          <h4 className="text-md font-bold text-blue-900 border-b border-gray-100 pb-2">
+          <h4 className="text-sm font-bold text-blue-900 border-b border-gray-100 pb-2">
             {editingFiliere ? `Modifier : ${editingFiliere.nom_filiere}` : "Nouvelle Spécialité Académique"}
           </h4>
 

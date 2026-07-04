@@ -554,6 +554,16 @@ export default function NotesTab({
   return (
     <div className="space-y-6" id="notes-management-container">
 
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-150">
+        <div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#c5a880] bg-[#c5a880]/10 px-2.5 py-1 rounded-md border border-[#c5a880]/20">
+            Saisie & Évaluation Académique
+          </span>
+          <p className="text-xs text-slate-400 mt-1.5 font-medium">Saisissez les notes de contrôles continus et d'examens par élève ou par matière.</p>
+        </div>
+      </div>
+
       {/* Primary Grid View: Saisie Left, Logs Right */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         

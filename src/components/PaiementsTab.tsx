@@ -1363,7 +1363,7 @@ export default function PaiementsTab({
                 {/* Header of the school */}
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3 border-b border-slate-400 sm:border-b-2 sm:border-slate-900 pb-3 sm:pb-4">
                   <div className="text-left font-sans space-y-0.5">
-                    <h2 className="text-sm sm:text-md font-black tracking-tight text-slate-950 uppercase">GROUPE SCOLAIRE ACADÉMIQUE</h2>
+                    <h2 className="text-sm sm:text-base font-black tracking-tight text-slate-950 uppercase">GROUPE SCOLAIRE ACADÉMIQUE</h2>
                     <p className="text-[8.5px] sm:text-[9px] text-slate-500 font-bold">République du Mali / Service de Trésorerie Centrale</p>
                     <p className="text-[8px] text-slate-400 font-medium">B.P. 1204 - Tel: +223 20 22 45 67 - Bamako</p>
                   </div>
@@ -1451,7 +1451,7 @@ export default function PaiementsTab({
                     </div>
                     <div className="text-left sm:text-right w-full sm:w-auto">
                       <span className="text-[9px] text-gray-400 uppercase font-extrabold tracking-wider block">MONTANT TOTAL RÉGLÉ :</span>
-                      <strong className="text-md sm:text-lg font-mono font-black text-slate-950 tracking-tight">{formatCFA(selectedReceipt.montant)}</strong>
+                      <strong className="text-sm sm:text-lg font-mono font-black text-slate-950 tracking-tight">{formatCFA(selectedReceipt.montant)}</strong>
                     </div>
                   </div>
 

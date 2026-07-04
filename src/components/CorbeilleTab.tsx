@@ -53,21 +53,18 @@ export default function CorbeilleTab({
   return (
     <div className="space-y-6" id="corbeille-tab-container">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-150">
         <div>
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Trash2 className="w-5 h-5 text-rose-600" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#c5a880] bg-[#c5a880]/10 px-2.5 py-1 rounded-md border border-[#c5a880]/20">
             Corbeille de fichiers et d'enregistrements
-          </h3>
-          <p className="text-xs text-gray-500 mt-1">
-            Visualisez, restaurez ou supprimez définitivement les éléments mis de côté.
-          </p>
+          </span>
+          <p className="text-xs text-slate-400 mt-1.5 font-medium font-serif">Visualisez, restaurez ou supprimez définitivement les éléments mis de côté.</p>
         </div>
 
         {trash.length > 0 && (
           <button
             onClick={() => setShowEmptyConfirm(true)}
-            className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition whitespace-nowrap shadow-sm"
+            className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition whitespace-nowrap shadow-sm cursor-pointer select-none"
           >
             <Trash2 className="w-4 h-4" />
             Vider la corbeille ({trash.length})

@@ -99,6 +99,15 @@ export default function App() {
   const [userRole, setUserRole] = useState<'guest' | 'admin' | 'student'>('guest');
   const [activeAdminName, setActiveAdminName] = useState("");
   const [activeStudent, setActiveStudent] = useState<Etudiant | null>(null);
+
+  const [isPortalLocked, setIsPortalLocked] = useState<boolean>(() => {
+    const saved = localStorage.getItem('school_portal_locked');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('school_portal_locked', JSON.stringify(isPortalLocked));
+  }, [isPortalLocked]);
   
   // Navigation
   const [adminActiveTab, setAdminActiveTab] = useState<string>('dashboard');
@@ -722,6 +731,11 @@ export default function App() {
         e.mot_de_passe.trim() === trimmedPassword
       );
       if (foundStudent) {
+        if (isPortalLocked) {
+          setLoginError("L'accès à l'espace étudiant est temporairement fermé par la direction de l'école jusqu'à nouvel ordre.");
+          return;
+        }
+
         // If they did not select a filiere, dynamically fallback to their primary one
         let targetFiliereId = selectedFiliereId;
         if (!targetFiliereId) {
@@ -853,24 +867,33 @@ export default function App() {
 
                 {/* Dropdown for Student Filière Selection */}
                 {loginRole === 'student' && (
-                  <div id="filiere-login-dropdown-wrapper">
-                    <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5 flex items-center gap-1.5">
-                      <GraduationCap className="w-4 h-4 text-blue-900" />
-                      Sélectionner votre Filière Académique <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={selectedFiliereId}
-                      onChange={e => setSelectedFiliereId(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white text-xs font-bold"
-                      required
-                    >
-                      <option value="">-- Choisir une filière --</option>
-                      {filieres.map(f => (
-                        <option key={f.id} value={f.id}>
-                          {f.nom_filiere}
-                        </option>
-                      ))}
-                    </select>
+                  <div id="filiere-login-dropdown-wrapper" className="space-y-3">
+                    {isPortalLocked && (
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-2 text-xs font-bold" id="portal-locked-warning-banner">
+                        <Lock className="w-4 h-4 text-red-600 shrink-0 animate-pulse" />
+                        <p className="leading-snug">L'accès à l'espace étudiant est temporairement fermé par la direction.</p>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5 flex items-center gap-1.5">
+                        <GraduationCap className="w-4 h-4 text-blue-900" />
+                        Sélectionner votre Filière Académique <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={selectedFiliereId}
+                        onChange={e => setSelectedFiliereId(e.target.value === "" ? "" : Number(e.target.value))}
+                        className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white text-xs font-bold"
+                        required
+                        disabled={isPortalLocked}
+                      >
+                        <option value="">-- Choisir une filière --</option>
+                        {filieres.map(f => (
+                          <option key={f.id} value={f.id}>
+                            {f.nom_filiere}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 )}
 
@@ -886,6 +909,7 @@ export default function App() {
                     placeholder={loginRole === 'admin' ? "Ex: admin@ecole.com" : "Ex: MT-2025-01"}
                     className="form-control.text-sm w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
                     required
+                    disabled={loginRole === 'student' && isPortalLocked}
                   />
                   
                   {/* Role Mismatch Helper */}
@@ -920,11 +944,13 @@ export default function App() {
                       placeholder=""
                       className="form-control.text-sm w-full p-3 pr-10 rounded-xl border border-gray-200 outline-none focus:border-blue-600 text-slate-900 bg-white"
                       required
+                      disabled={loginRole === 'student' && isPortalLocked}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-blue-600"
+                      disabled={loginRole === 'student' && isPortalLocked}
                     >
                       {showPassword ? (
                         <EyeOff className="w-4 h-4" />
@@ -937,9 +963,21 @@ export default function App() {
 
                 <button 
                   type="submit" 
-                  className="w-full py-3 bg-blue-900 text-white rounded-xl font-bold hover:bg-slate-900 transition flex items-center justify-center gap-2"
+                  disabled={loginRole === 'student' && isPortalLocked}
+                  className={`w-full py-3 text-white rounded-xl font-bold transition flex items-center justify-center gap-2 ${
+                    loginRole === 'student' && isPortalLocked
+                      ? 'bg-slate-305 border border-slate-200 text-slate-400 cursor-not-allowed opacity-60'
+                      : 'bg-blue-900 hover:bg-slate-900'
+                  }`}
                 >
-                  Confirmer et se connecter
+                  {loginRole === 'student' && isPortalLocked ? (
+                    <>
+                      <Lock className="w-4 h-4 shrink-0" />
+                      <span>Espace Étudiant Fermé</span>
+                    </>
+                  ) : (
+                    "Confirmer et se connecter"
+                  )}
                 </button>
               </form>
 
@@ -1039,7 +1077,7 @@ export default function App() {
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-205'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                       }`}
                     >
                       <Calendar className="w-4 h-4" />
@@ -1054,7 +1092,7 @@ export default function App() {
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                       }`}
                     >
                       <FileText className="w-4 h-4" />
@@ -1069,7 +1107,7 @@ export default function App() {
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                       }`}
                     >
                       <Award className="w-4 h-4" />
@@ -1084,7 +1122,7 @@ export default function App() {
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                       }`}
                     >
                       <BookOpen className="w-4 h-4" />
@@ -1099,7 +1137,7 @@ export default function App() {
                           ? (adminTheme === 'sombre-or' 
                               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
                               : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-202'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                       }`}
                     >
                       <ShieldCheck className="w-4 h-4" />
@@ -1377,7 +1415,7 @@ export default function App() {
                     <div className={`h-8 w-px hidden sm:block ${adminTheme === 'sombre-or' ? 'bg-amber-500/15' : 'bg-gray-200'}`}></div>
                     <div>
                       <h2 className={`text-sm font-black tracking-tight uppercase ${
-                        adminTheme === 'sombre-or' ? 'text-amber-400' : 'text-slate-905'
+                        adminTheme === 'sombre-or' ? 'text-amber-400' : 'text-slate-900'
                       }`}>
                         {adminActiveTab === 'etudiants' && "Inscriptions & Gestion Élèves"}
                         {adminActiveTab === 'filieres' && "Modélisation des Filières Académiques"}
@@ -1820,6 +1858,8 @@ export default function App() {
                     globalFiliereId={globalFiliereId}
                     globalSemestreId={globalSemestreId}
                     theme={adminTheme}
+                    isPortalLocked={isPortalLocked}
+                    onTogglePortalLock={() => setIsPortalLocked(!isPortalLocked)}
                   />
                 </div>
               </>
@@ -1956,33 +1996,60 @@ export default function App() {
       {/* 3. STUDENT PORTAL CONTAINER WRAPPER */}
       {userRole === 'student' && activeStudent && (
         <div className="flex-grow">
-          {/* Top banner button to go back or view logs */}
-          <div className="bg-slate-950 text-slate-300 p-2.5 px-6 flex justify-between items-center text-xs select-none">
-            <span className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              Scolarité d'étude sécurisée connectée l'étudiant
-            </span>
-          </div>
+          {isPortalLocked ? (
+            <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-6 text-center select-none animate-fade-in">
+              <div className="max-w-md bg-slate-950 p-8 rounded-3xl border border-rose-500/20 shadow-2xl shadow-rose-950/20 space-y-6">
+                <div className="w-20 h-20 bg-rose-500/10 border border-rose-500/30 text-rose-500 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                  <Lock className="w-10 h-10" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black text-white tracking-tight uppercase">Espace Étudiant Fermé</h3>
+                  <p className="text-xs text-rose-200 leading-relaxed font-semibold">
+                    L'accès à l'espace étudiant a été temporairement suspendu par la direction.
+                  </p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Veuillez contacter le secrétariat ou réessayer ultérieurement lorsque l'espace sera réouvert.
+                  </p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs tracking-wider uppercase transition cursor-pointer"
+                >
+                  Retourner au portail de connexion
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Top banner button to go back or view logs */}
+              <div className="bg-slate-950 text-slate-300 p-2.5 px-6 flex justify-between items-center text-xs select-none">
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                  Scolarité d'étude sécurisée connectée l'étudiant
+                </span>
+              </div>
 
-          <StudentPortal 
-            activeStudent={activeStudent}
-            etudiants={etudiants}
-            notes={filteredNotes}
-            cours={filteredCours}
-            semestres={filteredSemestres}
-            anneesScolaires={anneesScolaires}
-            filieres={filieres}
-            classes={classes}
-            autorisations={autorisations}
-            paiements={paiements}
-            scolariteAnnuelle={scolariteAnnuelle}
-            initialFiliereId={selectedFiliereId}
-            onLogAccess={handleLogAccess}
-            onUpdatePassword={handleUpdatePassword}
-            onLogout={handleLogout}
-            globalAnneeScolaire={globalAnneeScolaire}
-            onAnneeScolaireChange={setGlobalAnneeScolaire}
-          />
+              <StudentPortal 
+                activeStudent={activeStudent}
+                etudiants={etudiants}
+                notes={filteredNotes}
+                cours={filteredCours}
+                semestres={filteredSemestres}
+                anneesScolaires={anneesScolaires}
+                filieres={filieres}
+                classes={classes}
+                autorisations={autorisations}
+                paiements={paiements}
+                scolariteAnnuelle={scolariteAnnuelle}
+                initialFiliereId={selectedFiliereId}
+                onLogAccess={handleLogAccess}
+                onUpdatePassword={handleUpdatePassword}
+                onLogout={handleLogout}
+                globalAnneeScolaire={globalAnneeScolaire}
+                onAnneeScolaireChange={setGlobalAnneeScolaire}
+              />
+            </>
+          )}
         </div>
       )}
 

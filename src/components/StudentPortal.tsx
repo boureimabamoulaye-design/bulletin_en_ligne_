@@ -562,7 +562,7 @@ export default function StudentPortal({
                         <span className="text-[10px] font-bold text-blue-700 font-mono tracking-tight uppercase bg-blue-50 px-20 py-1 rounded">
                           {course.enseignant}
                         </span>
-                        <h4 className="text-md font-bold text-gray-900 mt-2">{course.titre}</h4>
+                        <h4 className="text-sm font-bold text-gray-900 mt-2">{course.titre}</h4>
                         <p className="text-xs text-gray-500 line-clamp-3 mt-2">{course.description || "Aucun descriptif de cours rédigé."}</p>
                         <span className="text-[10px] text-gray-400 block mt-4 font-mono font-bold uppercase">Date de dépôt : {course.date_ajout}</span>
                       </div>

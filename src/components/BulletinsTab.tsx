@@ -405,6 +405,16 @@ export default function BulletinsTab({
 
   return (
     <div className="space-y-6" id="bulletins-container">
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-150 no-print">
+        <div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#c5a880] bg-[#c5a880]/10 px-2.5 py-1 rounded-md border border-[#c5a880]/20">
+            Édition des Bulletins de Notes
+          </span>
+          <p className="text-xs text-slate-400 mt-1.5 font-medium">Générez, prévisualisez, éditez et imprimez les relevés de notes officiels de vos étudiants.</p>
+        </div>
+      </div>
+
       {/* Dynamic Global Print Styles for Perfect PDF Export */}
       <style>{`
         @media print {

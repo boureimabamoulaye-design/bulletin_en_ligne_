@@ -57,6 +57,16 @@ export default function AutorisationsTab({ autorisations, etudiants, filieres, l
 
   return (
     <div className="space-y-6" id="autorisations-container">
+      {/* Header bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-150">
+        <div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#c5a880] bg-[#c5a880]/10 px-2.5 py-1 rounded-md border border-[#c5a880]/20">
+            Autorisations & Accréditations d'Accès
+          </span>
+          <p className="text-xs text-slate-400 mt-1.5 font-medium">Gérez et octroyez des droits exceptionnels de consultation de cours inter-parcours.</p>
+        </div>
+      </div>
+
       {/* Upper informational bar explaining the feature */}
       <div className="bg-blue-50 border border-blue-200 p-5 rounded-xl text-blue-900 flex items-start gap-4">
         <ShieldCheck className="w-6 h-6 text-blue-700 shrink-0 mt-0.5" />

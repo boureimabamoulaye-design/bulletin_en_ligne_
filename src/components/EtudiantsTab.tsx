@@ -226,8 +226,13 @@ export default function EtudiantsTab({
   return (
     <div className="space-y-6" id="etudiants-management-container">
       {/* Upper header section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h3 className="text-xl font-bold text-gray-900">Enseignes Étudiantes</h3>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-150">
+        <div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#c5a880] bg-[#c5a880]/10 px-2.5 py-1 rounded-md border border-[#c5a880]/20">
+            Registre des Inscriptions
+          </span>
+          <p className="text-xs text-slate-400 mt-1.5 font-medium">Inscrivez les étudiants, gérez leurs classes et affectez leurs matricules scolaires.</p>
+        </div>
         <button 
           onClick={() => { setShowForm(!showForm); if(showForm) resetForm(); }}
           className="btn btn-primary inline-flex items-center gap-2 cursor-pointer select-none"
@@ -754,7 +759,7 @@ export default function EtudiantsTab({
               <button 
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-2 text-[10px] bg-slate-150 hover:bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded-md transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-slate-150 hover:bg-slate-200 text-slate-600 font-bold px-2 py-0.5 rounded-md transition-colors"
                 title="Effacer la recherche"
               >
                 Vider

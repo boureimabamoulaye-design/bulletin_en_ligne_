@@ -179,15 +179,16 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
 
   return (
     <div className="space-y-6" id="cours-management-container">
-      {/* Header bar */}
-      <div className="flex justify-between items-center bg-transparent">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-150">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Bibliothèque & Supports de Cours</h3>
-          <p className="text-xs text-gray-500 mt-1">Syllabus de cours et documents PDF d'études téléchargeables.</p>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#c5a880] bg-[#c5a880]/10 px-2.5 py-1 rounded-md border border-[#c5a880]/20">
+            Bibliothèque & Supports de Cours
+          </span>
+          <p className="text-xs text-slate-400 mt-1.5 font-medium">Syllabus de cours et documents PDF d'études téléchargeables.</p>
         </div>
         <button 
           onClick={() => { setShowForm(!showForm); if (showForm) resetForm(); }}
-          className="btn btn-primary inline-flex items-center gap-2"
+          className="btn btn-primary inline-flex items-center gap-2 cursor-pointer select-none"
           id="btn-add-cours"
         >
           <Plus className="w-4 h-4" />
@@ -198,7 +199,7 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
       {/* Editor Add/Mod course */}
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4" id="cours-form">
-          <h4 className="text-md font-bold text-blue-900 border-b border-gray-100 pb-2">
+          <h4 className="text-sm font-bold text-blue-900 border-b border-gray-100 pb-2">
             {editingCourse ? `Éditer le cours : ${editingCourse.titre}` : "Nouveau Programme de Cours Module"}
           </h4>
 
@@ -422,7 +423,7 @@ export default function CoursTab({ cours, filieres, classes, semestres, matieres
                     </div>
                   </div>
 
-                  <h4 className="text-md font-bold text-gray-900 mt-2 hover:text-blue-900 leading-tight">
+                  <h4 className="text-sm font-bold text-gray-900 mt-2 hover:text-blue-900 leading-tight">
                     {course.titre}
                   </h4>
                   <p className="text-xs text-gray-400 mt-1">Enseignant : <span className="font-semibold text-gray-700">{course.enseignant}</span></p>
