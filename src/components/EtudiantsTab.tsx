@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Etudiant, Filiere, Classe, Paiement } from '../types';
-import { UserPlus, Search, Edit2, Trash2, Shield, Eye, EyeOff, Wand2, Keyboard, Check, AlertTriangle, CreditCard, GraduationCap } from 'lucide-react';
+import { UserPlus, Search, Edit2, Trash2, Shield, Eye, EyeOff, Wand2, Keyboard, Check, AlertTriangle, CreditCard, GraduationCap, ChevronLeft, ChevronRight, Sliders, LayoutList } from 'lucide-react';
 
 interface EtudiantsTabProps {
   etudiants: Etudiant[];
@@ -33,6 +33,21 @@ export default function EtudiantsTab({
   const [filiereFilter, setFiliereFilter] = useState<number>(0);
   const [showForm, setShowForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Etudiant | null>(null);
+
+  // Pagination states for bulk performance (800+ students)
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
+  // New features: View modes, data masking, and student list hide option
+  const [viewMode, setViewMode] = useState<'table' | 'carousel'>('table');
+  const [isListHidden, setIsListHidden] = useState(false);
+  const [isMasked, setIsMasked] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+    setCarouselIndex(0);
+  }, [search, filiereFilter, globalFiliereId]);
 
   // Form input states
   const [nom, setNom] = useState("");
@@ -222,6 +237,43 @@ export default function EtudiantsTab({
 
     return matchesSearch && matchesFiliere;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredEtudiants.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedEtudiants = filteredEtudiants.slice(startIndex, startIndex + itemsPerPage);
+
+  const formatCFA = (val: number) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val).replace('XOF', 'CFA');
+  };
+
+  const maskText = (text: string, type: 'name' | 'email' | 'phone' | 'date' | 'address' | 'matricule') => {
+    if (!isMasked) return text;
+    if (!text) return "Non renseigné";
+    if (type === 'name') {
+      const nameParts = text.split(' ');
+      return nameParts.map(p => p.substring(0, Math.max(1, Math.floor(p.length / 3))) + "••••").join(' ');
+    }
+    if (type === 'matricule') {
+      return text.substring(0, 4) + "••••";
+    }
+    if (type === 'email') {
+      const emailParts = text.split('@');
+      if (emailParts.length === 2) {
+        return emailParts[0].substring(0, Math.min(2, emailParts[0].length)) + "••••@" + emailParts[1];
+      }
+      return "••••@••••.•••";
+    }
+    if (type === 'phone') {
+      return text.substring(0, Math.min(5, text.length)) + " •• •• ••";
+    }
+    if (type === 'date') {
+      return "••••-••-••";
+    }
+    if (type === 'address') {
+      return "Adresse confidentielle";
+    }
+    return "••••";
+  };
 
   return (
     <div className="space-y-6" id="etudiants-management-container">
@@ -789,130 +841,602 @@ export default function EtudiantsTab({
         </div>
       </div>
 
-      {/* Student List View */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" id="students-list-card">
-        <div className="overflow-x-auto w-full">
-          <table className="custom-table min-w-[850px]">
-            <thead>
-              <tr>
-                <th>Matricule</th>
-                <th>Nom & Prénoms</th>
-                <th>Sexe</th>
-                <th>Filière de Base</th>
-                <th>Classe</th>
-                <th>Scolarité ({globalAnneeScolaire})</th>
-                <th className="text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEtudiants.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center p-8 text-gray-500 text-sm">
-                    Aucun étudiant ne correspond à vos filtres de recherche.
-                  </td>
-                </tr>
-              ) : (
-                (() => {
-                  const formatCFA = (val: number) => {
-                    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val).replace('XOF', 'CFA');
-                  };
+       {/* Dynamic Controls for View Mode & Data Masking */}
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-slate-100 p-4 rounded-xl border border-slate-200 select-none shadow-xs" id="students-view-controls">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-black uppercase text-slate-500 mr-1">Format de Vue :</span>
+          <button
+            type="button"
+            onClick={() => setViewMode('table')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition cursor-pointer border ${
+              viewMode === 'table'
+                ? 'bg-blue-900 text-white border-blue-900 shadow-sm'
+                : 'bg-white hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
+          >
+            <LayoutList className="w-3.5 h-3.5" />
+            <span>Tableau Classique</span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => setViewMode('carousel')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 transition cursor-pointer border ${
+              viewMode === 'carousel'
+                ? 'bg-blue-900 text-white border-blue-900 shadow-sm'
+                : 'bg-white hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Carrousel Défilant ({filteredEtudiants.length})</span>
+          </button>
+        </div>
 
-                  return filteredEtudiants.map(student => {
-                    const f = filieres.find(x => x.id === student.filiere_id);
-                    const c = classes.find(x => x.id === student.classe_id);
-                    
-                    // Calculate student payment stats for selected academic year
-                    const studentPayments = paiements.filter(p => p.etudiant_id === student.id && p.statut === 'Payé' && p.annee_scolaire === globalAnneeScolaire);
-                    const totalPaid = studentPayments.reduce((sum, p) => sum + p.montant, 0);
-                    const remainingDues = scolariteAnnuelle - totalPaid;
-                    const isLate = totalPaid < scolariteAnnuelle;
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Data Masking Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsMasked(!isMasked)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 border transition cursor-pointer ${
+              isMasked
+                ? 'bg-amber-600 text-white border-amber-500 shadow-sm font-black'
+                : 'bg-white hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
+            title="Masquer/Censurer les informations confidentielles"
+          >
+            <Shield className={`w-3.5 h-3.5 ${isMasked ? 'animate-pulse text-amber-100' : ''}`} />
+            <span>{isMasked ? "Données Masquées" : "Masquer les Infos"}</span>
+          </button>
 
-                    return (
-                      <tr key={student.id} className="hover:bg-slate-50 transition">
-                        <td>
-                          <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded text-xs select-all">
-                            {student.matricule}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="font-semibold text-gray-950">{student.nom}</div>
-                          <div className="text-xs text-gray-500 mt-0.5">{student.prenom}</div>
-                        </td>
-                        <td className="text-xs text-gray-500">{student.sexe}</td>
-                        <td className="text-sm font-medium text-blue-700">{f ? f.nom_filiere : "Inconnue"}</td>
-                        <td>
-                          <span className="text-xs font-semibold bg-blue-50 text-blue-800 px-2.5 py-1 rounded">
-                            {c ? c.nom_classe : "L1"}
-                          </span>
-                        </td>
-                        <td>
-                          {isLate ? (
-                            <div className="flex flex-col gap-1 items-start">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition ${
-                                totalPaid > 0 
-                                  ? 'bg-amber-50 text-amber-800 border-amber-200 shadow-sm' 
-                                  : 'bg-rose-50 text-rose-800 border-rose-200 shadow-sm'
-                              }`}>
-                                <span className="relative flex h-2 w-2">
-                                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${totalPaid > 0 ? 'bg-amber-400' : 'bg-rose-400'}`}></span>
-                                  <span className={`relative inline-flex rounded-full h-2 w-2 ${totalPaid > 0 ? 'bg-amber-500' : 'bg-rose-500'}`}></span>
-                                </span>
-                                <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${totalPaid > 0 ? 'text-amber-600' : 'text-rose-600'}`} />
-                                <span className="uppercase tracking-wider">
-                                  {totalPaid > 0 ? "Retard (Partiel)" : "Retard (Impayé)"}
-                                </span>
-                              </span>
-                              <div className="text-[10px] text-slate-500 mt-0.5 font-semibold">
-                                Reste : <strong className="font-mono text-rose-600 font-extrabold">{formatCFA(remainingDues)}</strong>
-                              </div>
-                              <div className="text-[9px] text-slate-400 font-mono">
-                                Validé: {formatCFA(totalPaid)} / {formatCFA(scolariteAnnuelle)}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col gap-1 items-start">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-250 shadow-sm">
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                <span>RÉGLÉ</span>
-                              </span>
-                              <div className="text-[10px] text-slate-550 mt-0.5 font-semibold">
-                                Solde de scolarité apuré
-                              </div>
-                              <div className="text-[9px] text-slate-400 font-mono">
-                                {formatCFA(totalPaid)} / {formatCFA(scolariteAnnuelle)}
-                              </div>
-                            </div>
-                          )}
-                        </td>
-                        <td className="text-right">
-                          <div className="inline-flex gap-2">
-                            <button 
-                              onClick={() => handleEdit(student)}
-                              className="p-1 px-2.5 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition text-xs flex items-center gap-1 font-semibold"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                              Mod
-                            </button>
-                            <button 
-                              onClick={() => {
-                                onDeleteEtudiant(student.id);
-                              }}
-                              className="p-1 px-2 bg-red-50 text-red-600 hover:bg-red-100 rounded transition text-xs flex items-center gap-1 font-semibold"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Suppr
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  });
-                })()
-              )}
-            </tbody>
-          </table>
+          {/* List Visibility Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsListHidden(!isListHidden)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 border transition cursor-pointer ${
+              isListHidden
+                ? 'bg-rose-600 text-white border-rose-500 shadow-sm animate-pulse'
+                : 'bg-white hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
+          >
+            {isListHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            <span>{isListHidden ? "Afficher les Élèves" : "Masquer la Liste"}</span>
+          </button>
         </div>
       </div>
+
+      {isListHidden ? (
+        <div className="bg-slate-50 p-10 rounded-2xl border border-dashed border-slate-300 text-center space-y-4 max-w-lg mx-auto" id="students-hidden-card">
+          <div className="w-16 h-16 bg-slate-150 text-slate-500 rounded-full flex items-center justify-center mx-auto border border-slate-200 shadow-sm">
+            <EyeOff className="w-8 h-8" />
+          </div>
+          <div className="space-y-1.5">
+            <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">Liste des Étudiants Masquée</h4>
+            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+              Pour des raisons de discrétion visuelle ou de fluidité de l'écran, l'affichage direct est actuellement masqué.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsListHidden(false)}
+            className="px-5 py-2.5 bg-blue-900 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md uppercase tracking-wider mx-auto block"
+          >
+            Révéler et afficher la liste
+          </button>
+        </div>
+      ) : (
+        (() => {
+          if (filteredEtudiants.length === 0) {
+            return (
+              <div className="bg-white p-10 rounded-xl border border-gray-200 text-center text-slate-500 font-bold text-sm">
+                Aucun étudiant ne correspond à vos filtres de recherche.
+              </div>
+            );
+          }
+
+          if (viewMode === 'table') {
+            return (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-fade-in" id="students-list-card">
+                <div className="overflow-x-auto w-full">
+                  <table className="custom-table min-w-[850px]">
+                    <thead>
+                      <tr>
+                        <th>Matricule</th>
+                        <th>Nom & Prénoms</th>
+                        <th>Sexe</th>
+                        <th>Filière de Base</th>
+                        <th>Classe</th>
+                        <th>Scolarité ({globalAnneeScolaire})</th>
+                        <th className="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedEtudiants.map(student => {
+                        const f = filieres.find(x => x.id === student.filiere_id);
+                        const c = classes.find(x => x.id === student.classe_id);
+                        
+                        // Calculate student payment stats for selected academic year
+                        const studentPayments = paiements.filter(p => p.etudiant_id === student.id && p.statut === 'Payé' && p.annee_scolaire === globalAnneeScolaire);
+                        const totalPaid = studentPayments.reduce((sum, p) => sum + p.montant, 0);
+                        const remainingDues = scolariteAnnuelle - totalPaid;
+                        const isLate = totalPaid < scolariteAnnuelle;
+
+                        const formattedRemaining = isMasked ? "•••••• CFA" : formatCFA(remainingDues);
+                        const formattedPaid = isMasked ? "•••••• CFA" : formatCFA(totalPaid);
+                        const formattedAnnual = isMasked ? "•••••• CFA" : formatCFA(scolariteAnnuelle);
+
+                        return (
+                          <tr key={student.id} className="hover:bg-slate-50 transition">
+                            <td>
+                              <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded text-xs select-all">
+                                {maskText(student.matricule, 'matricule')}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="font-semibold text-gray-950">{maskText(student.nom, 'name')}</div>
+                              <div className="text-xs text-gray-500 mt-0.5">{maskText(student.prenom, 'name')}</div>
+                            </td>
+                            <td className="text-xs text-gray-500">{student.sexe}</td>
+                            <td className="text-sm font-medium text-blue-700">{f ? f.nom_filiere : "Inconnue"}</td>
+                            <td>
+                              <span className="text-xs font-semibold bg-blue-50 text-blue-800 px-2.5 py-1 rounded">
+                                {c ? c.nom_classe : "L1"}
+                              </span>
+                            </td>
+                            <td>
+                              {isLate ? (
+                                <div className="flex flex-col gap-1 items-start">
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition ${
+                                    totalPaid > 0 
+                                      ? 'bg-amber-50 text-amber-800 border-amber-200 shadow-sm' 
+                                      : 'bg-rose-50 text-rose-800 border-rose-200 shadow-sm'
+                                  }`}>
+                                    <span className="relative flex h-2 w-2">
+                                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${totalPaid > 0 ? 'bg-amber-400' : 'bg-rose-400'}`}></span>
+                                      <span className={`relative inline-flex rounded-full h-2 w-2 ${totalPaid > 0 ? 'bg-amber-500' : 'bg-rose-500'}`}></span>
+                                    </span>
+                                    <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${totalPaid > 0 ? 'text-amber-600' : 'text-rose-600'}`} />
+                                    <span className="uppercase tracking-wider">
+                                      {totalPaid > 0 ? "Retard (Partiel)" : "Retard (Impayé)"}
+                                    </span>
+                                  </span>
+                                  <div className="text-[10px] text-slate-500 mt-0.5 font-semibold">
+                                    Reste : <strong className="font-mono text-rose-600 font-extrabold">{formattedRemaining}</strong>
+                                  </div>
+                                  <div className="text-[9px] text-slate-400 font-mono">
+                                    Validé: {formattedPaid} / {formattedAnnual}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col gap-1 items-start">
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-250 shadow-sm">
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                    <span>RÉGLÉ</span>
+                                  </span>
+                                  <div className="text-[10px] text-slate-500 mt-0.5 font-semibold">
+                                    Solde de scolarité apuré
+                                  </div>
+                                  <div className="text-[9px] text-slate-400 font-mono">
+                                    {formattedPaid} / {formattedAnnual}
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                            <td className="text-right">
+                              <div className="inline-flex gap-2">
+                                <button 
+                                  onClick={() => handleEdit(student)}
+                                  className="p-1 px-2.5 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition text-xs flex items-center gap-1 font-semibold cursor-pointer"
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                  Mod
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    if(confirm(`Voulez-vous vraiment supprimer l'étudiant ${student.nom} ${student.prenom} ?`)) {
+                                      onDeleteEtudiant(student.id);
+                                    }
+                                  }}
+                                  className="p-1 px-2 bg-red-50 text-red-600 hover:bg-red-100 rounded transition text-xs flex items-center gap-1 font-semibold cursor-pointer"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  Suppr
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination controls for bulk rendering support */}
+                {filteredEtudiants.length > itemsPerPage && (
+                  <div className="bg-slate-50 px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
+                    <span className="text-xs font-semibold text-slate-500">
+                      Affichage de <strong className="text-slate-800">{startIndex + 1}</strong> à <strong className="text-slate-800">{Math.min(startIndex + itemsPerPage, filteredEtudiants.length)}</strong> sur <strong className="text-slate-800">{filteredEtudiants.length}</strong> étudiants
+                    </span>
+                    <div className="inline-flex items-center -space-x-px gap-1.5">
+                      <button
+                        type="button"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                          currentPage === 1
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-60'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 hover:text-slate-900 cursor-pointer'
+                        }`}
+                      >
+                        Précédent
+                      </button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                          let pageNum = index + 1;
+                          if (currentPage > 3 && totalPages > 5) {
+                            if (currentPage + 2 > totalPages) {
+                              pageNum = totalPages - 4 + index;
+                            } else {
+                              pageNum = currentPage - 2 + index;
+                            }
+                          }
+                          
+                          return (
+                            <button
+                              key={pageNum}
+                              type="button"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`w-8 h-8 rounded-lg text-xs font-black transition cursor-pointer ${
+                                currentPage === pageNum
+                                  ? 'bg-blue-900 text-white shadow-sm'
+                                  : 'bg-white hover:bg-slate-100 text-slate-650 border border-slate-300'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                          currentPage === totalPages
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-60'
+                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 hover:text-slate-900 cursor-pointer'
+                        }`}
+                      >
+                        Suivant
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // Render Carousel Slider View
+          const activeIndex = Math.min(Math.max(0, carouselIndex), filteredEtudiants.length - 1);
+          const student = filteredEtudiants[activeIndex];
+
+          const f = filieres.find(x => x.id === student.filiere_id);
+          const c = classes.find(x => x.id === student.classe_id);
+          
+          const studentPayments = paiements.filter(p => p.etudiant_id === student.id && p.statut === 'Payé' && p.annee_scolaire === globalAnneeScolaire);
+          const totalPaid = studentPayments.reduce((sum, p) => sum + p.montant, 0);
+          const remainingDues = scolariteAnnuelle - totalPaid;
+          const isLate = totalPaid < scolariteAnnuelle;
+
+          const progressPct = Math.min(100, Math.round((totalPaid / scolariteAnnuelle) * 100));
+
+          const initials = `${student.prenom[0] || ""}${student.nom[0] || ""}`.toUpperCase();
+          const isMale = student.sexe === 'M';
+
+          const formattedRemaining = isMasked ? "•••••• CFA" : formatCFA(remainingDues);
+          const formattedPaid = isMasked ? "•••••• CFA" : formatCFA(totalPaid);
+          const formattedAnnual = isMasked ? "•••••• CFA" : formatCFA(scolariteAnnuelle);
+
+          // Get nearby indices for horizontal scrolling previews
+          const nearbyIndices: number[] = [];
+          for (let d = -2; d <= 2; d++) {
+            const idx = activeIndex + d;
+            if (idx >= 0 && idx < filteredEtudiants.length) {
+              nearbyIndices.push(idx);
+            }
+          }
+
+          return (
+            <div className="space-y-6 animate-fade-in" id="students-carousel-view">
+              {/* Main ID Badge and school fees details */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* 1. Large Virtual ID Badge card */}
+                <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white rounded-3xl shadow-xl border border-slate-850 p-6 relative overflow-hidden flex flex-col justify-between min-h-[360px]" id="carousel-student-badge">
+                  
+                  {/* Backdrop abstract shapes */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full filter blur-3xl pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/5 rounded-full filter blur-2xl pointer-events-none"></div>
+
+                  {/* Header */}
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-4 mb-4 select-none">
+                    <div className="flex items-center gap-2.5">
+                      <GraduationCap className="w-5 h-5 text-amber-400" />
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 font-sans">CARTE SCOLAIRE NUMÉRIQUE</h4>
+                        <p className="text-[9px] text-slate-400 font-mono">ACADEMIC CARD • {globalAnneeScolaire}</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-black uppercase bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full">
+                      {c ? c.nom_classe : "L1"}
+                    </span>
+                  </div>
+
+                  {/* ID Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center flex-grow">
+                    
+                    {/* Left: Avatar initial frame */}
+                    <div className="md:col-span-4 flex flex-col items-center text-center space-y-2">
+                      <div className={`w-24 h-24 rounded-2xl border-2 shadow-md flex items-center justify-center font-black text-2xl relative overflow-hidden select-none ${
+                        isMale 
+                          ? 'bg-gradient-to-tr from-blue-900/40 to-cyan-900/40 text-cyan-400 border-cyan-500/30' 
+                          : 'bg-gradient-to-tr from-rose-900/40 to-pink-900/40 text-pink-400 border-pink-500/30'
+                      }`}>
+                        {initials}
+                        <span className="absolute bottom-1 right-1 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-slate-950/80 text-white">
+                          {student.sexe}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block">Matricule Officiel</span>
+                        <code className="text-xs font-bold font-mono text-amber-300 bg-slate-950/80 px-2 py-0.5 rounded border border-slate-800">
+                          {maskText(student.matricule, 'matricule')}
+                        </code>
+                      </div>
+                    </div>
+
+                    {/* Right: Personal specifications */}
+                    <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                      
+                      <div>
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Nom de famille</span>
+                        <p className="text-sm font-extrabold text-white uppercase tracking-wide">{maskText(student.nom, 'name')}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Prénom(s)</span>
+                        <p className="text-sm font-bold text-slate-100">{maskText(student.prenom, 'name')}</p>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Filière Académique</span>
+                        <p className="text-xs font-bold text-blue-400 leading-snug">{f ? f.nom_filiere : "Inconnue"}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Téléphone</span>
+                        <p className="text-xs font-mono font-bold text-slate-300">{maskText(student.telephone, 'phone')}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">E-mail</span>
+                        <p className="text-xs font-mono font-bold text-slate-300 truncate select-all" title={student.email}>
+                          {maskText(student.email, 'email')}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Date de Naissance</span>
+                        <p className="text-xs font-mono font-semibold text-slate-300">{maskText(student.date_naissance, 'date')}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Adresse de Résidence</span>
+                        <p className="text-xs font-semibold text-slate-300 truncate" title={student.adresse}>
+                          {maskText(student.adresse, 'address')}
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* Card bottom actions */}
+                  <div className="flex justify-between items-center border-t border-slate-850 pt-4 mt-4 select-none flex-wrap gap-2">
+                    <span className="text-[10px] text-slate-500 font-mono">Modifiez ou supprimez ce dossier à tout moment</span>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        type="button"
+                        onClick={() => handleEdit(student)}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 text-blue-450" />
+                        <span>Modifier</span>
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Confirmez-vous la suppression de l'étudiant ${student.nom} ${student.prenom} ?`)) {
+                            onDeleteEtudiant(student.id);
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/20 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-450" />
+                        <span>Supprimer</span>
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* 2. School fees financial visualizer */}
+                <div className="bg-white rounded-3xl shadow-md border border-gray-200 p-6 flex flex-col justify-between" id="carousel-student-payments">
+                  <div className="space-y-5">
+                    <div className="flex justify-between items-start select-none">
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">CONTRÔLE FINANCIER</h4>
+                        <p className="text-xs text-slate-800 font-bold mt-1">Scolarité : {formattedAnnual}</p>
+                      </div>
+                      {isLate ? (
+                        <span className="bg-rose-50 border border-rose-200 text-rose-700 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">
+                          Retard
+                        </span>
+                      ) : (
+                        <span className="bg-emerald-50 border border-emerald-250 text-emerald-700 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">
+                          En Règle
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Progress tracking gauge */}
+                    <div className="space-y-1.5 select-none">
+                      <div className="flex justify-between items-center text-xs font-bold">
+                        <span className="text-slate-500">Taux d'acquittement</span>
+                        <span className={isLate ? "text-amber-600 font-extrabold" : "text-emerald-600 font-extrabold"}>
+                          {isMasked ? "•• %" : `${progressPct}%`}
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden border border-slate-200 p-0.5">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-500 ${isLate ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'}`}
+                          style={{ width: `${progressPct}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-gray-100 select-none">
+                      <div className="py-2.5 flex justify-between items-center text-xs">
+                        <span className="text-slate-550 font-semibold">Total Réglé :</span>
+                        <strong className="text-emerald-600 font-mono font-extrabold">{formattedPaid}</strong>
+                      </div>
+                      <div className="py-2.5 flex justify-between items-center text-xs">
+                        <span className="text-slate-550 font-semibold">Reste à recouvrer :</span>
+                        <strong className={`font-mono font-extrabold ${isLate ? 'text-rose-600' : 'text-slate-800'}`}>
+                          {formattedRemaining}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100 select-none">
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center text-[10px] text-slate-500 font-semibold leading-relaxed">
+                      Scolarité due pour l'année académique active. Enregistrez les règlements dans l'onglet des paiements.
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Range Scrubber and Navigation handles */}
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 select-none shadow-xs">
+                
+                {/* Back navigation */}
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    disabled={activeIndex === 0}
+                    onClick={() => setCarouselIndex(0)}
+                    className="px-2.5 py-2 hover:bg-slate-200 bg-white border border-slate-300 rounded-lg text-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer font-black text-[10px]"
+                    title="Premier étudiant"
+                  >
+                    |&lt;&lt;
+                  </button>
+                  <button
+                    type="button"
+                    disabled={activeIndex === 0}
+                    onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
+                    className="px-4 py-2 hover:bg-slate-200 bg-white border border-slate-300 rounded-lg text-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5 font-bold text-xs"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Précédent</span>
+                  </button>
+                </div>
+
+                {/* Timeline Range Scrubber */}
+                <div className="flex-grow max-w-lg w-full text-center space-y-1">
+                  <input
+                    type="range"
+                    min={0}
+                    max={filteredEtudiants.length - 1}
+                    value={activeIndex}
+                    onChange={e => setCarouselIndex(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-900 focus:outline-none"
+                  />
+                  <div className="flex justify-between text-[10px] font-black text-slate-500 font-mono">
+                    <span>DÉBUT (1)</span>
+                    <span className="text-blue-900 bg-blue-50 px-3 py-1 rounded-full border border-blue-150 flex items-center gap-1.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                      </span>
+                      FICHE D'ÉTUDIANT {activeIndex + 1} SUR {filteredEtudiants.length}
+                    </span>
+                    <span>FIN ({filteredEtudiants.length})</span>
+                  </div>
+                </div>
+
+                {/* Forward navigation */}
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    disabled={activeIndex === filteredEtudiants.length - 1}
+                    onClick={() => setCarouselIndex(prev => Math.min(filteredEtudiants.length - 1, prev + 1))}
+                    className="px-4 py-2 hover:bg-slate-200 bg-white border border-slate-300 rounded-lg text-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5 font-bold text-xs"
+                  >
+                    <span>Suivant</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={activeIndex === filteredEtudiants.length - 1}
+                    onClick={() => setCarouselIndex(filteredEtudiants.length - 1)}
+                    className="px-2.5 py-2 hover:bg-slate-200 bg-white border border-slate-300 rounded-lg text-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer font-black text-[10px]"
+                    title="Dernier étudiant"
+                  >
+                    &gt;&gt;|
+                  </button>
+                </div>
+
+              </div>
+
+              {/* Strip previews tape of adjacent students */}
+              <div className="space-y-2.5 select-none" id="carousel-adjacent-filmstrip">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">Bande Défilante (Cliquez pour faire défiler directement) :</span>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {nearbyIndices.map(idx => {
+                    const nearStud = filteredEtudiants[idx];
+                    const isActive = idx === activeIndex;
+                    return (
+                      <button
+                        key={nearStud.id}
+                        type="button"
+                        onClick={() => setCarouselIndex(idx)}
+                        className={`p-3 rounded-xl border text-left transition duration-250 cursor-pointer flex flex-col justify-between h-20 shadow-xs ${
+                          isActive
+                            ? 'bg-blue-900 text-white border-blue-900 shadow-md scale-102 font-bold'
+                            : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-250 hover:border-slate-300'
+                        }`}
+                      >
+                        <code className={`text-[9px] font-mono font-bold block ${isActive ? 'text-amber-300' : 'text-slate-500'}`}>
+                          {maskText(nearStud.matricule, 'matricule')}
+                        </code>
+                        <div className="truncate font-sans font-black text-[11px] leading-tight uppercase mt-1">
+                          {maskText(nearStud.nom, 'name')}
+                        </div>
+                        <div className={`truncate text-[9px] ${isActive ? 'text-blue-200' : 'text-slate-400'}`}>
+                          {nearStud.prenom}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+          );
+        })()
+      )}
     </div>
   );
 }

@@ -70,53 +70,93 @@ export const INITIAL_ADMINS: Administrateur[] = [
   { id: 3, nom: "Bourekane Admin", email: "bourekane223@gmail.com", mot_de_passe: "admin123" }
 ];
 
-export const INITIAL_ETUDIANTS: Etudiant[] = [
-  {
-    id: 1,
-    matricule: "ETU20250001",
-    nom: "KOUASSI",
-    prenom: "Jean-Philippe",
-    sexe: "M",
-    date_naissance: "2003-04-12",
-    telephone: "+225 0707070707",
-    email: "jean.kouassi@ecole.com",
-    adresse: "Abidjan, Cocody",
-    photo: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150&h=150",
-    filiere_id: 1, // Informatique de Gestion
-    classe_id: 3, // Niveau 3
-    mot_de_passe: "student123"
-  },
-  {
-    id: 2,
-    matricule: "ETU20250002",
-    nom: "DIALLO",
-    prenom: "Aïssatou",
-    sexe: "F",
-    date_naissance: "2004-09-22",
-    telephone: "+224 622000000",
-    email: "aissatou.diallo@ecole.com",
-    adresse: "Conakry, Dixinn",
-    photo: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=150&h=150",
-    filiere_id: 2, // Réseaux et Télécommunications
-    classe_id: 1, // Niveau 1
-    mot_de_passe: "student123"
-  },
-  {
-    id: 3,
-    matricule: "ETU20250003",
-    nom: "TRAORE",
-    prenom: "Adama",
-    sexe: "M",
-    date_naissance: "2002-11-05",
-    telephone: "+223 76000000",
-    email: "adama.traore@ecole.com",
-    adresse: "Bamako, Faladié",
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150",
-    filiere_id: 3, // Comptabilité
-    classe_id: 2, // Niveau 2
-    mot_de_passe: "student123"
+export const INITIAL_ETUDIANTS: Etudiant[] = (() => {
+  const defaultEtudiants: Etudiant[] = [
+    {
+      id: 1,
+      matricule: "ETU20250001",
+      nom: "KOUASSI",
+      prenom: "Jean-Philippe",
+      sexe: "M",
+      date_naissance: "2003-04-12",
+      telephone: "+225 0707070707",
+      email: "jean.kouassi@ecole.com",
+      adresse: "Abidjan, Cocody",
+      photo: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150&h=150",
+      filiere_id: 1, // Informatique de Gestion
+      classe_id: 3, // Niveau 3
+      mot_de_passe: "student123"
+    },
+    {
+      id: 2,
+      matricule: "ETU20250002",
+      nom: "DIALLO",
+      prenom: "Aïssatou",
+      sexe: "F",
+      date_naissance: "2004-09-22",
+      telephone: "+224 622000000",
+      email: "aissatou.diallo@ecole.com",
+      adresse: "Conakry, Dixinn",
+      photo: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=150&h=150",
+      filiere_id: 2, // Réseaux et Télécommunications
+      classe_id: 1, // Niveau 1
+      mot_de_passe: "student123"
+    },
+    {
+      id: 3,
+      matricule: "ETU20250003",
+      nom: "TRAORE",
+      prenom: "Adama",
+      sexe: "M",
+      date_naissance: "2002-11-05",
+      telephone: "+223 76000000",
+      email: "adama.traore@ecole.com",
+      adresse: "Bamako, Faladié",
+      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150",
+      filiere_id: 3, // Comptabilité
+      classe_id: 2, // Niveau 2
+      mot_de_passe: "student123"
+    }
+  ];
+
+  const lastNames = ["DIALLO", "KOUASSI", "TRAORE", "BARRY", "CONE", "SYLLA", "CISSE", "TOURE", "SOUMAH", "KEITA", "SOW", "OUEDRAOGO", "KABORE", "COULIBALY", "DIARRA", "DEMBELE", "KAMARA", "SANOGO", "FOFANA", "DIOP", "NDIAYE", "SARR", "FALL", "GUEYE", "SENE", "MBAYE", "DIENG", "MARTIN", "BERNARD", "DUBOIS", "MICHEL", "MOREAU", "LAURENT", "SIMON", "LEFEBVRE", "ROUX", "LEGRAND", "VINCENT", "MEUNIER", "BARBIER"];
+  const firstNames = ["Jean", "Pierre", "Marie", "Aïssatou", "Adama", "Fatoumata", "Aly", "Ibrahim", "Moussa", "Mamadou", "Amadou", "Sekou", "Abdoulaye", "Salimata", "Aminata", "Kadidia", "Mariam", "Ousmane", "Cheick", "Lassana", "Tidiane", "Rokiatou", "Fanta", "Oumou", "Alassane", "Boubacar", "Souleymane", "Modibo", "Drissa", "Yacouba", "Balla", "Habib", "Awa", "Fatou", "Penda", "Khady", "Amy", "Youssouf", "Alpha", "Amara"];
+  const domains = ["ecole.com", "student.ecole.com", "univ.com"];
+  const cities = ["Abidjan, Cocody", "Conakry, Dixinn", "Bamako, Faladié", "Dakar, Plateau", "Ouagadougou, Patte d'Oie", "Lomé, Deckon", "Niamey, Plateaux", "Cotonou, Cadjehoun"];
+  
+  const list = [...defaultEtudiants];
+  for (let i = 1; i <= 800; i++) {
+    const id = 3 + i;
+    const lastName = lastNames[(id * 17) % lastNames.length];
+    const firstName = firstNames[(id * 31) % firstNames.length];
+    const sex = (id % 2 === 0) ? "M" : "F";
+    const filiereId = (id % 4) + 1; // 1 to 4
+    const classeId = (id % 3) + 1; // 1 to 3
+    const matricule = `ETU2025${String(id).padStart(4, '0')}`;
+    const email = `${firstName.toLowerCase().replace(/[^a-z]/g, "")}.${lastName.toLowerCase().replace(/[^a-z]/g, "")}${id}@${domains[id % domains.length]}`;
+    const phone = `+225 07${String(70000000 + id)}`;
+    const birthYear = 2000 + (id % 7); // 2000 to 2006
+    const birthMonth = String((id % 12) + 1).padStart(2, '0');
+    const birthDay = String((id % 28) + 1).padStart(2, '0');
+    
+    list.push({
+      id,
+      matricule,
+      nom: lastName,
+      prenom: firstName,
+      sexe: sex,
+      date_naissance: `${birthYear}-${birthMonth}-${birthDay}`,
+      telephone: phone,
+      email,
+      adresse: cities[id % cities.length],
+      photo: "",
+      filiere_id: filiereId,
+      classe_id: classeId,
+      mot_de_passe: "student123"
+    });
   }
-];
+  return list;
+})();
 
 export const INITIAL_COURS: Cours[] = [
   // IG

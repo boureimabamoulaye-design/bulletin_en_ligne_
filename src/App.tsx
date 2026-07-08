@@ -60,7 +60,17 @@ export default function App() {
   });
   const [etudiants, setEtudiants] = useState<Etudiant[]>(() => {
     const saved = localStorage.getItem('school_etudiants');
-    return saved ? JSON.parse(saved) : INITIAL_ETUDIANTS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 10) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error("Error parsing school_etudiants from localStorage", e);
+      }
+    }
+    return INITIAL_ETUDIANTS;
   });
   const [cours, setCours] = useState<Cours[]>(() => {
     const saved = localStorage.getItem('school_cours');
