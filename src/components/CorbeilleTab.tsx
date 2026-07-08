@@ -7,13 +7,15 @@ interface CorbeilleTabProps {
   onRestore: (item: TrashItem) => void;
   onPermanentDelete: (id: string) => void;
   onEmptyTrash: () => void;
+  onRestoreAll?: () => void;
 }
 
 export default function CorbeilleTab({ 
   trash, 
   onRestore, 
   onPermanentDelete, 
-  onEmptyTrash 
+  onEmptyTrash,
+  onRestoreAll
 }: CorbeilleTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
@@ -62,13 +64,27 @@ export default function CorbeilleTab({
         </div>
 
         {trash.length > 0 && (
-          <button
-            onClick={() => setShowEmptyConfirm(true)}
-            className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition whitespace-nowrap shadow-sm cursor-pointer select-none"
-          >
-            <Trash2 className="w-4 h-4" />
-            Vider la corbeille ({trash.length})
-          </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
+            <button
+              onClick={() => {
+                if (confirm("⚠️ Souhaitez-vous vraiment restaurer TOUS les éléments actuellement présents dans la corbeille ?")) {
+                  onRestoreAll?.();
+                  alert("Tous les éléments ont été restaurés avec succès !");
+                }
+              }}
+              className="py-2 px-3.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition whitespace-nowrap shadow-sm cursor-pointer select-none w-full sm:w-auto"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Restaurer tout ({trash.length})
+            </button>
+            <button
+              onClick={() => setShowEmptyConfirm(true)}
+              className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition whitespace-nowrap shadow-sm cursor-pointer select-none w-full sm:w-auto"
+            >
+              <Trash2 className="w-4 h-4" />
+              Vider la corbeille ({trash.length})
+            </button>
+          </div>
         )}
       </div>
 

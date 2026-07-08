@@ -639,6 +639,59 @@ export default function App() {
     setTrash([]);
   };
 
+  const handleRestoreAll = () => {
+    if (trash.length === 0) return;
+    
+    let restoredPaiements = [...paiements];
+    let restoredFilieres = [...filieres];
+    let restoredMatieres = [...matieres];
+    let restoredSemestres = [...semestres];
+    let restoredEtudiants = [...etudiants];
+    let restoredCours = [...cours];
+    let restoredNotes = [...notes];
+    let restoredAutorisations = [...autorisations];
+
+    trash.forEach(itemToRestore => {
+      const data = itemToRestore.originalData;
+      switch (itemToRestore.itemType) {
+        case 'paiement':
+          if (!restoredPaiements.some(p => p.id === data.id)) restoredPaiements.push(data);
+          break;
+        case 'filiere':
+          if (!restoredFilieres.some(f => f.id === data.id)) restoredFilieres.push(data);
+          break;
+        case 'matiere':
+          if (!restoredMatieres.some(m => m.id === data.id)) restoredMatieres.push(data);
+          break;
+        case 'semestre':
+          if (!restoredSemestres.some(s => s.id === data.id)) restoredSemestres.push(data);
+          break;
+        case 'etudiant':
+          if (!restoredEtudiants.some(e => e.id === data.id)) restoredEtudiants.push(data);
+          break;
+        case 'cours':
+          if (!restoredCours.some(c => c.id === data.id)) restoredCours.push(data);
+          break;
+        case 'note':
+          if (!restoredNotes.some(n => n.id === data.id)) restoredNotes.push(data);
+          break;
+        case 'autorisation':
+          if (!restoredAutorisations.some(a => a.id === data.id)) restoredAutorisations.push(data);
+          break;
+      }
+    });
+
+    setPaiements(restoredPaiements);
+    setFilieres(restoredFilieres);
+    setMatieres(restoredMatieres);
+    setSemestres(restoredSemestres);
+    setEtudiants(restoredEtudiants);
+    setCours(restoredCours);
+    setNotes(restoredNotes);
+    setAutorisations(restoredAutorisations);
+    setTrash([]);
+  };
+
   // Log active cross-major file consumption (triggered by student)
   const handleLogAccess = (studentId: number, filiereId: number) => {
     const id = logs.length > 0 ? Math.max(...logs.map(x => x.id)) + 1 : 1;
@@ -1735,6 +1788,7 @@ export default function App() {
                           onRestore={handleRestoreItem}
                           onPermanentDelete={handlePermanentDeleteItem}
                           onEmptyTrash={handleEmptyTrash}
+                          onRestoreAll={handleRestoreAll}
                         />
                       )}
                 </div>
