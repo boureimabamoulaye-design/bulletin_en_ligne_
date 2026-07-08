@@ -422,6 +422,22 @@ export default function App() {
     setAutorisations(autorisations.filter(a => a.etudiant_id !== id));
   };
 
+  // Delete all students
+  const handleDeleteAllEtudiants = () => {
+    if (etudiants.length === 0) return;
+    const trashItems: TrashItem[] = etudiants.map(item => ({
+      id: `etudiant-${item.id}-${Date.now()}`,
+      itemType: 'etudiant',
+      itemName: `Étudiant: ${item.prenom} ${item.nom} (Matricule: ${item.matricule})`,
+      originalData: item,
+      deletedAt: new Date().toISOString()
+    }));
+    setTrash(prev => [...trashItems, ...prev]);
+    setEtudiants([]);
+    setNotes([]);
+    setAutorisations([]);
+  };
+
   // Add course support
   const handleAddCours = (newC: Omit<Cours, 'id' | 'date_ajout'>) => {
     const id = cours.length > 0 ? Math.max(...cours.map(x => x.id)) + 1 : 1;
@@ -1591,6 +1607,7 @@ export default function App() {
                           onAddEtudiant={handleAddEtudiant}
                           onUpdateEtudiant={handleUpdateEtudiant}
                           onDeleteEtudiant={handleDeleteEtudiant}
+                          onDeleteAllEtudiants={handleDeleteAllEtudiants}
                           onAddPaiement={handleAddPaiement}
                           globalFiliereId={globalFiliereId}
                           paiements={paiements}

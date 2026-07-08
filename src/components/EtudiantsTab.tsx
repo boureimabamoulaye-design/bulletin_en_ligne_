@@ -9,6 +9,7 @@ interface EtudiantsTabProps {
   onAddEtudiant: (student: Omit<Etudiant, 'id'>) => void;
   onUpdateEtudiant: (student: Etudiant) => void;
   onDeleteEtudiant: (id: number) => void;
+  onDeleteAllEtudiants?: () => void;
   onAddPaiement?: (paiement: Omit<Paiement, 'id'>) => void;
   globalFiliereId?: number;
   paiements?: Paiement[];
@@ -23,6 +24,7 @@ export default function EtudiantsTab({
   onAddEtudiant, 
   onUpdateEtudiant, 
   onDeleteEtudiant, 
+  onDeleteAllEtudiants,
   onAddPaiement,
   globalFiliereId,
   paiements = [],
@@ -43,6 +45,8 @@ export default function EtudiantsTab({
   const [isListHidden, setIsListHidden] = useState(false);
   const [isMasked, setIsMasked] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [showConfirmDeleteAll, setShowConfirmDeleteAll] = useState(false);
+  const [confirmStep, setConfirmStep] = useState(1);
 
   React.useEffect(() => {
     setCurrentPage(1);
@@ -285,15 +289,121 @@ export default function EtudiantsTab({
           </span>
           <p className="text-xs text-slate-400 mt-1.5 font-medium">Inscrivez les étudiants, gérez leurs classes et affectez leurs matricules scolaires.</p>
         </div>
-        <button 
-          onClick={() => { setShowForm(!showForm); if(showForm) resetForm(); }}
-          className="btn btn-primary inline-flex items-center gap-2 cursor-pointer select-none"
-          id="btn-toggle-student-form"
-        >
-          <UserPlus className="w-4 h-4" />
-          {showForm ? "Masquer le formulaire" : "Inscrire un Étudiant"}
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+          {etudiants.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowConfirmDeleteAll(true);
+                setConfirmStep(1);
+              }}
+              className="px-4 py-2.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm select-none animate-pulse-subtle w-full sm:w-auto shrink-0"
+              id="btn-delete-all-students"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Supprimer tous les effectifs</span>
+            </button>
+          )}
+
+          <button 
+            onClick={() => { setShowForm(!showForm); if(showForm) resetForm(); }}
+            className="btn btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 cursor-pointer select-none"
+            id="btn-toggle-student-form"
+          >
+            <UserPlus className="w-4 h-4" />
+            {showForm ? "Masquer le formulaire" : "Inscrire un Étudiant"}
+          </button>
+        </div>
       </div>
+
+      {/* Custom fast React confirmation modal */}
+      {showConfirmDeleteAll && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-850 rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl relative">
+            <button 
+              type="button"
+              onClick={() => { setShowConfirmDeleteAll(false); setConfirmStep(1); }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white transition font-black text-sm cursor-pointer"
+              title="Fermer"
+            >
+              ✕
+            </button>
+            
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="p-2 bg-rose-500/10 text-rose-500 rounded-lg">
+                <AlertTriangle className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm uppercase tracking-wider text-rose-600 dark:text-rose-500">
+                  Suppression Globale des Effectifs
+                </h3>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">CONFIRMATION DU DIRECTEUR • ÉTAPE {confirmStep}/2</p>
+              </div>
+            </div>
+
+            {confirmStep === 1 ? (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  Vous êtes sur le point de supprimer <strong className="text-slate-900 dark:text-white font-extrabold font-mono">{etudiants.length}</strong> étudiants inscrits dans la base.
+                </p>
+                <div className="p-3.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-xl text-xs text-rose-700 dark:text-rose-300 font-medium">
+                  ⚠️ Tous les étudiants et leurs profils seront sauvegardés et archivés temporairement dans la corbeille pour une éventuelle restauration.
+                </div>
+                
+                <div className="flex gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowConfirmDeleteAll(false); setConfirmStep(1); }}
+                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmStep(2)}
+                    className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider shadow-sm"
+                  >
+                    <span>Continuer</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 animate-fade-in">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  Cette action masquera la liste active et désactivera les fiches de scolarité associées aux étudiants sélectionnés.
+                </p>
+                
+                <div className="p-3.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+                  Confirmez-vous vouloir exécuter cette opération de vidage complet immédiatement ?
+                </div>
+
+                <div className="flex gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmStep(1)}
+                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Retour</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDeleteAllEtudiants?.();
+                      setShowConfirmDeleteAll(false);
+                      setConfirmStep(1);
+                    }}
+                    className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition cursor-pointer uppercase tracking-wider text-center shadow-md border border-rose-500"
+                  >
+                    SUPPRIMER TOUT
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Editor addition/modification container */}
       {showForm && (
