@@ -407,15 +407,15 @@ export default function StudentPortal({
                         <span className="text-blue-700 font-extrabold">{filierePrincipale?.nom_filiere}</span>
                       </div>
                       <div className="flex justify-between py-1.5 border-b border-gray-100">
-                        <span className="text-gray-400">Niveau de Classe :</span>
-                        <span className="text-slate-800 font-bold">{classeActuelle?.nom_classe}</span>
-                      </div>
-                      <div className="flex justify-between py-1.5 border-b border-gray-100">
                         <span className="text-gray-400">Date de Naissance :</span>
                         <span className="text-slate-800 font-bold">{activeStudent.date_naissance}</span>
                       </div>
                       <div className="flex justify-between py-1.5 border-b border-gray-100">
-                        <span className="text-gray-400">E-mail institutionnel :</span>
+                        <span className="text-gray-400">Lieu de Naissance :</span>
+                        <span className="text-slate-800 font-bold">{activeStudent.lieu_naissance || "Bamako"}</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 border-b border-gray-100">
+                        <span className="text-gray-400">E-mail de l'élève :</span>
                         <span className="text-slate-800 font-bold">{activeStudent.email}</span>
                       </div>
                       <div className="flex justify-between py-1.5 border-b border-gray-100">
@@ -785,11 +785,6 @@ export default function StudentPortal({
                       </div>
                       <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
                         <div>
-                          <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Rang dans la classe</span>
-                          <span className="text-sm font-mono text-emerald-400 font-black">{rank === 1 ? '1er' : `${rank}ème`} / {total} {total > 1 ? 'élèves' : 'élève'}</span>
-                        </div>
-                        <div className="h-6 w-px bg-slate-800 hidden sm:block"></div>
-                        <div>
                           <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block mb-0.5">Moyenne Pondérée</span>
                           <span className="text-base text-blue-400 font-extrabold">{currentAverage.toFixed(2)} / 20</span>
                         </div>
@@ -836,7 +831,7 @@ export default function StudentPortal({
                   <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-slate-800 pb-5 gap-4">
                     <div className="text-center md:text-left">
                       <h2 className="text-lg font-black text-slate-950 tracking-tight">INSTITUT ACADÉMIQUE DE SCOLARITÉ</h2>
-                      <p className="text-xs text-gray-400 mt-1 uppercase leading-none font-bold">Abidjan - Plateau | Tel: +225 01 02 03 04 05</p>
+                      <p className="text-xs text-gray-400 mt-1 uppercase leading-none font-bold">Bamako - Hamdallaye ACI | Tel: +223 20 22 40 30</p>
                     </div>
                     <div className="text-center md:text-right font-mono text-xs border border-slate-200 bg-slate-50 p-2.5 rounded-lg w-full md:w-auto">
                       <strong className="text-slate-900 block font-black uppercase">BULLETIN SCOLAIRE OFFICIEL</strong>
@@ -1024,13 +1019,9 @@ export default function StudentPortal({
                             <span className="text-slate-950 font-black">{currentAverage > 0 ? `${currentAverage.toFixed(2)}/20` : "Pas de moyenne"}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Rang de la promotion :</span>
-                            <span className="text-emerald-700 font-extrabold">{currentAverage > 0 ? `${rank === 1 ? '1er' : `${rank}ème`} sur ${total}` : "-"}</span>
-                          </div>
-                          <div className="flex justify-between">
                             <span className="text-gray-500">Validation administrative :</span>
                             <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${currentAverage >= 10 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
-                              {currentAverage >= 10 ? 'Admis' : 'Ajourné'}
+                              {currentAverage >= 10 ? 'Validé' : 'Non validé'}
                             </span>
                           </div>
                         </div>

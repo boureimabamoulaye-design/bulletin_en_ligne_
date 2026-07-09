@@ -58,6 +58,7 @@ export default function EtudiantsTab({
   const [prenom, setPrenom] = useState("");
   const [sexe, setSexe] = useState<'M' | 'F'>("M");
   const [dateNaissance, setDateNaissance] = useState("2004-01-01");
+  const [lieuNaissance, setLieuNaissance] = useState("");
   const [telephone, setTelephone] = useState("");
   const [email, setEmail] = useState("");
   const [adresse, setAdresse] = useState("");
@@ -82,6 +83,7 @@ export default function EtudiantsTab({
     setPrenom("");
     setSexe("M");
     setDateNaissance("2004-01-01");
+    setLieuNaissance("");
     setTelephone("");
     setEmail("");
     setAdresse("");
@@ -104,6 +106,7 @@ export default function EtudiantsTab({
     setPrenom(student.prenom);
     setSexe(student.sexe);
     setDateNaissance(student.date_naissance);
+    setLieuNaissance(student.lieu_naissance || "");
     setTelephone(student.telephone);
     setEmail(student.email);
     setAdresse(student.adresse);
@@ -146,9 +149,17 @@ export default function EtudiantsTab({
     return `${prefix}-${yearSuffix}${classSlug}-${seq}`;
   };
 
-  const activeMatricule = editingStudent 
-    ? editingStudent.matricule 
-    : (matriculeMode === 'auto' ? getAutoMatricule() : customMatricule.trim().toUpperCase());
+  const activeMatricule = customMatricule.trim().toUpperCase();
+
+  React.useEffect(() => {
+    if (showForm) {
+      if (editingStudent) {
+        setCustomMatricule(editingStudent.matricule);
+      } else {
+        setCustomMatricule("");
+      }
+    }
+  }, [showForm, editingStudent]);
 
   // Luxury Card color styling map based on Filiere selection (fits gold & slate themes)
   const getFiliereGradient = (id: number) => {
@@ -173,7 +184,7 @@ export default function EtudiantsTab({
       return;
     }
 
-    if (matriculeMode === 'manual' && isDuplicateMatricule(customMatricule)) {
+    if (isDuplicateMatricule(customMatricule)) {
       alert("Erreur de validation: Le matricule choisi est déjà réservé par un autre élève.");
       return;
     }
@@ -188,11 +199,12 @@ export default function EtudiantsTab({
         date_naissance: dateNaissance,
         telephone,
         email,
-        adresse,
+        adresse: adresse || (lieuNaissance ? `${lieuNaissance}, Mali` : "Bamako, Mali"),
         photo: "",
         filiere_id: filiereId,
         classe_id: classeId,
-        mot_de_passe: motDePasse
+        mot_de_passe: motDePasse,
+        lieu_naissance: lieuNaissance
       });
     } else {
       onAddEtudiant({
@@ -203,11 +215,12 @@ export default function EtudiantsTab({
         date_naissance: dateNaissance,
         telephone,
         email,
-        adresse,
+        adresse: adresse || (lieuNaissance ? `${lieuNaissance}, Mali` : "Bamako, Mali"),
         photo: "",
         filiere_id: filiereId,
         classe_id: classeId,
-        mot_de_passe: motDePasse
+        mot_de_passe: motDePasse,
+        lieu_naissance: lieuNaissance
       });
 
       if (enregistrerPaiement && onAddPaiement) {
@@ -417,10 +430,10 @@ export default function EtudiantsTab({
             </span>
           </h4>
           
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             
-            {/* Left/Middle Column (Covers Form Fields) */}
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Form Fields Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               
               <div className="form-group">
                 <label className="form-label text-slate-400">Nom de famille <span className="text-red-500">*</span></label>
@@ -428,7 +441,7 @@ export default function EtudiantsTab({
                   type="text" 
                   value={nom} 
                   onChange={e => setNom(e.target.value)} 
-                  placeholder="Ex: KOUASSI" 
+                  placeholder="Ex: COULIBALY" 
                   className="form-control" 
                   required 
                 />
@@ -440,73 +453,64 @@ export default function EtudiantsTab({
                   type="text" 
                   value={prenom} 
                   onChange={e => setPrenom(e.target.value)} 
-                  placeholder="Ex: Jean-Philippe" 
+                  placeholder="Ex: Cheick" 
                   className="form-control" 
                   required 
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label text-slate-400">E-mail institutionnel <span className="text-red-500">*</span></label>
+                <label className="form-label text-slate-400">Matricule de l'élève <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={customMatricule} 
+                    onChange={e => setCustomMatricule(e.target.value)} 
+                    placeholder="Ex: ETU-26XS-0004" 
+                    className="form-control font-mono font-bold uppercase pr-9" 
+                    required 
+                    disabled={!!editingStudent}
+                  />
+                  <div className="absolute right-3 top-3">
+                    {customMatricule.trim() === "" ? (
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" title="Saisie en cours..."></div>
+                    ) : isDuplicateMatricule(customMatricule) ? (
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-bounce" title="Doublon détecté !"></div>
+                    ) : (
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="Matricule valide et libre"></div>
+                    )}
+                  </div>
+                </div>
+                {customMatricule.trim() !== "" && isDuplicateMatricule(customMatricule) && (
+                  <p className="text-[10px] text-red-400 mt-1 font-bold">⚠️ Matricule déjà attribué à un autre élève</p>
+                )}
+                {editingStudent && (
+                  <p className="text-[9px] text-slate-400 mt-1 italic font-mono">Lecture seule pour cohérence historique.</p>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label text-slate-400">E-mail de l'élève <span className="text-red-500">*</span></label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
-                  placeholder="nom.prenom@ecole.com" 
+                  placeholder="Ex: m.coulibaly@gmail.com" 
                   className="form-control" 
                   required 
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label text-slate-400">Téléphone de contact</label>
+                <label className="form-label text-slate-400">Téléphone de contact <span className="text-red-500">*</span></label>
                 <input 
                   type="text" 
                   value={telephone} 
                   onChange={e => setTelephone(e.target.value)} 
-                  placeholder="+225 00000000" 
+                  placeholder="Ex: +223 76000000" 
                   className="form-control" 
+                  required
                 />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label text-slate-400">Filière d'Étude Principale <span className="text-red-500">*</span></label>
-                <select 
-                  value={filiereId} 
-                  onChange={e => setFiliereId(Number(e.target.value))} 
-                  className="form-control font-semibold"
-                  required
-                >
-                  {filieres.map(f => (
-                    <option key={f.id} value={f.id}>{f.nom_filiere}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label text-slate-400">Classe / Niveau <span className="text-red-500">*</span></label>
-                <select 
-                  value={classeId} 
-                  onChange={e => setClasseId(Number(e.target.value))} 
-                  className="form-control font-semibold font-mono text-slate-100"
-                  required
-                >
-                  {classes.map(c => (
-                    <option key={c.id} value={c.id}>{c.nom_classe}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label text-slate-400">Sexe</label>
-                <select 
-                  value={sexe} 
-                  onChange={e => setSexe(e.target.value as 'M' | 'F')} 
-                  className="form-control font-semibold"
-                >
-                  <option value="M">Masculin</option>
-                  <option value="F">Féminin</option>
-                </select>
               </div>
 
               <div className="form-group">
@@ -521,280 +525,60 @@ export default function EtudiantsTab({
               </div>
 
               <div className="form-group">
-                <label className="form-label text-slate-400">Adresse physique domicile</label>
+                <label className="form-label text-slate-400">Lieu de Naissance <span className="text-red-500">*</span></label>
                 <input 
                   type="text" 
-                  value={adresse} 
-                  onChange={e => setAdresse(e.target.value)} 
-                  placeholder="Quartier, Commune, Ville" 
+                  value={lieuNaissance} 
+                  onChange={e => setLieuNaissance(e.target.value)} 
+                  placeholder="Ex: Bamako" 
                   className="form-control" 
+                  required 
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label text-slate-400 flex items-center justify-between">
-                  <span>Mot de Passe du Compte</span>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-xs text-[#c5a880] hover:underline flex items-center gap-1 cursor-pointer select-none"
-                  >
-                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    {showPassword ? "Masquer" : "Afficher"}
-                  </button>
-                </label>
-                <div className="relative">
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    value={motDePasse} 
-                    onChange={e => setMotDePasse(e.target.value)} 
-                    className="form-control pr-10" 
-                    required 
-                  />
-                  <Shield className="absolute right-3 top-3 w-4 h-4 text-emerald-500" />
-                </div>
+                <label className="form-label text-slate-400">Genre / Sexe <span className="text-red-500">*</span></label>
+                <select 
+                  value={sexe} 
+                  onChange={e => setSexe(e.target.value as 'M' | 'F')} 
+                  className="form-control bg-[#111422] text-slate-100 border-[#20253e] font-bold"
+                  required
+                >
+                  <option value="M" className="text-slate-900">Masculin (M)</option>
+                  <option value="F" className="text-slate-900">Féminin (F)</option>
+                </select>
               </div>
 
-            </div>
-
-            {/* Right Column: Holographic ID Student Card Live Preview + Matricule Saisie Module */}
-            <div className="bg-[#14172a] p-4 rounded-xl border border-[#20253e] flex flex-col justify-between space-y-4">
-              
-              <div>
-                <div className="flex justify-between items-center mb-2.5">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                    🪪 Aperçu de Carte Scolaire
-                  </span>
-                  {matriculeMode === 'auto' ? (
-                    <span className="text-[8.5px] bg-[#071314] text-teal-400 border border-teal-900 px-1.5 py-0.5 rounded font-black font-mono">🌟 AUTO</span>
-                  ) : (
-                    <span className="text-[8.5px] bg-[#1a0e06] text-amber-501 border border-amber-900 px-1.5 py-0.5 rounded font-black font-mono">✍️ MANUEL</span>
-                  )}
-                </div>
-
-                {/* Digital Card Rendering Box */}
-                {(() => {
-                  const selFiliere = filieres.find(f => f.id === filiereId);
-                  const selClasse = classes.find(c => c.id === classeId);
-                  const gradient = getFiliereGradient(filiereId);
-                  
-                  return (
-                    <div className={`w-full bg-gradient-to-br ${gradient} p-4 rounded-xl border relative shadow-2xl overflow-hidden transition-all duration-300 min-h-[195px] flex flex-col justify-between select-none`}>
-                      {/* Stylized background lines */}
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#c5a880]/5 rounded-full blur-2xl pointer-events-none"></div>
-                      <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-[#c5a880]/5 rounded-full blur-xl pointer-events-none"></div>
-                      
-                      {/* Card Header area */}
-                      <div className="flex justify-between items-start border-b border-[#252b47] pb-2">
-                        <div className="text-left font-serif">
-                          <h6 className="text-[9.5px] tracking-widest font-black uppercase text-[#dfcbb0] leading-none">
-                            GROUPE SCOLAIRE ACADÉMIQUE
-                          </h6>
-                          <span className="text-[6.5px] font-mono tracking-widest text-[#bfcbde] uppercase leading-none block mt-0.5">
-                            BAMAKO • EXCELLENCE & SAVOIR
-                          </span>
-                        </div>
-                        {/* Gold smartchip rendering */}
-                        <div className="w-5.5 h-4 bg-gradient-to-br from-yellow-300 via-[#c5a880] to-[#8a7251] rounded border border-[#dfcbb0]/40 flex flex-col justify-center items-center shrink-0 shadow-inner">
-                          <div className="grid grid-cols-3 gap-[1px] w-4 h-2.5">
-                            <div className="border border-[#111422]/20 rounded-[1px]"></div>
-                            <div className="border border-[#111422]/20 rounded-[1px]"></div>
-                            <div className="border border-[#111422]/20 rounded-[1px]"></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Card main row information */}
-                      <div className="flex gap-3 my-2.5 items-center">
-                        {/* Profile Initials Emblem (Remplace la photo stock) */}
-                        <div className="w-11 h-11 bg-gradient-to-br from-[#c5a880]/20 to-[#dfcbb0]/10 border border-[#c5a880]/50 rounded-full shrink-0 relative flex items-center justify-center shadow-lg">
-                          <span className="font-serif font-black text-xs text-[#dfcbb0] tracking-wider">
-                            {nom && prenom ? `${nom.charAt(0).toUpperCase()}${prenom.charAt(0).toUpperCase()}` : "ET"}
-                          </span>
-                        </div>
-
-                        {/* Name and scholastic attributes */}
-                        <div className="flex-1 space-y-1 min-w-0 text-left">
-                          <div className="space-y-[1px]">
-                            <span className="text-[6px] tracking-wide text-gray-500 uppercase leading-none block">Identité Étudiant</span>
-                            <p className="font-sans font-black text-[11px] leading-tight text-[#ffffff] uppercase truncate tracking-wide">
-                              {nom ? nom.toUpperCase() : "..."}
-                            </p>
-                            <p className="font-sans font-semibold text-[8px] leading-none text-[#dfcbb0] truncate">
-                              {prenom || "..."}
-                            </p>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-1 pb-1">
-                            <div>
-                              <span className="text-[5.5px] uppercase text-slate-500 block">Filière</span>
-                              <span className="text-[7.5px] font-black block truncate leading-tight text-[#bfcbde]">
-                                {selFiliere ? selFiliere.nom_filiere : "A définir"}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-[5.5px] uppercase text-slate-500 block">Classe / Niveau</span>
-                              <span className="text-[7.5px] font-mono font-black block truncate leading-tight text-[#c5a880]">
-                                {selClasse ? selClasse.nom_classe : "Optionnelle"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Card Footer containing final active matricule & security layout */}
-                      <div className="pt-2 border-t border-[#252b47] flex justify-between items-center bg-[#0d101d]/40 px-2 py-1 rounded">
-                        <div className="text-left">
-                          <span className="text-[5.5px] font-bold uppercase text-slate-500 block leading-none">Matricule Scolaire</span>
-                          <span className="font-mono text-[10.5px] font-black text-[#c5a880] tracking-wider block">
-                            {activeMatricule || "ENT-2026-XXXX"}
-                          </span>
-                        </div>
-
-                        {/* Custom Barcode using precise CSS stripes */}
-                        <div className="bg-[#14172a]/80 p-1 rounded-sm border border-[#20253e] flex items-center gap-[1px] h-6 overflow-hidden shrink-0 select-none">
-                          <div className="w-0.5 h-4 bg-slate-400"></div>
-                          <div className="w-1 h-4 bg-slate-400"></div>
-                          <div className="w-[1px] h-4 bg-transparent"></div>
-                          <div className="w-0.5 h-4 bg-slate-400"></div>
-                          <div className="w-[1px] h-4 bg-transparent"></div>
-                          <div className="w-1.5 h-4 bg-slate-400"></div>
-                          <div className="w-0.5 h-4 bg-slate-400"></div>
-                          <div className="w-[1px] h-4 bg-transparent"></div>
-                          <div className="w-0.5 h-4 bg-slate-400"></div>
-                        </div>
-                      </div>
-
-                    </div>
-                  );
-                })()}
+              <div className="form-group">
+                <label className="form-label text-slate-400">Filière d'études <span className="text-red-500">*</span></label>
+                <select 
+                  value={filiereId} 
+                  onChange={e => setFiliereId(Number(e.target.value))} 
+                  className="form-control bg-[#111422] text-slate-100 border-[#20253e] font-bold"
+                  required
+                >
+                  {filieres.map(f => (
+                    <option key={f.id} value={f.id} className="text-slate-900">
+                      {f.nom_filiere}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Advanced Matricule Allocation Console */}
-              <div className="bg-[#0f1220] p-3.5 rounded-xl border border-[#20253e] space-y-3 text-left">
-                <div className="flex justify-between items-center pb-1 border-b border-[#20253e]">
-                  <span className="text-[9.5px] font-black uppercase text-[#dfcbb0] tracking-wider block">
-                    Modèle de Saisie du Matricule
-                  </span>
-                  {editingStudent && (
-                    <span className="text-[8px] bg-amber-900/40 text-[#c5a880] border border-[#c5a880]/30 px-2 py-0.5 rounded font-bold uppercase select-none">
-                      Lecture Seule
-                    </span>
-                  )}
-                </div>
-
-                {!editingStudent ? (
-                  <>
-                    {/* Aligned Tabs for Choice generation Mode */}
-                    <div className="grid grid-cols-2 gap-1 bg-[#14172a] p-1 rounded-lg border border-[#20253e]">
-                      <button
-                        type="button"
-                        onClick={() => setMatriculeMode('auto')}
-                        className={`py-1 rounded text-[9.5px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                          matriculeMode === 'auto'
-                            ? 'bg-blue-600/30 text-white border border-blue-500/40 font-extrabold'
-                            : 'text-slate-400 hover:text-slate-250'
-                        }`}
-                      >
-                        <Wand2 className="w-3 h-3 stroke-[2.5] text-[#c5a880]" /> Auto-générer
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMatriculeMode('manual')}
-                        className={`py-1 rounded text-[9.5px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                          matriculeMode === 'manual'
-                            ? 'bg-[#c5a880]/20 text-white border border-[#c5a880]/40 font-extrabold'
-                            : 'text-slate-400 hover:text-slate-250'
-                        }`}
-                      >
-                        <Keyboard className="w-3 h-3 stroke-[2.5]" /> Saisie Libre
-                      </button>
-                    </div>
-
-                    {/* Active Mode UI Content */}
-                    {matriculeMode === 'auto' ? (
-                      <div className="space-y-2 pt-1">
-                        <span className="text-[9px] text-[#bfcbde] font-semibold block leading-none">
-                          Sélectionnez le préfixe de base de l'inscription :
-                        </span>
-                        
-                        <div className="flex gap-1.5 font-mono">
-                          {(['ETU', 'INS', 'ACAD'] as const).map(pfx => {
-                            const isSelected = matriculePrefix === pfx;
-                            return (
-                              <button
-                                key={pfx}
-                                type="button"
-                                onClick={() => setMatriculePrefix(pfx)}
-                                className={`flex-grow py-1 px-1.5 rounded text-[10px] font-black border transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-[#c5a880] text-[#111422] border-[#c0a27a]'
-                                    : 'bg-[#14172a] text-slate-400 border-[#20253e] hover:text-slate-100'
-                                }`}
-                              >
-                                {pfx}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        
-                        <span className="text-[8.5px] text-slate-400 italic leading-snug block mt-1">
-                          Formule dynamique : <strong className="text-slate-200 font-mono">{activeMatricule}</strong>. Ce code intègre l'année en cours, le niveau de classe d'étude et le compteur séquentiel élève.
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5 pt-1">
-                        <label className="text-[9px] text-[#bfcbde] font-semibold block">
-                          Nouveau matricule personnalisé <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={customMatricule}
-                            onChange={e => setCustomMatricule(e.target.value)}
-                            placeholder="Saisir (Ex: ETTI-26L3-9999)"
-                            className="form-control font-mono font-bold tracking-wider text-xs uppercase pr-9 placeholder:text-slate-600 placeholder:italic select-text"
-                            required={matriculeMode === 'manual'}
-                          />
-                          <div className="absolute right-3 top-3">
-                            {customMatricule.trim() === "" ? (
-                              <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" title="Saisie en cours..."></div>
-                            ) : isDuplicateMatricule(customMatricule) ? (
-                              <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-bounce" title="Doublon détecté !"></div>
-                            ) : (
-                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="Matricule valide et libre"></div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Duplication error state alerts inside custom panel */}
-                        {customMatricule.trim() !== "" && (
-                          <div className="pt-1 select-none">
-                            {isDuplicateMatricule(customMatricule) ? (
-                              <div className="p-1 px-2 bg-red-950/20 border border-red-900/40 rounded flex items-center gap-1 text-[9px] font-bold text-red-400">
-                                <AlertTriangle className="w-3 h-3 shrink-0 text-red-500" />
-                                <span>Matricule attribué à un autre élève</span>
-                              </div>
-                            ) : (
-                              <div className="p-1 px-2 bg-emerald-950/20 border border-emerald-900/30 rounded flex items-center gap-1 text-[9px] font-bold text-emerald-400">
-                                <Check className="w-3 h-3 shrink-0 text-emerald-400" />
-                                <span>Identifiant unique disponible</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="p-2.5 bg-[#14172a] rounded-lg border border-[#20253e] text-center font-mono space-y-1">
-                    <span className="text-[8.5px] uppercase tracking-wide text-slate-500 block">Scolarité native scellée</span>
-                    <strong className="text-xs font-black text-slate-100 tracking-wider block">{activeMatricule}</strong>
-                    <p className="text-[8px] text-slate-400 leading-relaxed font-sans">
-                      Les matricules sont des clés d'archives non éditables pour garantir la cohérence des bulletins de notes historiques.
-                    </p>
-                  </div>
-                )}
+              <div className="form-group">
+                <label className="form-label text-slate-400">Niveau / Classe <span className="text-red-500">*</span></label>
+                <select 
+                  value={classeId} 
+                  onChange={e => setClasseId(Number(e.target.value))} 
+                  className="form-control bg-[#111422] text-slate-100 border-[#20253e] font-bold"
+                  required
+                >
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id} className="text-slate-900">
+                      {c.nom_classe}
+                    </option>
+                  ))}
+                </select>
               </div>
 
             </div>
@@ -876,9 +660,9 @@ export default function EtudiantsTab({
               </button>
               <button 
                 type="submit" 
-                disabled={matriculeMode === 'manual' && isDuplicateMatricule(customMatricule)}
+                disabled={isDuplicateMatricule(customMatricule)}
                 className={`btn btn-primary font-black text-xs py-2 px-5 cursor-pointer uppercase tracking-wider select-none ${
-                  matriculeMode === 'manual' && isDuplicateMatricule(customMatricule)
+                  isDuplicateMatricule(customMatricule)
                     ? 'opacity-40 cursor-not-allowed text-slate-400 border-none'
                     : ''
                 }`}
@@ -1342,6 +1126,13 @@ export default function EtudiantsTab({
                       </div>
 
                       <div>
+                        <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Lieu de Naissance</span>
+                        <p className="text-xs font-semibold text-slate-300 truncate">
+                          {student.lieu_naissance || "Bamako"}
+                        </p>
+                      </div>
+
+                      <div className="sm:col-span-2">
                         <span className="text-[10px] text-slate-550 font-black uppercase tracking-wider block">Adresse de Résidence</span>
                         <p className="text-xs font-semibold text-slate-300 truncate" title={student.adresse}>
                           {maskText(student.adresse, 'address')}

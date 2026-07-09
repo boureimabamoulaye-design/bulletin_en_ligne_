@@ -64,6 +64,7 @@ interface NotesTabProps {
   globalSemestreId?: number;
   onSemestreChange?: (id: number) => void;
   onFiliereChange?: (id: number) => void;
+  adminTheme?: string;
 }
 
 export default function NotesTab({ 
@@ -80,7 +81,8 @@ export default function NotesTab({
   globalFiliereId,
   globalSemestreId,
   onSemestreChange,
-  onFiliereChange
+  onFiliereChange,
+  adminTheme = 'sombre-or'
 }: NotesTabProps) {
   // --- STATES ---
   const [localFiliereId, setLocalFiliereId] = useState<number>(filieres[0]?.id || 0);
@@ -105,11 +107,18 @@ export default function NotesTab({
   }, [selectedFiliereId, semestres, localSemesterId]);
 
   // --- MULTI-ENTRY STATES ---
-  const [entryMode, setEntryMode] = useState<'individual' | 'collective' | 'paste'>('individual');
+  const [entryMode, setEntryMode] = useState<'individual' | 'collective' | 'grid' | 'bulletin' | 'paste'>('individual');
 
   // Collective Saisie states
   const [collectiveMatiereId, setCollectiveMatiereId] = useState<number>(0);
   const [collectiveGrades, setCollectiveGrades] = useState<Record<number, { note_classe: string; note_examen: string }>>({});
+
+  // Grid Saisie states
+  const [gridGrades, setGridGrades] = useState<Record<string, { note_classe: string; note_examen: string }>>({});
+
+  // Bulletin Saisie states
+  const [bulletinEtudiantId, setBulletinEtudiantId] = useState<number>(0);
+  const [bulletinGrades, setBulletinGrades] = useState<Record<number, { note_classe: string; note_examen: string }>>({});
 
   // Paste Saisie states
   const [pasteMatiereId, setPasteMatiereId] = useState<number>(0);
@@ -144,7 +153,62 @@ export default function NotesTab({
     }
   }, [selectedFiliereId, selectedSemesterId, matieres, collectiveMatiereId, pasteMatiereId]);
 
-  const handleSwitchMode = (mode: 'individual' | 'collective' | 'paste') => {
+  // Load existing grades into the Grid on selection change
+  useEffect(() => {
+    if (entryMode === 'grid' && selectedFiliereId > 0) {
+      const initialGrid: Record<string, { note_classe: string; note_examen: string }> = {};
+      const fStudents = etudiants.filter(e => Number(e.filiere_id) === Number(selectedFiliereId));
+      const fMatieres = matieres.filter(m => 
+        Number(m.filiere_id) === Number(selectedFiliereId) &&
+        (!m.semestre_id || Number(m.semestre_id) === Number(selectedSemesterId))
+      );
+
+      fStudents.forEach(st => {
+        fMatieres.forEach(m => {
+          const existing = notes.find(n => 
+            Number(n.etudiant_id) === Number(st.id) &&
+            Number(n.semestre_id) === Number(selectedSemesterId) &&
+            cours.find(c => c.id === n.cours_id)?.titre === m.nom_matiere
+          );
+          initialGrid[`${st.id}_${m.id}`] = {
+            note_classe: existing?.note_classe !== undefined ? existing.note_classe.toString() : "",
+            note_examen: existing?.note_examen !== undefined ? existing.note_examen.toString() : ""
+          };
+        });
+      });
+      setGridGrades(initialGrid);
+    }
+  }, [entryMode, selectedFiliereId, selectedSemesterId, notes, etudiants, matieres, cours]);
+
+  // Load existing grades into the Bulletin on student selection change
+  useEffect(() => {
+    if (entryMode === 'bulletin' && bulletinEtudiantId > 0) {
+      const student = etudiants.find(e => Number(e.id) === Number(bulletinEtudiantId));
+      if (student) {
+        const studentFiliereId = Number(student.filiere_id);
+        const fMatieres = matieres.filter(m => 
+          Number(m.filiere_id) === studentFiliereId &&
+          (!m.semestre_id || Number(m.semestre_id) === Number(selectedSemesterId))
+        );
+
+        const initialBulletin: Record<number, { note_classe: string; note_examen: string }> = {};
+        fMatieres.forEach(m => {
+          const existing = notes.find(n => 
+            Number(n.etudiant_id) === Number(bulletinEtudiantId) &&
+            Number(n.semestre_id) === Number(selectedSemesterId) &&
+            cours.find(c => c.id === n.cours_id)?.titre === m.nom_matiere
+          );
+          initialBulletin[m.id] = {
+            note_classe: existing?.note_classe !== undefined ? existing.note_classe.toString() : "",
+            note_examen: existing?.note_examen !== undefined ? existing.note_examen.toString() : ""
+          };
+        });
+        setBulletinGrades(initialBulletin);
+      }
+    }
+  }, [entryMode, bulletinEtudiantId, selectedSemesterId, notes, etudiants, matieres, cours]);
+
+  const handleSwitchMode = (mode: 'individual' | 'collective' | 'grid' | 'bulletin' | 'paste') => {
     setEntryMode(mode);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -153,6 +217,9 @@ export default function NotesTab({
     setSearchHasBeenRun(false);
     setGradesInput({});
     setCollectiveGrades({});
+    setGridGrades({});
+    setBulletinEtudiantId(0);
+    setBulletinGrades({});
     setPasteText("");
     setPasteAnalyzedRows([]);
   };
@@ -262,6 +329,196 @@ export default function NotesTab({
     // Reset collective state
     setCollectiveGrades({});
     setSuccessMessage(`Félicitations ! Un lot de ${entriesCount} note(s) a été enregistré de façon collective pour la matière "${activeMatiere.nom_matiere}" avec succès.`);
+  };
+
+  // Grid submit action handler
+  const handleGridSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const fStudents = etudiants.filter(stud => Number(stud.filiere_id) === Number(selectedFiliereId));
+    const fMatieres = matieres.filter(m => 
+      Number(m.filiere_id) === Number(selectedFiliereId) &&
+      (!m.semestre_id || Number(m.semestre_id) === Number(selectedSemesterId))
+    );
+
+    if (fStudents.length === 0 || fMatieres.length === 0) {
+      setErrorMessage("Aucun étudiant ou aucune matière à enregistrer.");
+      return;
+    }
+
+    const gradesToSubmit: {
+      etudiant_id: number;
+      semestre_id: number;
+      credits: number;
+      note: number;
+      note_classe: number;
+      note_examen: number;
+      matiere_nom: string;
+      matiere_code: string;
+    }[] = [];
+
+    let hasFormatError = false;
+    let entriesCount = 0;
+
+    fStudents.forEach(st => {
+      fMatieres.forEach(m => {
+        const input = gridGrades[`${st.id}_${m.id}`];
+        if (!input) return;
+
+        const ccTrimmed = input.note_classe.trim();
+        const examTrimmed = input.note_examen.trim();
+
+        // Skip cell if both are empty
+        if (ccTrimmed === "" && examTrimmed === "") {
+          return;
+        }
+
+        const cc = parseFloat(ccTrimmed);
+        const ds = parseFloat(examTrimmed);
+
+        if (isNaN(cc) || cc < 0 || cc > 20 || isNaN(ds) || ds < 0 || ds > 20) {
+          hasFormatError = true;
+          return;
+        }
+
+        // Check if unchanged from existing notes to optimize
+        const existing = notes.find(n => 
+          Number(n.etudiant_id) === Number(st.id) &&
+          Number(n.semestre_id) === Number(selectedSemesterId) &&
+          cours.find(c => c.id === n.cours_id)?.titre === m.nom_matiere
+        );
+
+        if (existing && existing.note_classe === cc && existing.note_examen === ds) {
+          return;
+        }
+
+        const weightedScore = (cc * 0.4) + (ds * 0.6);
+        entriesCount++;
+
+        gradesToSubmit.push({
+          etudiant_id: st.id,
+          semestre_id: selectedSemesterId,
+          credits: m.credits,
+          note: Number(weightedScore.toFixed(2)),
+          note_classe: cc,
+          note_examen: ds,
+          matiere_nom: m.nom_matiere,
+          matiere_code: m.code_matiere
+        });
+      });
+    });
+
+    if (hasFormatError) {
+      setErrorMessage("Erreur de saisie : Toutes les notes saisies doivent être des nombres valides compris entre 0 et 20.");
+      return;
+    }
+
+    if (entriesCount === 0) {
+      setErrorMessage("Aucun changement de note détecté dans la grille globale.");
+      return;
+    }
+
+    onAddNotes(gradesToSubmit);
+    setSuccessMessage(`Félicitations ! Un lot de ${entriesCount} note(s) a été enregistré ou mis à jour avec succès dans la grille globale.`);
+  };
+
+  // Bulletin submit action handler
+  const handleBulletinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const student = etudiants.find(stud => Number(stud.id) === Number(bulletinEtudiantId));
+    if (!student) {
+      setErrorMessage("Veuillez sélectionner un étudiant.");
+      return;
+    }
+
+    const studentFiliereId = Number(student.filiere_id);
+    const fMatieres = matieres.filter(m => 
+      Number(m.filiere_id) === studentFiliereId &&
+      (!m.semestre_id || Number(m.semestre_id) === Number(selectedSemesterId))
+    );
+
+    if (fMatieres.length === 0) {
+      setErrorMessage("Aucune matière n'est disponible pour la filière de cet étudiant.");
+      return;
+    }
+
+    const gradesToSubmit: {
+      etudiant_id: number;
+      semestre_id: number;
+      credits: number;
+      note: number;
+      note_classe: number;
+      note_examen: number;
+      matiere_nom: string;
+      matiere_code: string;
+    }[] = [];
+
+    let hasFormatError = false;
+    let entriesCount = 0;
+
+    fMatieres.forEach(m => {
+      const input = bulletinGrades[m.id];
+      if (!input) return;
+
+      const ccTrimmed = input.note_classe.trim();
+      const examTrimmed = input.note_examen.trim();
+
+      // Skip if empty
+      if (ccTrimmed === "" && examTrimmed === "") {
+        return;
+      }
+
+      const cc = parseFloat(ccTrimmed);
+      const ds = parseFloat(examTrimmed);
+
+      if (isNaN(cc) || cc < 0 || cc > 20 || isNaN(ds) || ds < 0 || ds > 20) {
+        hasFormatError = true;
+        return;
+      }
+
+      // Check if unchanged
+      const existing = notes.find(n => 
+        Number(n.etudiant_id) === Number(bulletinEtudiantId) &&
+        Number(n.semestre_id) === Number(selectedSemesterId) &&
+        cours.find(c => c.id === n.cours_id)?.titre === m.nom_matiere
+      );
+
+      if (existing && existing.note_classe === cc && existing.note_examen === ds) {
+        return;
+      }
+
+      const weightedScore = (cc * 0.4) + (ds * 0.6);
+      entriesCount++;
+
+      gradesToSubmit.push({
+        etudiant_id: Number(bulletinEtudiantId),
+        semestre_id: selectedSemesterId,
+        credits: m.credits,
+        note: Number(weightedScore.toFixed(2)),
+        note_classe: cc,
+        note_examen: ds,
+        matiere_nom: m.nom_matiere,
+        matiere_code: m.code_matiere
+      });
+    });
+
+    if (hasFormatError) {
+      setErrorMessage("Erreur de saisie : Toutes les notes saisies doivent être des nombres valides compris entre 0 et 20.");
+      return;
+    }
+
+    if (entriesCount === 0) {
+      setErrorMessage("Aucun changement détecté dans le bulletin de cet étudiant.");
+      return;
+    }
+
+    onAddNotes(gradesToSubmit);
+    setSuccessMessage(`Félicitations ! Le bulletin de l'étudiant "${student.nom} ${student.prenom}" a été enregistré ou mis à jour avec ${entriesCount} note(s) avec succès.`);
   };
 
   // Parser of bulk pasted table rows
@@ -580,7 +837,7 @@ export default function NotesTab({
               </div>
               
               {/* Mode Multi-Saisie Switcher */}
-              <div className="flex bg-slate-100 p-1 rounded-lg border border-gray-200 shrink-0 select-none">
+              <div className="flex bg-slate-100 p-1 rounded-lg border border-gray-200 shrink-0 select-none flex-wrap gap-1">
                 <button
                   type="button"
                   onClick={() => handleSwitchMode('individual')}
@@ -602,6 +859,28 @@ export default function NotesTab({
                   }`}
                 >
                   Par Matière (Collectif)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchMode('bulletin')}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+                    entryMode === 'bulletin'
+                      ? 'bg-white text-blue-905 shadow-xs border border-gray-200/50'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Saisie par Bulletins
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchMode('grid')}
+                  className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+                    entryMode === 'grid'
+                      ? 'bg-white text-blue-905 shadow-xs border border-gray-200/50'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  Grille Globale (Multi-Matières)
                 </button>
                 <button
                   type="button"
@@ -835,7 +1114,7 @@ export default function NotesTab({
                           <table className="custom-table min-w-[850px] w-full" style={{ boxShadow: 'none' }}>
                             <thead>
                               <tr>
-                                <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Matière obligatoire</th>
+                                <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Matière / Cours</th>
                                 <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Crédits</th>
                                 <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Classe (40%)</th>
                                 <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Examen (60%)</th>
@@ -861,18 +1140,24 @@ export default function NotesTab({
                                 });
 
                                 return (
-                                  <tr key={m.id} className="hover:bg-slate-900/40 transition border-b border-[#20253f] last:border-b-0">
+                                  <tr key={m.id} className={`transition border-b last:border-b-0 ${adminTheme === 'sombre-or' ? 'hover:bg-slate-900/40 border-[#20253f]' : 'hover:bg-slate-50 border-gray-150'}`}>
                                     <td className="py-4 px-4">
-                                      <div className="font-bold text-white text-sm">{m.nom_matiere}</div>
+                                      <div className={`font-bold text-sm ${adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-900'}`}>{m.nom_matiere}</div>
                                       <div className="font-mono text-[10px] text-amber-500/85 font-semibold mt-0.5 uppercase tracking-wider">{m.code_matiere}</div>
                                       {matchingNotesForMatiere.length > 0 && (
-                                        <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[#cca072] font-semibold bg-[#191410] px-2 py-0.5 rounded border border-[#cca072]/20 w-fit">
+                                        <div className={`mt-1.5 flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded border w-fit ${
+                                          adminTheme === 'sombre-or' 
+                                            ? 'text-[#cca072] bg-[#191410] border-[#cca072]/20' 
+                                            : 'text-amber-700 bg-amber-50 border-amber-200'
+                                        }`}>
                                           <Clock className="w-3.5 h-3.5" />
                                           <span>Déjà {matchingNotesForMatiere.length} évaluation(s) saisie(s)</span>
                                         </div>
                                       )}
                                     </td>
-                                    <td className="py-4 px-4 text-center font-mono font-bold text-slate-300 text-xs bg-slate-950/20">{m.credits} ECTS</td>
+                                    <td className={`py-4 px-4 text-center font-mono font-bold text-xs ${
+                                      adminTheme === 'sombre-or' ? 'text-slate-300 bg-slate-950/20' : 'text-slate-600 bg-slate-50/50'
+                                    }`}>{m.credits} ECTS</td>
                                     <td className="py-4 px-4">
                                       <div className="flex flex-col items-center justify-center">
                                         <input 
@@ -1097,12 +1382,31 @@ export default function NotesTab({
 
                   return (
                     <form onSubmit={handleCollectiveSubmit} className="space-y-4">
+                      {/* Active subject info banner */}
+                      <div className={`p-4 rounded-xl shadow-inner flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left border ${
+                        adminTheme === 'sombre-or'
+                          ? 'bg-[#101428] text-white border-[#20253f]'
+                          : 'bg-blue-50/50 text-blue-950 border-blue-100'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <BookOpen className={`w-5 h-5 ${adminTheme === 'sombre-or' ? 'text-[#dfcbb0]' : 'text-blue-600'}`} />
+                          <div>
+                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Saisie en cours pour la matière :</span>
+                            <h4 className={`text-sm font-black ${adminTheme === 'sombre-or' ? 'text-white' : 'text-blue-905'}`}>{activeMatiereObj.nom_matiere}</h4>
+                          </div>
+                        </div>
+                        <div className="sm:text-right">
+                          <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Code & Crédits</span>
+                          <span className={`text-xs font-mono font-bold ${adminTheme === 'sombre-or' ? 'text-[#dfcbb0]' : 'text-blue-800'}`}>{activeMatiereObj.code_matiere} — {activeMatiereObj.credits} ECTS</span>
+                        </div>
+                      </div>
+
                       <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs">
                         <div className="overflow-x-auto w-full">
                           <table className="custom-table min-w-[750px] w-full" style={{ boxShadow: 'none' }}>
                             <thead>
                               <tr>
-                                <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Étudiant</th>
+                                <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Étudiant / Matière</th>
                                 <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Classe (40%)</th>
                                 <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-40">Note Examen (60%)</th>
                                 <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-36">Note Finale Est.</th>
@@ -1124,12 +1428,26 @@ export default function NotesTab({
                                 });
 
                                 return (
-                                  <tr key={st.id} className="hover:bg-slate-900/40 transition border-b border-[#20253f] last:border-b-0">
-                                    <td className="py-4 px-4">
-                                      <div className="font-bold text-white text-sm">{st.nom} {st.prenom}</div>
-                                      <div className="font-mono text-[10.5px] text-amber-500/85 font-semibold mt-0.5 uppercase tracking-wider">{st.matricule}</div>
+                                  <tr key={st.id} className={`transition border-b last:border-b-0 ${adminTheme === 'sombre-or' ? 'hover:bg-slate-900/40 border-[#20253f]' : 'hover:bg-slate-50 border-gray-150'}`}>
+                                    <td className="py-4 px-4 text-left">
+                                      <div className={`font-bold text-sm ${adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-900'}`}>{st.nom} {st.prenom}</div>
+                                      <div className="font-mono text-[10.5px] text-amber-550/85 font-semibold mt-0.5 uppercase tracking-wider">{st.matricule}</div>
+                                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
+                                        <span className="text-gray-400">Évaluation :</span>
+                                        <span className={`font-bold px-1.5 py-0.5 rounded border font-sans ${
+                                          adminTheme === 'sombre-or' 
+                                            ? 'text-[#dfcbb0] bg-[#1d1b24] border-[#dfcbb0]/25' 
+                                            : 'text-blue-700 bg-blue-50 border-blue-250'
+                                        }`}>
+                                          {activeMatiereObj.nom_matiere}
+                                        </span>
+                                      </div>
                                       {matchingNotesForMatiere.length > 0 && (
-                                        <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[#cca072] font-semibold bg-[#191410] px-2 py-0.5 rounded border border-[#cca072]/20 w-fit">
+                                        <div className={`mt-1.5 flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded border w-fit ${
+                                          adminTheme === 'sombre-or' 
+                                            ? 'text-[#cca072] bg-[#191410] border-[#cca072]/20' 
+                                            : 'text-amber-700 bg-amber-50 border-amber-200'
+                                        }`}>
                                           <Clock className="w-3.5 h-3.5" />
                                           <span>Déjà évalué : {Number(matchingNotesForMatiere[0].note).toFixed(2)}/20</span>
                                         </div>
@@ -1223,6 +1541,590 @@ export default function NotesTab({
                   );
                 })()}
 
+              </div>
+            )}
+
+            {/* --- MODE 5: SAISIE PAR BULLETIN (PAR ELEVE / MULTI-MATIERES) --- */}
+            {entryMode === 'bulletin' && (
+              <div className="space-y-4">
+                {/* Selector Header */}
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl border ${
+                  adminTheme === 'sombre-or' 
+                    ? 'bg-[#101428] border-[#20253f]' 
+                    : 'bg-slate-50 border-gray-200'
+                }`}>
+                  {/* Filière Selection to narrow down */}
+                  <div className="space-y-1 text-left">
+                    <label className={`text-[10px] font-black uppercase tracking-wider ${
+                      adminTheme === 'sombre-or' ? 'text-[#dfcbb0]' : 'text-gray-600'
+                    }`}>Filière Académique (Optionnel)</label>
+                    <select 
+                      value={selectedFiliereId} 
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (onFiliereChange) {
+                          onFiliereChange(val);
+                        } else {
+                          setLocalFiliereId(val);
+                        }
+                        // Reset student if they change filiere to avoid cross-filiere student issues
+                        setBulletinEtudiantId(0);
+                      }}
+                      className={`form-control text-xs w-full py-2 px-3 focus:ring-1 focus:ring-blue-500 font-bold border rounded-lg ${
+                        adminTheme === 'sombre-or' 
+                          ? 'bg-[#0f111a] text-white border-[#20253f]' 
+                          : 'bg-white text-gray-900 border-gray-200'
+                      }`}
+                    >
+                      <option value="" className={adminTheme === 'sombre-or' ? 'text-white bg-slate-900' : 'text-gray-900 bg-white'}>Toutes les filières...</option>
+                      {filieres.map(f => (
+                        <option key={f.id} value={f.id} className={adminTheme === 'sombre-or' ? 'text-white bg-slate-900' : 'text-gray-900 bg-white'}>{f.nom_filiere}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Étudiant selection */}
+                  <div className="space-y-1 text-left">
+                    <label className={`text-[10px] font-black uppercase tracking-wider ${
+                      adminTheme === 'sombre-or' ? 'text-[#dfcbb0]' : 'text-gray-600'
+                    }`}>Sélectionner l'Étudiant *</label>
+                    <select 
+                      value={bulletinEtudiantId} 
+                      onChange={e => setBulletinEtudiantId(Number(e.target.value))}
+                      className={`form-control text-xs w-full py-2 px-3 focus:ring-1 focus:ring-blue-500 font-bold border rounded-lg ${
+                        adminTheme === 'sombre-or' 
+                          ? 'bg-[#0f111a] text-white border-[#20253f]' 
+                          : 'bg-white text-gray-900 border-gray-200'
+                      }`}
+                    >
+                      <option value="0" className={adminTheme === 'sombre-or' ? 'text-white bg-slate-900' : 'text-gray-900 bg-white'}>-- Choisir un étudiant --</option>
+                      {etudiants
+                        .filter(st => !selectedFiliereId || Number(st.filiere_id) === Number(selectedFiliereId))
+                        .map(st => {
+                          const fil = filieres.find(f => Number(f.id) === Number(st.filiere_id));
+                          return (
+                            <option key={st.id} value={st.id} className={adminTheme === 'sombre-or' ? 'text-white bg-slate-900' : 'text-gray-900 bg-white'}>
+                              {st.nom} {st.prenom} ({st.matricule}) {fil ? ` - ${fil.nom_filiere}` : ""}
+                            </option>
+                          );
+                        })}
+                    </select>
+                  </div>
+                </div>
+
+                {errorMessage && (
+                  <div className="bg-rose-50 border border-rose-300 text-rose-850 p-4 rounded-xl text-xs flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0" />
+                    <span className="font-bold">{errorMessage}</span>
+                  </div>
+                )}
+
+                {(() => {
+                  if (bulletinEtudiantId === 0) {
+                    return (
+                      <div className={`border border-dashed p-8 rounded-xl text-center text-xs flex flex-col items-center justify-center space-y-2 ${
+                        adminTheme === 'sombre-or' ? 'border-[#20253f] text-gray-400' : 'border-gray-250 text-gray-400'
+                      }`}>
+                        <User className={`w-8 h-8 ${adminTheme === 'sombre-or' ? 'text-slate-700' : 'text-gray-300'}`} />
+                        <span>Veuillez sélectionner un étudiant ci-dessus pour charger et saisir son bulletin de notes.</span>
+                      </div>
+                    );
+                  }
+
+                  const student = etudiants.find(e => Number(e.id) === Number(bulletinEtudiantId));
+                  if (!student) return null;
+
+                  const studentFiliere = filieres.find(f => Number(f.id) === Number(student.filiere_id));
+                  const studentMatieres = matieres.filter(m => 
+                    Number(m.filiere_id) === Number(student.filiere_id) &&
+                    (!m.semestre_id || Number(m.semestre_id) === Number(selectedSemesterId))
+                  );
+
+                  if (studentMatieres.length === 0) {
+                    return (
+                      <div className={`text-xs p-6 rounded-xl text-center border ${
+                        adminTheme === 'sombre-or' 
+                          ? 'bg-amber-950/20 text-amber-300 border-amber-900/30' 
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}>
+                        Aucune matière n'est configurée pour la filière de cet étudiant ({studentFiliere?.nom_filiere || "Inconnue"}) et cette session académique.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <form onSubmit={handleBulletinSubmit} className="space-y-4">
+                      {/* Bulletin header card */}
+                      <div className={`p-4 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4 text-left ${
+                        adminTheme === 'sombre-or' 
+                          ? 'bg-[#101428] text-white border-[#20253f]' 
+                          : 'bg-blue-50/50 text-blue-950 border-blue-100'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                            adminTheme === 'sombre-or' 
+                              ? 'bg-[#20253f] text-[#dfcbb0]' 
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {student.nom[0]}{student.prenom[0]}
+                          </div>
+                          <div>
+                            <span className={`text-[9px] uppercase font-black tracking-wider block ${
+                              adminTheme === 'sombre-or' ? 'text-gray-400' : 'text-blue-800'
+                            }`}>Fiche Bulletin de :</span>
+                            <h4 className={`text-sm font-black ${adminTheme === 'sombre-or' ? 'text-[#dfcbb0]' : 'text-blue-950'}`}>{student.nom} {student.prenom}</h4>
+                            <p className="text-[10px] text-gray-500 font-mono font-semibold mt-0.5">Matricule : {student.matricule} • Filière : {studentFiliere?.nom_filiere || "Non renseignée"}</p>
+                          </div>
+                        </div>
+                        <div className="text-left md:text-right shrink-0">
+                          <span className={`text-[9px] uppercase font-black tracking-wider block ${
+                            adminTheme === 'sombre-or' ? 'text-gray-400' : 'text-blue-800'
+                          }`}>Session Active :</span>
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded border font-sans block mt-1 ${
+                            adminTheme === 'sombre-or' 
+                              ? 'text-[#dfcbb0] bg-[#1d1b24] border-[#dfcbb0]/25' 
+                              : 'text-blue-900 bg-blue-100/60 border-blue-100/80'
+                          }`}>
+                            {semestres.find(s => s.id === selectedSemesterId)?.nom_semestre || "Semestre Actuel"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Grade Saisie Bulletin Table */}
+                      <div className={`border rounded-xl overflow-hidden shadow-xs ${
+                        adminTheme === 'sombre-or' ? 'border-[#20253f]' : 'border-gray-200'
+                      }`}>
+                        <div className="overflow-x-auto w-full">
+                          <table className={`min-w-max w-full text-left text-xs border-collapse ${
+                            adminTheme === 'sombre-or' ? 'bg-[#0d101d]' : 'bg-white'
+                          }`}>
+                            <thead className={`border-b ${
+                              adminTheme === 'sombre-or' ? 'bg-[#101428] border-[#20253f]' : 'bg-slate-50 border-gray-200'
+                            }`}>
+                              <tr>
+                                <th className={`py-3 px-4 font-bold text-left uppercase text-[10px] tracking-wider ${
+                                  adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-700'
+                                }`}>Matière / Code</th>
+                                <th className={`py-3 px-4 font-bold text-center uppercase text-[10px] tracking-wider ${
+                                  adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-700'
+                                } w-32`}>Crédits (ECTS)</th>
+                                <th className={`py-3 px-4 font-bold text-center uppercase text-[10px] tracking-wider ${
+                                  adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-700'
+                                } w-32`}>Note CC (40%)</th>
+                                <th className={`py-3 px-4 font-bold text-center uppercase text-[10px] tracking-wider ${
+                                  adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-700'
+                                } w-32`}>Note Examen (60%)</th>
+                                <th className={`py-3 px-4 font-bold text-center uppercase text-[10px] tracking-wider ${
+                                  adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-700'
+                                } w-32`}>Moyenne / Note</th>
+                                <th className={`py-3 px-4 font-bold text-center uppercase text-[10px] tracking-wider ${
+                                  adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-700'
+                                } w-32`}>Décision</th>
+                              </tr>
+                            </thead>
+                            <tbody className={`divide-y ${adminTheme === 'sombre-or' ? 'divide-[#20253f]' : 'divide-gray-150'}`}>
+                              {studentMatieres.map(m => {
+                                const currentInput = bulletinGrades[m.id] || { note_classe: "", note_examen: "" };
+                                const computed = calculateLiveWeighted(currentInput.note_classe, currentInput.note_examen);
+
+                                // validation checks
+                                const ccVal = getValidationInfo(currentInput.note_classe);
+                                const exVal = getValidationInfo(currentInput.note_examen);
+
+                                return (
+                                  <tr key={m.id} className={`transition-colors ${
+                                    adminTheme === 'sombre-or' ? 'hover:bg-slate-900/40' : 'hover:bg-slate-50/70'
+                                  }`}>
+                                    <td className="py-3.5 px-4 text-left">
+                                      <div className={`font-bold text-sm ${adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-900'}`}>{m.nom_matiere}</div>
+                                      <div className="font-mono text-[9px] text-amber-600 font-semibold mt-0.5 uppercase tracking-wider">{m.code_matiere}</div>
+                                    </td>
+                                    <td className={`py-3.5 px-4 text-center font-mono font-bold text-xs ${
+                                      adminTheme === 'sombre-or' ? 'text-slate-400 bg-[#101428]/20' : 'text-slate-600 bg-slate-50/30'
+                                    }`}>
+                                      {m.credits} ECTS
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                      <div className="flex flex-col items-center">
+                                        <input 
+                                          type="text"
+                                          placeholder="CC /20"
+                                          value={currentInput.note_classe}
+                                          onChange={e => {
+                                            setBulletinGrades({
+                                              ...bulletinGrades,
+                                              [m.id]: { ...currentInput, note_classe: e.target.value }
+                                            });
+                                          }}
+                                          className={`w-20 text-center py-1 px-2 text-xs font-black rounded-lg border transition-all ${
+                                            currentInput.note_classe.trim() === "" 
+                                              ? adminTheme === 'sombre-or'
+                                                ? "border-[#20253f] bg-[#0d1021] text-white focus:border-[#c5a880] focus:ring-1 focus:ring-[#c5a880]/10"
+                                                : "border-gray-200 bg-white text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/10"
+                                              : ccVal.isError 
+                                                ? adminTheme === 'sombre-or'
+                                                  ? "!border-rose-750 !bg-rose-950/30 !text-rose-400"
+                                                  : "!border-rose-400 !bg-rose-50 !text-rose-700"
+                                                : adminTheme === 'sombre-or'
+                                                  ? "!border-emerald-750 !bg-emerald-950/30 !text-emerald-400"
+                                                  : "!border-emerald-400 !bg-emerald-50 !text-emerald-700"
+                                          }`}
+                                        />
+                                        {ccVal.isError && <span className="text-[8px] text-rose-500 font-bold mt-0.5">{ccVal.helperText}</span>}
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5 px-4">
+                                      <div className="flex flex-col items-center">
+                                        <input 
+                                          type="text"
+                                          placeholder="EX /20"
+                                          value={currentInput.note_examen}
+                                          onChange={e => {
+                                            setBulletinGrades({
+                                              ...bulletinGrades,
+                                              [m.id]: { ...currentInput, note_examen: e.target.value }
+                                            });
+                                          }}
+                                          className={`w-20 text-center py-1 px-2 text-xs font-black rounded-lg border transition-all ${
+                                            currentInput.note_examen.trim() === "" 
+                                              ? adminTheme === 'sombre-or'
+                                                ? "border-[#20253f] bg-[#0d1021] text-white focus:border-[#c5a880] focus:ring-1 focus:ring-[#c5a880]/10"
+                                                : "border-gray-200 bg-white text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/10"
+                                              : exVal.isError 
+                                                ? adminTheme === 'sombre-or'
+                                                  ? "!border-rose-750 !bg-rose-950/30 !text-rose-400"
+                                                  : "!border-rose-400 !bg-rose-50 !text-rose-700"
+                                                : adminTheme === 'sombre-or'
+                                                  ? "!border-emerald-750 !bg-emerald-950/30 !text-emerald-400"
+                                                  : "!border-emerald-400 !bg-emerald-50 !text-emerald-700"
+                                          }`}
+                                        />
+                                        {exVal.isError && <span className="text-[8px] text-rose-500 font-bold mt-0.5">{exVal.helperText}</span>}
+                                      </div>
+                                    </td>
+                                    <td className="py-3.5 px-4 text-center">
+                                      {computed !== null ? (
+                                        <span className={`inline-flex items-center justify-center font-mono text-[11px] font-black px-2.5 py-1 rounded-md border ${
+                                          computed >= 10 
+                                            ? adminTheme === 'sombre-or'
+                                              ? "bg-emerald-950/30 border-emerald-800 text-emerald-400"
+                                              : "bg-emerald-50 border-emerald-200 text-emerald-700" 
+                                            : adminTheme === 'sombre-or'
+                                              ? "bg-rose-950/30 border-rose-850 text-rose-400"
+                                              : "bg-rose-50 border-rose-200 text-rose-700"
+                                        }`}>
+                                          {computed.toFixed(2)}/20
+                                        </span>
+                                      ) : (
+                                        <span className="text-gray-400 font-semibold text-[10px] italic">Non saisie</span>
+                                      )}
+                                    </td>
+                                    <td className="py-3.5 px-4 text-center">
+                                      {computed !== null ? (
+                                        <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                          computed >= 10 
+                                            ? "bg-emerald-100 text-emerald-800" 
+                                            : "bg-rose-100 text-rose-800"
+                                        }`}>
+                                          {computed >= 10 ? "ADMIS" : "RATTRAPAGE"}
+                                        </span>
+                                      ) : (
+                                        <span className="text-gray-300">—</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-2">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            // Reload existing notes
+                            const initialBulletin: Record<number, { note_classe: string; note_examen: string }> = {};
+                            studentMatieres.forEach(m => {
+                              const existing = notes.find(n => 
+                                Number(n.etudiant_id) === Number(bulletinEtudiantId) &&
+                                Number(n.semestre_id) === Number(selectedSemesterId) &&
+                                cours.find(c => c.id === n.cours_id)?.titre === m.nom_matiere
+                              );
+                              initialBulletin[m.id] = {
+                                note_classe: existing?.note_classe !== undefined ? existing.note_classe.toString() : "",
+                                note_examen: existing?.note_examen !== undefined ? existing.note_examen.toString() : ""
+                              };
+                            });
+                            setBulletinGrades(initialBulletin);
+                            setSuccessMessage("Le bulletin de l'étudiant a été réinitialisé aux valeurs enregistrées.");
+                          }}
+                          className={`btn text-xs font-semibold ${
+                            adminTheme === 'sombre-or' 
+                              ? 'bg-[#101428] text-slate-300 border border-[#20253f] hover:bg-slate-900' 
+                              : 'bg-white border border-gray-300 hover:bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          Réinitialiser le bulletin
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="btn btn-primary font-bold text-xs inline-flex items-center gap-1.5"
+                        >
+                          <Save className="w-4 h-4" /> Enregistrer le Bulletin Complet
+                        </button>
+                      </div>
+                    </form>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* --- MODE 4: GRILLE GLOBALE (MULTI-MATIERES) --- */}
+            {entryMode === 'grid' && (
+              <div className="space-y-4">
+                {/* Filters selection */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-gray-200">
+                  {/* Filière Selection */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] font-black uppercase text-gray-600 tracking-wider">Filière Académique *</label>
+                    <select 
+                      value={selectedFiliereId} 
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (onFiliereChange) {
+                          onFiliereChange(val);
+                        } else {
+                          setLocalFiliereId(val);
+                        }
+                      }}
+                      className="form-control text-xs w-full py-2 px-3 focus:ring-1 focus:ring-blue-500 bg-white font-bold text-gray-900 border border-gray-200 rounded-lg"
+                    >
+                      <option value="" className="text-gray-900">Sélectionner une filière...</option>
+                      {filieres.map(f => (
+                        <option key={f.id} value={f.id} className="text-gray-900">{f.nom_filiere}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Session / Semestre select dropdown */}
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] font-black uppercase text-gray-600 tracking-wider">Session Académique *</label>
+                    <select 
+                      value={selectedSemesterId} 
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (onSemestreChange) {
+                          onSemestreChange(val);
+                        } else {
+                          setLocalSemesterId(val);
+                        }
+                      }}
+                      className="form-control text-xs w-full py-2 px-3 bg-white font-bold text-gray-900 border border-gray-200 rounded-lg"
+                    >
+                      {semestres
+                        .filter(s => !selectedFiliereId || !s.filiere_id || Number(s.filiere_id) === Number(selectedFiliereId))
+                        .map(s => (
+                          <option key={s.id} value={s.id} className="text-gray-900">{s.nom_semestre} ({s.annee_scolaire})</option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {errorMessage && (
+                  <div className="bg-rose-50 border border-rose-300 text-rose-850 p-4 rounded-xl text-xs flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0" />
+                    <span className="font-bold">{errorMessage}</span>
+                  </div>
+                )}
+
+                {(() => {
+                  const filteredStudents = etudiants.filter(e => Number(e.filiere_id) === Number(selectedFiliereId));
+                  const filteredMatieres = matieres.filter(m => 
+                    Number(m.filiere_id) === Number(selectedFiliereId) &&
+                    (!m.semestre_id || Number(m.semestre_id) === Number(selectedSemesterId))
+                  );
+
+                  if (!selectedFiliereId) {
+                    return (
+                      <div className="border border-dashed border-gray-250 p-8 rounded-xl text-center text-gray-400 text-xs flex flex-col items-center justify-center space-y-2">
+                        <Layers className="w-8 h-8 text-gray-300" />
+                        <span>Veuillez sélectionner une filière pour charger la grille de saisie globale.</span>
+                      </div>
+                    );
+                  }
+
+                  if (filteredMatieres.length === 0) {
+                    return (
+                      <div className="bg-amber-50 text-amber-800 text-xs p-6 rounded-xl text-center border border-amber-200">
+                        Aucune matière n'est configurée pour cette filière et cette session académique.
+                      </div>
+                    );
+                  }
+
+                  if (filteredStudents.length === 0) {
+                    return (
+                      <div className="bg-amber-50 text-amber-800 text-xs p-6 rounded-xl text-center border border-amber-200">
+                        Aucun étudiant n'est encore inscrit dans cette filière académique.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <form onSubmit={handleGridSubmit} className="space-y-4">
+                      <div className="bg-blue-50/50 text-blue-950 p-3.5 rounded-xl border border-blue-100 text-xs text-left">
+                        <span className="font-extrabold block text-blue-900 mb-1">💡 Saisie Matricielle Globale (LMD)</span>
+                        Saisissez ou modifiez directement les notes de CC (Contrôle Continu, 40%) et d'EX (Examen, 60%) pour chaque matière et chaque élève. 
+                        Les moyennes sont calculées en temps réel. Cliquez sur le bouton <strong className="font-bold">« Enregistrer la Grille Globale »</strong> en bas pour sauvegarder l'ensemble de vos modifications d'un coup.
+                      </div>
+
+                      <div className="border border-gray-250 rounded-xl overflow-hidden shadow-xs">
+                        <div className="overflow-x-auto overflow-y-auto max-h-[480px] w-full">
+                          <table className="min-w-max w-full text-left text-xs border-collapse">
+                            <thead className="bg-slate-50 sticky top-0 z-10 shadow-xs border-b border-gray-200">
+                              <tr>
+                                <th className="py-3 px-4 font-bold text-left uppercase text-[10px] tracking-wider text-gray-700 bg-slate-50 sticky left-0 z-20 min-w-[200px] border-r border-gray-200">
+                                  Étudiant
+                                </th>
+                                {filteredMatieres.map(m => (
+                                  <th key={m.id} className="py-3 px-3 text-center uppercase text-[10px] tracking-wider text-gray-700 bg-slate-50 border-r border-gray-200 w-44">
+                                    <div className="font-bold text-slate-900 truncate max-w-[170px]" title={m.nom_matiere}>
+                                      {m.nom_matiere}
+                                    </div>
+                                    <div className="text-[9px] text-amber-600 font-mono font-bold uppercase mt-0.5">
+                                      {m.code_matiere} • {m.credits} ECTS
+                                    </div>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-150">
+                              {filteredStudents.map(st => (
+                                <tr key={st.id} className="hover:bg-slate-50/85 transition-colors bg-white">
+                                  <td className="py-3 px-4 text-left font-bold text-slate-900 sticky left-0 z-10 bg-white border-r border-gray-200 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                                    <div className="text-gray-900">{st.nom} {st.prenom}</div>
+                                    <div className="font-mono text-[9px] text-gray-500 font-semibold uppercase mt-0.5 tracking-wider">{st.matricule}</div>
+                                  </td>
+                                  {filteredMatieres.map(m => {
+                                    const cellKey = `${st.id}_${m.id}`;
+                                    const currentInput = gridGrades[cellKey] || { note_classe: "", note_examen: "" };
+                                    const computed = calculateLiveWeighted(currentInput.note_classe, currentInput.note_examen);
+
+                                    // validation classes
+                                    const ccVal = getValidationInfo(currentInput.note_classe);
+                                    const exVal = getValidationInfo(currentInput.note_examen);
+
+                                    return (
+                                      <td key={m.id} className="py-3 px-3 text-center border-r border-gray-200 bg-slate-50/30">
+                                        <div className="flex items-center justify-center gap-1.5">
+                                          {/* CC Input */}
+                                          <div className="flex flex-col items-center">
+                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">CC</span>
+                                            <input 
+                                              type="text"
+                                              placeholder="-"
+                                              value={currentInput.note_classe}
+                                              onChange={e => {
+                                                setGridGrades({
+                                                  ...gridGrades,
+                                                  [cellKey]: { ...currentInput, note_classe: e.target.value }
+                                                });
+                                              }}
+                                              className={`w-14 text-center py-1 px-1.5 text-xs font-black rounded-lg border transition-all ${
+                                                currentInput.note_classe.trim() === "" 
+                                                  ? "border-gray-200 bg-white text-gray-900 focus:border-[#c5a880] focus:ring-1 focus:ring-[#c5a880]/10"
+                                                  : ccVal.isError 
+                                                    ? "!border-rose-400 !bg-rose-50 !text-rose-700 font-bold"
+                                                    : "!border-emerald-400 !bg-emerald-50 !text-emerald-700 font-bold"
+                                              }`}
+                                            />
+                                          </div>
+
+                                          {/* EX Input */}
+                                          <div className="flex flex-col items-center">
+                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">EX</span>
+                                            <input 
+                                              type="text"
+                                              placeholder="-"
+                                              value={currentInput.note_examen}
+                                              onChange={e => {
+                                                setGridGrades({
+                                                  ...gridGrades,
+                                                  [cellKey]: { ...currentInput, note_examen: e.target.value }
+                                                });
+                                              }}
+                                              className={`w-14 text-center py-1 px-1.5 text-xs font-black rounded-lg border transition-all ${
+                                                currentInput.note_examen.trim() === "" 
+                                                  ? "border-gray-200 bg-white text-gray-900 focus:border-[#c5a880] focus:ring-1 focus:ring-[#c5a880]/10"
+                                                  : exVal.isError 
+                                                    ? "!border-rose-400 !bg-rose-50 !text-rose-700 font-bold"
+                                                    : "!border-emerald-400 !bg-emerald-50 !text-emerald-700 font-bold"
+                                              }`}
+                                            />
+                                          </div>
+                                        </div>
+
+                                        {/* Computed average */}
+                                        {computed !== null ? (
+                                          <div className="mt-1 flex items-center justify-center">
+                                            <span className={`inline-flex items-center justify-center font-mono text-[9.5px] font-black px-1.5 py-0.5 rounded-md border ${
+                                              computed >= 10 
+                                                ? "bg-emerald-50 border-emerald-200 text-emerald-700" 
+                                                : "bg-rose-50 border-rose-200 text-rose-700"
+                                            }`}>
+                                              Moy: {computed.toFixed(1)}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <div className="h-4 mt-1"></div>
+                                        )}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-2">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            // Reload existing notes
+                            const initialGrid: Record<string, { note_classe: string; note_examen: string }> = {};
+                            filteredStudents.forEach(st => {
+                              filteredMatieres.forEach(m => {
+                                const existing = notes.find(n => 
+                                  Number(n.etudiant_id) === Number(st.id) &&
+                                  Number(n.semestre_id) === Number(selectedSemesterId) &&
+                                  cours.find(c => c.id === n.cours_id)?.titre === m.nom_matiere
+                                );
+                                initialGrid[`${st.id}_${m.id}`] = {
+                                  note_classe: existing?.note_classe !== undefined ? existing.note_classe.toString() : "",
+                                  note_examen: existing?.note_examen !== undefined ? existing.note_examen.toString() : ""
+                                };
+                              });
+                            });
+                            setGridGrades(initialGrid);
+                            setSuccessMessage("La grille de notes a été réinitialisée avec les valeurs enregistrées.");
+                          }}
+                          className="btn bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold"
+                        >
+                          Réinitialiser la grille
+                        </button>
+                        <button 
+                          type="submit" 
+                          className="btn btn-primary font-bold text-xs inline-flex items-center gap-1.5"
+                        >
+                          <Save className="w-4 h-4" /> Enregistrer la Grille Globale
+                        </button>
+                      </div>
+                    </form>
+                  );
+                })()}
               </div>
             )}
 
@@ -1339,66 +2241,95 @@ export default function NotesTab({
                   </div>
                 )}
 
-                {pasteAnalyzedRows.length > 0 && (
-                  <div className="space-y-4 border-t border-gray-150 pt-4" id="paste-analyzer-preview">
-                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-slate-50 p-4 rounded-xl border border-gray-200">
-                      <div className="text-xs">
-                        <span className="font-extrabold text-slate-800">Résultat d'analyse :</span>
-                        <div className="mt-1 font-semibold space-x-3">
-                          <span className="text-emerald-700">{pasteAnalyzedRows.filter(r => r.isValid).length} valides</span>
-                          <span className="text-rose-600">{pasteAnalyzedRows.filter(r => !r.isValid).length} ignorés</span>
+                {pasteAnalyzedRows.length > 0 && (() => {
+                  const pasteMatiereObj = matieres.find(m => m.id === pasteMatiereId);
+                  return (
+                    <div className="space-y-4 border-t border-gray-150 pt-4" id="paste-analyzer-preview">
+                      {/* Active subject info banner in Paste Mode */}
+                      {pasteMatiereObj && (
+                        <div className="bg-[#101428] text-white p-4 rounded-xl border border-[#20253f] shadow-inner flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                          <div className="flex items-center gap-3">
+                            <BookOpen className="w-5 h-5 text-[#dfcbb0]" />
+                            <div>
+                              <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Importation de notes pour la matière :</span>
+                              <h4 className="text-sm font-black text-white">{pasteMatiereObj.nom_matiere}</h4>
+                            </div>
+                          </div>
+                          <div className="sm:text-right">
+                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Code & Crédits</span>
+                            <span className="text-xs font-mono font-bold text-[#dfcbb0]">{pasteMatiereObj.code_matiere} — {pasteMatiereObj.credits} ECTS</span>
+                          </div>
                         </div>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={handleConfirmPasteImport}
-                        disabled={pasteAnalyzedRows.filter(r => r.isValid).length === 0}
-                        className={`btn btn-primary font-bold text-xs inline-flex items-center gap-1.5 ${
-                          pasteAnalyzedRows.filter(r => r.isValid).length === 0 ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                      >
-                        <Save className="w-4 h-4" /> Confirmer l'importation de {pasteAnalyzedRows.filter(r => r.isValid).length} lignes
-                      </button>
-                    </div>
+                      )}
 
-                    <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs max-h-60 overflow-y-auto overflow-x-auto">
-                      <table className="custom-table min-w-[700px] w-full" style={{ boxShadow: 'none' }}>
-                        <thead>
-                          <tr>
-                            <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Ligne / Matricule</th>
-                            <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Étudiant identifié</th>
-                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Note CC</th>
-                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Note Exam</th>
-                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Moyenne</th>
-                            <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-28">Validité</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pasteAnalyzedRows.map(row => {
-                            const cc = parseFloat(row.noteClasse);
-                            const ds = parseFloat(row.noteExamen);
-                            const avgVal = row.isValid ? (cc * 0.4) + (ds * 0.6) : null;
-                            
-                            return (
-                              <tr key={row.id} className={`border-b border-[#20253f] last:border-b-0 transition-colors ${row.isValid ? 'bg-slate-900/40 hover:bg-slate-900/60' : 'bg-rose-950/20 hover:bg-rose-950/30'}`}>
-                                <td className="py-3 px-4">
-                                  <div className="font-extrabold text-[#cca072] font-mono text-[10.5px] uppercase tracking-wider">Ligne #{row.id}</div>
-                                  <div className="font-mono text-[11px] font-black text-amber-500 uppercase mt-0.5">{row.matricule}</div>
-                                </td>
-                                <td className="py-3 px-4 font-bold text-white text-xs">{row.studentName}</td>
-                                <td className="py-3 px-4 text-center font-black text-xs text-slate-200">{row.noteClasse} / 20</td>
-                                <td className="py-3 px-4 text-center font-black text-xs text-slate-200">{row.noteExamen} / 20</td>
-                                <td className="py-3 px-4 text-center">
-                                  {avgVal !== null ? (
-                                    <span className={`inline-flex items-center justify-center font-mono text-xs font-black px-2 py-0.5 rounded-lg border ${
-                                      avgVal >= 10 
-                                        ? "bg-emerald-950/40 border-emerald-500/20 text-emerald-400" 
-                                        : "bg-rose-950/40 border-rose-500/20 text-rose-400"
-                                    }`}>
-                                      {avgVal.toFixed(2)}
-                                    </span>
-                                  ) : <span className="text-slate-500 font-bold text-xs select-none">-</span>}
-                                </td>
+                      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-slate-50 p-4 rounded-xl border border-gray-200">
+                        <div className="text-xs text-left">
+                          <span className="font-extrabold text-slate-800">Résultat d'analyse :</span>
+                          <div className="mt-1 font-semibold space-x-3">
+                            <span className="text-emerald-700">{pasteAnalyzedRows.filter(r => r.isValid).length} valides</span>
+                            <span className="text-rose-600">{pasteAnalyzedRows.filter(r => !r.isValid).length} ignorés</span>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={handleConfirmPasteImport}
+                          disabled={pasteAnalyzedRows.filter(r => r.isValid).length === 0}
+                          className={`btn btn-primary font-bold text-xs inline-flex items-center gap-1.5 ${
+                            pasteAnalyzedRows.filter(r => r.isValid).length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          <Save className="w-4 h-4" /> Confirmer l'importation de {pasteAnalyzedRows.filter(r => r.isValid).length} lignes
+                        </button>
+                      </div>
+
+                      <div className="border border-gray-200 rounded-xl overflow-hidden shadow-xs max-h-60 overflow-y-auto overflow-x-auto">
+                        <table className="custom-table min-w-[700px] w-full" style={{ boxShadow: 'none' }}>
+                          <thead>
+                            <tr>
+                              <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Ligne / Matricule</th>
+                              <th className="py-3 px-4 font-bold text-left uppercase text-[11px] tracking-wider">Étudiant / Matière</th>
+                              <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Note CC</th>
+                              <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Note Exam</th>
+                              <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-24">Moyenne</th>
+                              <th className="py-3 px-4 font-bold text-center uppercase text-[11px] tracking-wider w-28">Validité</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pasteAnalyzedRows.map(row => {
+                              const cc = parseFloat(row.noteClasse);
+                              const ds = parseFloat(row.noteExamen);
+                              const avgVal = row.isValid ? (cc * 0.4) + (ds * 0.6) : null;
+                              
+                              return (
+                                <tr key={row.id} className={`border-b border-[#20253f] last:border-b-0 transition-colors ${row.isValid ? 'bg-slate-900/40 hover:bg-slate-900/60' : 'bg-rose-950/20 hover:bg-rose-950/30'}`}>
+                                  <td className="py-3 px-4 text-left">
+                                    <div className="font-extrabold text-[#cca072] font-mono text-[10.5px] uppercase tracking-wider">Ligne #{row.id}</div>
+                                    <div className="font-mono text-[11px] font-black text-amber-500 uppercase mt-0.5">{row.matricule}</div>
+                                  </td>
+                                  <td className="py-3 px-4 font-bold text-white text-xs text-left">
+                                    <div>{row.studentName}</div>
+                                    {pasteMatiereObj && (
+                                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
+                                        <span className="text-gray-400 font-normal">Matière ciblé :</span>
+                                        <span className="text-[#dfcbb0] font-bold bg-[#1d1b24] px-1.5 py-0.2 rounded border border-[#dfcbb0]/20 font-sans">
+                                          {pasteMatiereObj.nom_matiere}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="py-3 px-4 text-center font-black text-xs text-slate-200">{row.noteClasse} / 20</td>
+                                  <td className="py-3 px-4 text-center font-black text-xs text-slate-200">{row.noteExamen} / 20</td>
+                                  <td className="py-3 px-4 text-center">
+                                    {avgVal !== null ? (
+                                      <span className={`inline-flex items-center justify-center font-mono text-xs font-black px-2 py-0.5 rounded-lg border ${
+                                        avgVal >= 10 
+                                          ? "bg-emerald-950/40 border-emerald-500/20 text-emerald-400" 
+                                          : "bg-rose-950/40 border-rose-500/20 text-rose-400"
+                                      }`}>
+                                        {avgVal.toFixed(2)}
+                                      </span>
+                                    ) : <span className="text-slate-500 font-bold text-xs select-none">-</span>}
+                                  </td>
                                 <td className="py-3 px-4 text-center">
                                   {row.isValid ? (
                                     <span className="bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 font-black uppercase text-[10px] tracking-wider px-2.5 py-1 rounded-lg">
@@ -1420,7 +2351,8 @@ export default function NotesTab({
                       </table>
                     </div>
                   </div>
-                )}
+                );
+              })()}
               </div>
             )}
           </div>

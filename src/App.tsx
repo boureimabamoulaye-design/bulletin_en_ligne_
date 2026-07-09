@@ -32,7 +32,7 @@ import {
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
   BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info,
   ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon,
-  Lock, ShieldAlert, Eye, EyeOff
+  Lock, ShieldAlert, Eye, EyeOff, Minimize2, Maximize2
 } from 'lucide-react';
 
 const shortenSemester = (name: string): string => {
@@ -173,6 +173,11 @@ export default function App() {
     return (localStorage.getItem('school_admin_theme') as 'sombre-or' | 'clair-pro') || 'sombre-or';
   });
 
+  const [compactScroll, setCompactScroll] = useState<boolean>(() => {
+    const saved = localStorage.getItem('school_admin_compact_scroll');
+    return saved !== 'false'; // true by default to immediately optimize user experience
+  });
+
   React.useEffect(() => {
     localStorage.setItem('school_global_annee_scolaire', globalAnneeScolaire);
   }, [globalAnneeScolaire]);
@@ -180,6 +185,26 @@ export default function App() {
   React.useEffect(() => {
     localStorage.setItem('school_admin_theme', adminTheme);
   }, [adminTheme]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_admin_compact_scroll', String(compactScroll));
+  }, [compactScroll]);
+
+  // Auto-scroll selected tab into view dynamically so it never gets cut off
+  React.useEffect(() => {
+    if (adminActiveTab) {
+      const activeBtn = document.getElementById(`admin-tab-btn-${adminActiveTab}`);
+      if (activeBtn) {
+        setTimeout(() => {
+          activeBtn.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+          });
+        }, 100);
+      }
+    }
+  }, [adminActiveTab]);
 
   const toggleAdminTheme = () => {
     setAdminTheme(prev => prev === 'sombre-or' ? 'clair-pro' : 'sombre-or');
@@ -1460,6 +1485,58 @@ export default function App() {
 
           {/* Right Work Panel layout */}
           <main className="flex-1 flex flex-col min-w-0">
+            
+            {/* Navigation horizontale fluide et moderne */}
+            <div className={`sticky top-[60px] lg:top-0 z-30 border-b backdrop-blur-md transition-all duration-300 ${
+              adminTheme === 'sombre-or' 
+                ? 'bg-[#0b0e1a]/95 border-amber-500/10 shadow-[0_4px_20px_rgba(0,0,0,0.25)]' 
+                : 'bg-white/95 border-gray-200 shadow-sm'
+            }`} id="admin-horizontal-nav-scroll">
+              <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+                <div 
+                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-nowrap py-0.5 w-full" 
+                  style={{ WebkitOverflowScrolling: 'touch' }}
+                >
+                  {[
+                    { id: 'dashboard', label: "Vue d'Ensemble", icon: LayoutDashboard },
+                    { id: 'etudiants', label: "Étudiants", icon: Users },
+                    { id: 'filieres', label: "Filières", icon: GraduationCap },
+                    { id: 'semestres', label: "Semestres", icon: Calendar },
+                    { id: 'cours', label: "Supports", icon: FileText },
+                    { id: 'notes', label: "Saisie Notes", icon: Award },
+                    { id: 'bulletins', label: "Bulletins", icon: BookOpen },
+                    { id: 'autorisations', label: "Autorisations", icon: ShieldCheck },
+                    { id: 'paiements', label: "Paiements", icon: CreditCard },
+                    { id: 'corbeille', label: `Corbeille (${trash.length})`, icon: Trash2 },
+                  ].map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = adminActiveTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        id={`admin-tab-btn-${tab.id}`}
+                        onClick={() => {
+                          setAdminActiveTab(tab.id);
+                        }}
+                        className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 shrink-0 cursor-pointer border ${
+                          isActive
+                            ? adminTheme === 'sombre-or'
+                              ? 'bg-[#c5a880] border-[#c5a880] text-[#060810] shadow-md shadow-[#c5a880]/15 font-black scale-102'
+                              : 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                            : adminTheme === 'sombre-or'
+                              ? 'bg-[#14172a] border-[#20253e] text-slate-400 hover:text-[#c5a880] hover:bg-[#1b1e32] hover:border-[#c5a880]/30'
+                              : 'bg-gray-100 border-gray-200 text-slate-600 hover:text-indigo-600 hover:bg-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             {adminActiveTab !== 'dashboard' ? (
               // Focused full-screen workspace layout for deep work on any individual tab
               <div className="flex-grow p-6 md:p-8 overflow-y-auto w-full mx-auto select-none animate-fade-in space-y-6 pb-8 md:pb-8 max-w-none">
@@ -1523,6 +1600,34 @@ export default function App() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3">
+                    {/* TOGGLE DÉFILEMENT COMPACT */}
+                    <button
+                      type="button"
+                      onClick={() => setCompactScroll(!compactScroll)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all duration-200 outline-none active:scale-95 cursor-pointer shrink-0 ${
+                        compactScroll
+                          ? adminTheme === 'sombre-or'
+                            ? 'bg-amber-500/15 border-amber-500/40 text-[#c5a880] shadow-sm shadow-amber-950/20'
+                            : 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
+                          : adminTheme === 'sombre-or'
+                            ? 'bg-[#121626]/60 border-slate-700/60 text-slate-400 hover:text-slate-200'
+                            : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                      }`}
+                      title={compactScroll ? "Désactiver la hauteur compacte des tableaux" : "Activer la hauteur compacte des tableaux"}
+                    >
+                      {compactScroll ? (
+                        <>
+                          <Minimize2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>Hauteur Compacte ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>Affichage Étendu</span>
+                        </>
+                      )}
+                    </button>
+
                     {/* THÈME TOGGLE SWITCH */}
                     <button
                       type="button"
@@ -1651,7 +1756,7 @@ export default function App() {
                   adminTheme === 'sombre-or' 
                     ? 'bg-slate-900 border-amber-500/15 text-slate-100 shadow-amber-950/10 shadow-md' 
                     : 'bg-white border-gray-200 shadow-sm'
-                }`}>
+                } ${compactScroll ? 'compact-scroll-active' : ''} ${adminTheme === 'clair-pro' ? 'clair-pro-active' : ''}`}>
                   {adminActiveTab === 'etudiants' && (
                         <EtudiantsTab 
                           etudiants={etudiants}
@@ -1727,6 +1832,7 @@ export default function App() {
                           globalSemestreId={globalSemestreId}
                           onSemestreChange={setGlobalSemestreId}
                           onFiliereChange={setGlobalFiliereId}
+                          adminTheme={adminTheme}
                         />
                       )}
 
@@ -1812,6 +1918,34 @@ export default function App() {
                     }`}>Plateforme moderne de gestion scolaire unifiée.</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
+                    {/* TOGGLE DÉFILEMENT COMPACT */}
+                    <button
+                      type="button"
+                      onClick={() => setCompactScroll(!compactScroll)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all duration-200 outline-none active:scale-95 cursor-pointer shrink-0 ${
+                        compactScroll
+                          ? adminTheme === 'sombre-or'
+                            ? 'bg-amber-500/15 border-amber-500/40 text-[#c5a880] shadow-sm shadow-amber-950/20'
+                            : 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
+                          : adminTheme === 'sombre-or'
+                            ? 'bg-[#121626]/60 border-slate-700/60 text-slate-400 hover:text-slate-200'
+                            : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                      }`}
+                      title={compactScroll ? "Désactiver la hauteur compacte des tableaux" : "Activer la hauteur compacte des tableaux"}
+                    >
+                      {compactScroll ? (
+                        <>
+                          <Minimize2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span>Hauteur Compacte ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <Maximize2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>Affichage Étendu</span>
+                        </>
+                      )}
+                    </button>
+
                     {/* THÈME TOGGLE SWITCH */}
                     <button
                       type="button"
@@ -2110,25 +2244,27 @@ export default function App() {
                 </span>
               </div>
 
-              <StudentPortal 
-                activeStudent={activeStudent}
-                etudiants={etudiants}
-                notes={filteredNotes}
-                cours={filteredCours}
-                semestres={filteredSemestres}
-                anneesScolaires={anneesScolaires}
-                filieres={filieres}
-                classes={classes}
-                autorisations={autorisations}
-                paiements={paiements}
-                scolariteAnnuelle={scolariteAnnuelle}
-                initialFiliereId={selectedFiliereId}
-                onLogAccess={handleLogAccess}
-                onUpdatePassword={handleUpdatePassword}
-                onLogout={handleLogout}
-                globalAnneeScolaire={globalAnneeScolaire}
-                onAnneeScolaireChange={setGlobalAnneeScolaire}
-              />
+              <div className={compactScroll ? 'compact-scroll-active' : ''}>
+                <StudentPortal 
+                  activeStudent={activeStudent}
+                  etudiants={etudiants}
+                  notes={filteredNotes}
+                  cours={filteredCours}
+                  semestres={filteredSemestres}
+                  anneesScolaires={anneesScolaires}
+                  filieres={filieres}
+                  classes={classes}
+                  autorisations={autorisations}
+                  paiements={paiements}
+                  scolariteAnnuelle={scolariteAnnuelle}
+                  initialFiliereId={selectedFiliereId}
+                  onLogAccess={handleLogAccess}
+                  onUpdatePassword={handleUpdatePassword}
+                  onLogout={handleLogout}
+                  globalAnneeScolaire={globalAnneeScolaire}
+                  onAnneeScolaireChange={setGlobalAnneeScolaire}
+                />
+              </div>
             </>
           )}
         </div>

@@ -75,17 +75,18 @@ export const INITIAL_ETUDIANTS: Etudiant[] = (() => {
     {
       id: 1,
       matricule: "ETU20250001",
-      nom: "KOUASSI",
-      prenom: "Jean-Philippe",
+      nom: "COULIBALY",
+      prenom: "Mamadou",
       sexe: "M",
       date_naissance: "2003-04-12",
-      telephone: "+225 0707070707",
-      email: "jean.kouassi@ecole.com",
-      adresse: "Abidjan, Cocody",
+      telephone: "+223 76070707",
+      email: "mamadou.coulibaly@gmail.com",
+      adresse: "Bamako, Badalabougou",
       photo: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=150&h=150",
       filiere_id: 1, // Informatique de Gestion
       classe_id: 3, // Niveau 3
-      mot_de_passe: "student123"
+      mot_de_passe: "student123",
+      lieu_naissance: "Bamako"
     },
     {
       id: 2,
@@ -94,13 +95,14 @@ export const INITIAL_ETUDIANTS: Etudiant[] = (() => {
       prenom: "Aïssatou",
       sexe: "F",
       date_naissance: "2004-09-22",
-      telephone: "+224 622000000",
-      email: "aissatou.diallo@ecole.com",
-      adresse: "Conakry, Dixinn",
+      telephone: "+223 66220000",
+      email: "aissatou.diallo@yahoo.fr",
+      adresse: "Ségou, Centre",
       photo: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=150&h=150",
       filiere_id: 2, // Réseaux et Télécommunications
       classe_id: 1, // Niveau 1
-      mot_de_passe: "student123"
+      mot_de_passe: "student123",
+      lieu_naissance: "Ségou"
     },
     {
       id: 3,
@@ -110,19 +112,20 @@ export const INITIAL_ETUDIANTS: Etudiant[] = (() => {
       sexe: "M",
       date_naissance: "2002-11-05",
       telephone: "+223 76000000",
-      email: "adama.traore@ecole.com",
+      email: "adama.traore@gmail.com",
       adresse: "Bamako, Faladié",
       photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150",
       filiere_id: 3, // Comptabilité
       classe_id: 2, // Niveau 2
-      mot_de_passe: "student123"
+      mot_de_passe: "student123",
+      lieu_naissance: "Bamako"
     }
   ];
 
-  const lastNames = ["DIALLO", "KOUASSI", "TRAORE", "BARRY", "CONE", "SYLLA", "CISSE", "TOURE", "SOUMAH", "KEITA", "SOW", "OUEDRAOGO", "KABORE", "COULIBALY", "DIARRA", "DEMBELE", "KAMARA", "SANOGO", "FOFANA", "DIOP", "NDIAYE", "SARR", "FALL", "GUEYE", "SENE", "MBAYE", "DIENG", "MARTIN", "BERNARD", "DUBOIS", "MICHEL", "MOREAU", "LAURENT", "SIMON", "LEFEBVRE", "ROUX", "LEGRAND", "VINCENT", "MEUNIER", "BARBIER"];
-  const firstNames = ["Jean", "Pierre", "Marie", "Aïssatou", "Adama", "Fatoumata", "Aly", "Ibrahim", "Moussa", "Mamadou", "Amadou", "Sekou", "Abdoulaye", "Salimata", "Aminata", "Kadidia", "Mariam", "Ousmane", "Cheick", "Lassana", "Tidiane", "Rokiatou", "Fanta", "Oumou", "Alassane", "Boubacar", "Souleymane", "Modibo", "Drissa", "Yacouba", "Balla", "Habib", "Awa", "Fatou", "Penda", "Khady", "Amy", "Youssouf", "Alpha", "Amara"];
-  const domains = ["ecole.com", "student.ecole.com", "univ.com"];
-  const cities = ["Abidjan, Cocody", "Conakry, Dixinn", "Bamako, Faladié", "Dakar, Plateau", "Ouagadougou, Patte d'Oie", "Lomé, Deckon", "Niamey, Plateaux", "Cotonou, Cadjehoun"];
+  const lastNames = ["DIALLO", "COULIBALY", "TRAORE", "BARRY", "CONE", "SYLLA", "CISSE", "TOURE", "KEITA", "SOW", "OUEDRAOGO", "KABORE", "DIARRA", "DEMBELE", "KAMARA", "SANOGO", "FOFANA", "SABY", "MAIGA", "KANOUTE", "TANGARA", "DOLO", "GUINDO", "BAGAYOKO", "TOGOLA", "SIDIBE", "SARE", "CISSOKO", "KONATE", "KANE", "DACKOUO", "SAMAKE", "YATTARA", "SACKO", "SOUKOUNA", "HAIDARA", "TALL", "BAH", "KANTE"];
+  const firstNames = ["Moussa", "Cheick", "Ousmane", "Aïssatou", "Adama", "Fatoumata", "Mamadou", "Ibrahim", "Abdoulaye", "Amadou", "Salimata", "Aminata", "Kadidia", "Mariam", "Lassana", "Tidiane", "Rokiatou", "Fanta", "Oumou", "Alassane", "Boubacar", "Souleymane", "Modibo", "Drissa", "Yacouba", "Balla", "Habib", "Awa", "Fatou", "Penda", "Khady", "Amy", "Youssouf", "Alpha", "Amara", "Sadio", "Djeneba", "Saliou", "Sékou"];
+  const domains = ["gmail.com", "yahoo.fr", "hotmail.com"];
+  const cities = ["Bamako, Faladié", "Bamako, Badalabougou", "Ségou, Centre", "Sikasso, Bougoula", "Kayes, Khasso", "Mopti, Gangal", "Gao, Château", "Koutiala, Centre", "Kita, Gare", "Tombouctou, Médina"];
   
   const list = [...defaultEtudiants];
   for (let i = 1; i <= 800; i++) {
@@ -134,10 +137,11 @@ export const INITIAL_ETUDIANTS: Etudiant[] = (() => {
     const classeId = (id % 3) + 1; // 1 to 3
     const matricule = `ETU2025${String(id).padStart(4, '0')}`;
     const email = `${firstName.toLowerCase().replace(/[^a-z]/g, "")}.${lastName.toLowerCase().replace(/[^a-z]/g, "")}${id}@${domains[id % domains.length]}`;
-    const phone = `+225 07${String(70000000 + id)}`;
+    const phone = `+223 ${id % 2 === 0 ? '7' : '6'}${String(6000000 + id).padStart(7, '0')}`;
     const birthYear = 2000 + (id % 7); // 2000 to 2006
     const birthMonth = String((id % 12) + 1).padStart(2, '0');
     const birthDay = String((id % 28) + 1).padStart(2, '0');
+    const birthPlace = cities[id % cities.length].split(",")[0];
     
     list.push({
       id,
@@ -152,7 +156,8 @@ export const INITIAL_ETUDIANTS: Etudiant[] = (() => {
       photo: "",
       filiere_id: filiereId,
       classe_id: classeId,
-      mot_de_passe: "student123"
+      mot_de_passe: "student123",
+      lieu_naissance: birthPlace
     });
   }
   return list;

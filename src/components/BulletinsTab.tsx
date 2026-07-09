@@ -259,7 +259,7 @@ export default function BulletinsTab({
   };
 
   const activeMention = getMention(activeGPA);
-  const activeDecision = activeGPA >= 10 ? "Admis" : "Ajourné";
+  const activeDecision = activeGPA >= 10 ? "Validé" : "Non validé";
 
   // Initialize edit mode inputs
   const handleStartEditing = () => {
@@ -388,10 +388,9 @@ export default function BulletinsTab({
     
     reportDoc += `----------------------------------------------------\n`;
     reportDoc += `MOYENNE GÉNÉRALE : ${activeGPA.toFixed(2)} / 20\n`;
-    reportDoc += `RANG : ${activeRank} sur ${activeTotalClassmates} étudiants\n`;
     reportDoc += `MENTION : ${activeMention}\n`;
     reportDoc += `DÉCISION DU JURY : ${activeDecision}\n\n`;
-    reportDoc += `Fait à Abidjan, le 06/06/2026\n`;
+    reportDoc += `Fait à Bamako, le 06/06/2026\n`;
     reportDoc += `Le Secrétaire Général de Direction\n`;
     
     const element = document.createElement("a");
@@ -636,7 +635,7 @@ export default function BulletinsTab({
                 <BookOpen className="w-6 h-6 text-blue-800" />
                 <span>INSTITUT SUPÉRIEUR DES TECHNOLOGIES</span>
               </h2>
-              <p className="text-xs text-gray-500 mt-1 font-semibold uppercase">Abidjan - Plateau | Tel: +225 01 02 03 04 05</p>
+              <p className="text-xs text-gray-500 mt-1 font-semibold uppercase">Bamako - Hamdallaye ACI | Tel: +223 20 22 40 30</p>
               <p className="text-[10px] text-gray-400 mt-0.5">Ministère de l'Enseignement Technique & Professionnel</p>
             </div>
             
@@ -721,7 +720,7 @@ export default function BulletinsTab({
                         if (val >= 14) return "Bien";
                         if (val >= 12) return "Assez Bien";
                         if (val >= 10) return "Passable";
-                        return "Ajourné";
+                        return "Non validé";
                       };
 
                       // University LMD validation status: Validé (V.A.) or Compensé (V.Comp.) or Rattrapage (R.A.)
@@ -948,16 +947,6 @@ export default function BulletinsTab({
                 <span className="text-lg font-black text-slate-950">{activeGPA > 0 ? `${activeGPA.toFixed(2)}/20` : "N/A"}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-gray-600">Rang de Classement :</span>
-                {activeGPA > 0 ? (
-                  <span className="font-bold text-slate-900">
-                    {activeRank === 1 ? "1er Ex-æquo" : `${activeRank}ème`} sur <span className="font-medium text-slate-500">{activeTotalClassmates} élèves</span>
-                  </span>
-                ) : (
-                  <span className="text-gray-400">Non classé</span>
-                )}
-              </div>
-              <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-gray-600">Mention administrative :</span>
                 <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${activeGPA >= 15 ? "bg-emerald-100 text-emerald-800" : activeGPA >= 10 ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>
                   {activeGPA > 0 ? activeMention : "Aucune éval"}
@@ -972,7 +961,7 @@ export default function BulletinsTab({
                 DÉCISION : {activeGPA > 0 ? activeDecision : "N/A"}
               </h3>
               <p className="text-[10px] text-gray-500 mt-2 font-mono">
-                {activeGPA >= 10 ? "L'étudiant est admis à s'inscrire en classe supérieure." : "L'étudiant doit se présenter aux épreuves de rattrapage."}
+                {activeGPA >= 10 ? "L'étudiant a validé son semestre d'études." : "L'étudiant n'a pas validé son semestre et doit se présenter aux épreuves de rattrapage."}
               </p>
             </div>
           </div>
@@ -987,7 +976,7 @@ export default function BulletinsTab({
             
             <div className="relative">
               <span className="font-black text-slate-900 uppercase block">Le Secrétariat Académique</span>
-              <p className="text-[10px] text-gray-400 mt-0.5 italic">Abidjan, le 06 Juin 2026</p>
+              <p className="text-[10px] text-gray-400 mt-0.5 italic">Bamako, le 06 Juin 2026</p>
               <div className="mt-6 border-b border-gray-400 w-32 mx-auto"></div>
               
               {/* Fake dynamic retro-looking administrative seal */}

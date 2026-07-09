@@ -43,6 +43,7 @@ export interface Etudiant {
   filiere_id: number;
   classe_id: number;
   mot_de_passe: string;
+  lieu_naissance?: string;
 }
 
 export interface Cours {
@@ -93,7 +94,7 @@ export interface Bulletin {
   moyenne_generale: number;
   rang: number;
   mention: string;
-  decision: 'Admis' | 'Ajourné';
+  decision: 'Validé' | 'Non validé' | 'Admis' | 'Ajourné';
 }
 
 export interface Administrateur {
