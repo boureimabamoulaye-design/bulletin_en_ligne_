@@ -1,23 +1,61 @@
 import { Filiere, Matiere, Classe, Semestre, Etudiant, Cours, Note, AutorisationFiliere, HistoriqueAcces, Administrateur, Paiement } from './types';
 
 export const INITIAL_MATIERES: Matiere[] = [
-  // IG
+  // --- FILIERE 1: INFORMATIQUE DE GESTION (IG) ---
   { id: 1, nom_matiere: "Algorithmique & Structures de Données", code_matiere: "IG-101", credits: 3, filiere_id: 1, semestre_id: 1 },
   { id: 2, nom_matiere: "Bases de Données Relationnelles & SQL", code_matiere: "IG-201", credits: 3, filiere_id: 1, semestre_id: 2 },
   { id: 3, nom_matiere: "Développement Web PHP-MySQL", code_matiere: "IG-301", credits: 4, filiere_id: 1, semestre_id: 2 },
   { id: 4, nom_matiere: "Analyse Mathématique", code_matiere: "IG-102", credits: 2, filiere_id: 1, semestre_id: 1 },
-  // RT
+  { id: 14, nom_matiere: "Programmation Orientée Objet & Java", code_matiere: "IG-103", credits: 3, filiere_id: 1, semestre_id: 1 },
+  { id: 15, nom_matiere: "Conception des SI & UML", code_matiere: "IG-104", credits: 3, filiere_id: 1, semestre_id: 1 },
+  { id: 16, nom_matiere: "Développement d'Applications Mobiles", code_matiere: "IG-202", credits: 3, filiere_id: 1, semestre_id: 2 },
+  { id: 17, nom_matiere: "Recherche Opérationnelle", code_matiere: "IG-203", credits: 2, filiere_id: 1, semestre_id: 2 },
+  { id: 18, nom_matiere: "Management de Projet Informatique", code_matiere: "IG-204", credits: 3, filiere_id: 1, semestre_id: 2 },
+  { id: 19, nom_matiere: "Sécurité des Applications Web", code_matiere: "IG-105", credits: 3, filiere_id: 1, semestre_id: 1 },
+  { id: 20, nom_matiere: "Systèmes d'Information et ERP", code_matiere: "IG-106", credits: 3, filiere_id: 1, semestre_id: 1 },
+  { id: 21, nom_matiere: "Initiation au Cloud & DevOps", code_matiere: "IG-205", credits: 2, filiere_id: 1, semestre_id: 2 },
+
+  // --- FILIERE 2: RESEAUX ET TELECOMMUNICATIONS (RT) ---
   { id: 5, nom_matiere: "Architecture des Réseaux TCP/IP", code_matiere: "RT-101", credits: 3, filiere_id: 2, semestre_id: 3 },
   { id: 6, nom_matiere: "Administration Système Linux", code_matiere: "RT-201", credits: 3, filiere_id: 2, semestre_id: 4 },
   { id: 7, nom_matiere: "Sécurité & Cryptographie", code_matiere: "RT-301", credits: 4, filiere_id: 2, semestre_id: 4 },
-  // CF
+  { id: 22, nom_matiere: "Télécommunications & Modulation", code_matiere: "RT-102", credits: 3, filiere_id: 2, semestre_id: 3 },
+  { id: 23, nom_matiere: "Routage IP & Commutation", code_matiere: "RT-103", credits: 3, filiere_id: 2, semestre_id: 3 },
+  { id: 24, nom_matiere: "Services Réseaux (DNS, DHCP, Mail)", code_matiere: "RT-104", credits: 3, filiere_id: 2, semestre_id: 3 },
+  { id: 25, nom_matiere: "Réseaux Sans Fil & IoT", code_matiere: "RT-202", credits: 3, filiere_id: 2, semestre_id: 4 },
+  { id: 26, nom_matiere: "Virtualisation & Cloud Computing", code_matiere: "RT-203", credits: 3, filiere_id: 2, semestre_id: 4 },
+  { id: 27, nom_matiere: "Téléphonie sur IP (VoIP)", code_matiere: "RT-204", credits: 3, filiere_id: 2, semestre_id: 4 },
+  { id: 28, nom_matiere: "Supervision & Monitoring Réseaux", code_matiere: "RT-105", credits: 2, filiere_id: 2, semestre_id: 3 },
+  { id: 29, nom_matiere: "Câblage Structuré & Fibre Optique", code_matiere: "RT-106", credits: 2, filiere_id: 2, semestre_id: 3 },
+  { id: 30, nom_matiere: "Plan de Continuité d'Activité (PCA)", code_matiere: "RT-205", credits: 2, filiere_id: 2, semestre_id: 4 },
+
+  // --- FILIERE 3: COMPTABILITE ET FINANCE (CF) ---
   { id: 8, nom_matiere: "Comptabilité Générale Intermédiaire", code_matiere: "CF-101", credits: 4, filiere_id: 3, semestre_id: 5 },
   { id: 9, nom_matiere: "Finance d'Entreprise & Budget", code_matiere: "CF-201", credits: 3, filiere_id: 3, semestre_id: 6 },
   { id: 10, nom_matiere: "Fiscalité & Droit des Affaires", code_matiere: "CF-301", credits: 3, filiere_id: 3, semestre_id: 6 },
-  // MD
+  { id: 31, nom_matiere: "Contrôle de Gestion", code_matiere: "CF-102", credits: 3, filiere_id: 3, semestre_id: 5 },
+  { id: 32, nom_matiere: "Audit Financier & Comptable", code_matiere: "CF-103", credits: 3, filiere_id: 3, semestre_id: 5 },
+  { id: 33, nom_matiere: "Marchés Financiers & Bourse", code_matiere: "CF-104", credits: 3, filiere_id: 3, semestre_id: 5 },
+  { id: 34, nom_matiere: "Mathématiques Financières", code_matiere: "CF-202", credits: 3, filiere_id: 3, semestre_id: 6 },
+  { id: 35, nom_matiere: "Analyse Financière des Bilans", code_matiere: "CF-203", credits: 3, filiere_id: 3, semestre_id: 6 },
+  { id: 36, nom_matiere: "Comptabilité de Gestion Analytique", code_matiere: "CF-204", credits: 3, filiere_id: 3, semestre_id: 6 },
+  { id: 37, nom_matiere: "Droit Social & Gestion de Paie", code_matiere: "CF-105", credits: 2, filiere_id: 3, semestre_id: 5 },
+  { id: 38, nom_matiere: "Gestion de Trésorerie", code_matiere: "CF-106", credits: 2, filiere_id: 3, semestre_id: 5 },
+  { id: 39, nom_matiere: "Consolidation des Comptes de Groupe", code_matiere: "CF-205", credits: 2, filiere_id: 3, semestre_id: 6 },
+
+  // --- FILIERE 4: MARKETING DIGITAL & COMMUNICATION (MD) ---
   { id: 11, nom_matiere: "Stratégie de Content Marketing", code_matiere: "MD-101", credits: 3, filiere_id: 4, semestre_id: 7 },
   { id: 12, nom_matiere: "SEO & Growth Hacking", code_matiere: "MD-201", credits: 3, filiere_id: 4, semestre_id: 8 },
-  { id: 13, nom_matiere: "Community Management", code_matiere: "MD-301", credits: 2, filiere_id: 4, semestre_id: 8 }
+  { id: 13, nom_matiere: "Community Management", code_matiere: "MD-301", credits: 2, filiere_id: 4, semestre_id: 8 },
+  { id: 40, nom_matiere: "Publicité en Ligne (Ads)", code_matiere: "MD-102", credits: 3, filiere_id: 4, semestre_id: 7 },
+  { id: 41, nom_matiere: "Web Analytics & Data", code_matiere: "MD-103", credits: 3, filiere_id: 4, semestre_id: 7 },
+  { id: 42, nom_matiere: "E-commerce & CMS Shopify", code_matiere: "MD-104", credits: 3, filiere_id: 4, semestre_id: 7 },
+  { id: 43, nom_matiere: "Droit du Numérique & RGPD", code_matiere: "MD-202", credits: 3, filiere_id: 4, semestre_id: 8 },
+  { id: 44, nom_matiere: "Design Graphique & UI/UX", code_matiere: "MD-203", credits: 3, filiere_id: 4, semestre_id: 8 },
+  { id: 45, nom_matiere: "Emailing & Automation", code_matiere: "MD-204", credits: 3, filiere_id: 4, semestre_id: 8 },
+  { id: 46, nom_matiere: "Stratégie de Marque", code_matiere: "MD-105", credits: 2, filiere_id: 4, semestre_id: 7 },
+  { id: 47, nom_matiere: "Communication Globale", code_matiere: "MD-106", credits: 2, filiere_id: 4, semestre_id: 7 },
+  { id: 48, nom_matiere: "Psychologie du Consommateur", code_matiere: "MD-205", credits: 2, filiere_id: 4, semestre_id: 8 }
 ];
 
 export const INITIAL_FILIERES: Filiere[] = [

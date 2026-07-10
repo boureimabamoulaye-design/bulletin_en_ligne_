@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Etudiant, Note, Cours, Semestre, Filiere, Classe, AutorisationFiliere, HistoriqueAcces, Paiement } from '../types';
-import { GraduationCap, Award, FileText, Lock, ShieldAlert, CheckCircle, Download, Printer, User, BookOpen, Menu, X, LogOut, DollarSign, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, Award, FileText, Lock, ShieldAlert, CheckCircle, Download, Printer, User, BookOpen, Menu, X, LogOut, DollarSign, Eye, EyeOff, Clock, Shield, Calendar } from 'lucide-react';
 
 interface StudentPortalProps {
   activeStudent: Etudiant;
@@ -20,6 +20,12 @@ interface StudentPortalProps {
   onLogout: () => void;
   globalAnneeScolaire?: string;
   onAnneeScolaireChange?: (annee: string) => void;
+  adminTheme?: string;
+  onThemeChange?: () => void;
+  compactScroll?: boolean;
+  onCompactScrollChange?: (val: boolean) => void;
+  globalSemestreId?: number;
+  onSemestreChange?: (id: number) => void;
 }
 
 const shortenSemester = (name: string): string => {
@@ -44,14 +50,28 @@ export default function StudentPortal({
   onUpdatePassword,
   onLogout,
   globalAnneeScolaire,
-  onAnneeScolaireChange
+  onAnneeScolaireChange,
+  adminTheme = 'sombre-or',
+  onThemeChange,
+  compactScroll = false,
+  onCompactScrollChange,
+  globalSemestreId,
+  onSemestreChange
 }: StudentPortalProps) {
   const [activeTab, setActiveTab] = useState<'profil' | 'cours' | 'notes' | 'bulletins' | 'paiements'>('bulletins');
   const [menuOpen, setMenuOpen] = useState(false);
   const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
-  const [selectedSemestreId, setSelectedSemestreId] = useState<number>(() => {
+  const [localSemestreId, setLocalSemestreId] = useState<number>(() => {
     return studentSemestres[0]?.id || semestres[0]?.id || 0;
   });
+  const selectedSemestreId = globalSemestreId && globalSemestreId > 0 ? globalSemestreId : localSemestreId;
+  const setSelectedSemestreId = (id: number) => {
+    if (onSemestreChange) {
+      onSemestreChange(id);
+    } else {
+      setLocalSemestreId(id);
+    }
+  };
 
   // Dynamically compile unique list of academic years
   const uniqueAnneeScolaires = Array.from(new Set([
@@ -308,76 +328,151 @@ export default function StudentPortal({
 
       {/* Main Working Panel */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+        <header className={`border-b px-6 py-4 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 shrink-0 transition-colors ${
+          adminTheme === 'sombre-or' ? 'bg-[#0b0f19] border-amber-500/10' : 'bg-white border-slate-200'
+        }`}>
           <div>
-            <h2 className="text-lg font-black text-slate-900 tracking-tight">
+            <h2 className={`text-lg font-black tracking-tight ${
+              adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-900'
+            }`}>
               {activeTab === 'profil' && "Mon Profil Universitaire"}
               {activeTab === 'cours' && "Supports & Syllabus des Filières"}
               {activeTab === 'notes' && "Relevé des notes d'évaluations"}
               {activeTab === 'bulletins' && "Génération Automatique de Bulletins"}
               {activeTab === 'paiements' && "Mon Carnet de Paiements & Versements"}
             </h2>
-            <p className="text-xs text-slate-500 mt-1">Espace sécurisé de gestion scolaire de l'étudiant.</p>
+            <p className={`text-xs mt-1 ${
+              adminTheme === 'sombre-or' ? 'text-slate-400' : 'text-slate-500'
+            }`}>Espace sécurisé de gestion scolaire de l'étudiant.</p>
           </div>
           
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
-            {/* SÉLECTEUR GLOBAL D'ANNÉE ACADÉMIQUE */}
-            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 space-x-0.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto xl:justify-end select-none">
+            {/* 1. COMPACT SCROLL TOGGLE */}
+            {onCompactScrollChange && (
+              <button
+                onClick={() => onCompactScrollChange(!compactScroll)}
+                className={`p-1.5 px-3 border rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  adminTheme === 'sombre-or'
+                    ? 'bg-slate-950 border-amber-500/20 text-slate-300 hover:text-white'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+                title="Ajuster la hauteur de défilement de l'interface"
+              >
+                <span>{compactScroll ? "↕ Défilement Normal" : "↕ Défilement Compact"}</span>
+              </button>
+            )}
+
+            {/* 2. MODE SOMBRE/CLAIR TOGGLE */}
+            {onThemeChange && (
+              <button
+                type="button"
+                onClick={onThemeChange}
+                className={`p-1.5 px-3 border rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  adminTheme === 'sombre-or'
+                    ? 'bg-amber-500 border-amber-500 text-slate-950 font-black hover:bg-amber-400'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <span>{adminTheme === 'sombre-or' ? "☼ Mode Clair" : "☾ Mode Sombre"}</span>
+              </button>
+            )}
+
+            {/* 3. ACADEMIC YEARS */}
+            <div className={`flex items-center gap-0.5 border rounded-lg p-0.5 transition-colors ${
+              adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
+            }`}>
               <button
                 type="button"
                 onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2024-2025")}
-                className={`text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
+                className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                   selectedStudentAnnee === "2024-2025"
-                    ? "bg-blue-600 text-white shadow"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                    : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                 }`}
                 title="Année Précédente"
               >
-                <span className="hidden sm:inline">Précédent (24-25)</span>
-                <span className="sm:hidden">24-25</span>
+                Précédent (24-25)
               </button>
               <button
                 type="button"
                 onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2025-2026")}
-                className={`text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
+                className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                   selectedStudentAnnee === "2025-2026"
-                    ? "bg-blue-600 text-white shadow"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                    : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                 }`}
-                title="Année Courante"
+                title="Année Courante (Active)"
               >
-                <span className="hidden sm:inline">Courant (25-26)</span>
-                <span className="sm:hidden">25-26</span>
+                Courant (25-26)
               </button>
               <button
                 type="button"
                 onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2026-2027")}
-                className={`text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
+                className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
                   selectedStudentAnnee === "2026-2027"
-                    ? "bg-blue-600 text-white shadow"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
+                    : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
                 }`}
                 title="Année Suivante"
               >
-                <span className="hidden sm:inline">Suivant (26-27)</span>
-                <span className="sm:hidden">26-27</span>
+                Suivant (26-27)
               </button>
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-150 border border-slate-300 rounded-xl p-1 shrink-0">
-              <span className="text-[10px] font-black text-slate-500 uppercase px-1.5 hidden sm:inline">Active :</span>
+            {/* 4. FILIÈRE ACTIVE */}
+            <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
+              adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <span className={`font-extrabold uppercase tracking-wider ${
+                adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
+              }`}>Filière active :</span>
               <select
                 value={courseFiliereFilter}
                 onChange={(e) => handleSelectFiliereCourse(Number(e.target.value))}
-                className="p-1 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-850 hover:bg-slate-50 transition focus:outline-none cursor-pointer max-w-[130px] sm:max-w-[280px] truncate"
+                className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[160px] ${
+                  adminTheme === 'sombre-or' ? 'text-white' : 'text-blue-900'
+                }`}
               >
                 {allAccessibleFilieres.map(f => (
-                  <option key={f.id} value={f.id} className="font-semibold text-slate-900">
+                  <option key={f.id} value={f.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>
                     {f.nom_filiere}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* 5. PÉRIODE ACTIVE */}
+            <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
+              adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
+            }`}>
+              <span className={`font-extrabold uppercase tracking-wider ${
+                adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
+              }`}>Période active :</span>
+              <select
+                value={selectedSemestreId}
+                onChange={e => setSelectedSemestreId(Number(e.target.value))}
+                className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 ${
+                  adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-850'
+                }`}
+              >
+                {studentSemestres
+                  .filter(sem => !courseFiliereFilter || !sem.filiere_id || Number(sem.filiere_id) === Number(courseFiliereFilter))
+                  .map(sem => (
+                    <option key={sem.id} value={sem.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>
+                      {shortenSemester(sem.nom_semestre)}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* 6. STATUS BADGE */}
+            <span className={`text-[10px] uppercase font-bold border px-3 py-1.5 rounded-lg font-semibold tracking-wide ${
+              adminTheme === 'sombre-or' 
+                ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
+                : 'bg-slate-100 border-slate-200 text-slate-400'
+            }`}>
+              Enregistrement session : Actif ✔
+            </span>
           </div>
         </header>
 

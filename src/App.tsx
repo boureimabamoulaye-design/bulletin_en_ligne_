@@ -48,7 +48,33 @@ export default function App() {
   });
   const [matieres, setMatieres] = useState<Matiere[]>(() => {
     const saved = localStorage.getItem('school_matieres');
-    return saved ? JSON.parse(saved) : INITIAL_MATIERES;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as Matiere[];
+        // Auto-upgrade if we have fewer subjects or are missing some default ones
+        const merged = [...parsed];
+        let addedAny = false;
+        INITIAL_MATIERES.forEach(initM => {
+          const exists = parsed.some(pm => 
+            pm.nom_matiere.toLowerCase().trim() === initM.nom_matiere.toLowerCase().trim() ||
+            pm.code_matiere.toLowerCase().trim() === initM.code_matiere.toLowerCase().trim()
+          );
+          if (!exists) {
+            // Find maximum ID to avoid collisions
+            const maxId = merged.length > 0 ? Math.max(...merged.map(x => x.id)) + 1 : 1;
+            merged.push({ ...initM, id: maxId });
+            addedAny = true;
+          }
+        });
+        if (addedAny) {
+          localStorage.setItem('school_matieres', JSON.stringify(merged));
+        }
+        return merged;
+      } catch (e) {
+        console.error("Error upgrading school_matieres", e);
+      }
+    }
+    return INITIAL_MATIERES;
   });
   const [classes, setClasses] = useState<Classe[]>(() => {
     const saved = localStorage.getItem('school_classes');
@@ -496,7 +522,14 @@ export default function App() {
   const handleAddNote = (newN: Omit<Note, 'id' | 'date_ajout'>) => {
     const id = notes.length > 0 ? Math.max(...notes.map(x => x.id)) + 1 : 1;
     const date_ajout = new Date().toISOString().split('T')[0];
-    setNotes([...notes, { id, date_ajout, ...newN }]);
+    setNotes(prev => {
+      const filtered = prev.filter(existing => !(
+        Number(existing.etudiant_id) === Number(newN.etudiant_id) &&
+        Number(existing.cours_id) === Number(newN.cours_id) &&
+        Number(existing.semestre_id) === Number(newN.semestre_id)
+      ));
+      return [...filtered, { id, date_ajout, ...newN }];
+    });
   };
 
   // Add multiple notes at once, automatically creating any missing course modules
@@ -562,13 +595,23 @@ export default function App() {
     }
 
     setNotes(prev => {
+      // Avoid duplicate grades for the same student, course, and semester
+      const filteredPrev = prev.filter(existing => {
+        const isDuplicate = resolvedNotes.some(r => 
+          Number(r.etudiant_id) === Number(existing.etudiant_id) &&
+          Number(r.cours_id) === Number(existing.cours_id) &&
+          Number(r.semestre_id) === Number(existing.semestre_id)
+        );
+        return !isDuplicate;
+      });
+
       let currentId = prev.length > 0 ? Math.max(...prev.map(x => x.id)) : 0;
       const date_ajout = new Date().toISOString().split('T')[0];
       const newItems = resolvedNotes.map(noteItem => {
         currentId++;
         return { id: currentId, date_ajout, ...noteItem };
       });
-      return [...prev, ...newItems];
+      return [...filteredPrev, ...newItems];
     });
   };
 
@@ -1852,6 +1895,7 @@ export default function App() {
                           globalSemestreId={globalSemestreId}
                           onSemestreChange={setGlobalSemestreId}
                           onFiliereChange={setGlobalFiliereId}
+                          adminTheme={adminTheme}
                         />
                       )}
 
@@ -2263,6 +2307,12 @@ export default function App() {
                   onLogout={handleLogout}
                   globalAnneeScolaire={globalAnneeScolaire}
                   onAnneeScolaireChange={setGlobalAnneeScolaire}
+                  adminTheme={adminTheme}
+                  onThemeChange={toggleAdminTheme}
+                  compactScroll={compactScroll}
+                  onCompactScrollChange={setCompactScroll}
+                  globalSemestreId={globalSemestreId}
+                  onSemestreChange={setGlobalSemestreId}
                 />
               </div>
             </>
