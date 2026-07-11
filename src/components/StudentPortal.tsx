@@ -341,84 +341,9 @@ export default function StudentPortal({
               {activeTab === 'bulletins' && "Génération Automatique de Bulletins"}
               {activeTab === 'paiements' && "Mon Carnet de Paiements & Versements"}
             </h2>
-            <p className={`text-xs mt-1 ${
-              adminTheme === 'sombre-or' ? 'text-slate-400' : 'text-slate-500'
-            }`}>Espace sécurisé de gestion scolaire de l'étudiant.</p>
           </div>
           
           <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto xl:justify-end select-none">
-            {/* 1. COMPACT SCROLL TOGGLE */}
-            {onCompactScrollChange && (
-              <button
-                onClick={() => onCompactScrollChange(!compactScroll)}
-                className={`p-1.5 px-3 border rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  adminTheme === 'sombre-or'
-                    ? 'bg-slate-950 border-amber-500/20 text-slate-300 hover:text-white'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-                title="Ajuster la hauteur de défilement de l'interface"
-              >
-                <span>{compactScroll ? "↕ Défilement Normal" : "↕ Défilement Compact"}</span>
-              </button>
-            )}
-
-            {/* 2. MODE SOMBRE/CLAIR TOGGLE */}
-            {onThemeChange && (
-              <button
-                type="button"
-                onClick={onThemeChange}
-                className={`p-1.5 px-3 border rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  adminTheme === 'sombre-or'
-                    ? 'bg-amber-500 border-amber-500 text-slate-950 font-black hover:bg-amber-400'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <span>{adminTheme === 'sombre-or' ? "☼ Mode Clair" : "☾ Mode Sombre"}</span>
-              </button>
-            )}
-
-            {/* 3. ACADEMIC YEARS */}
-            <div className={`flex items-center gap-0.5 border rounded-lg p-0.5 transition-colors ${
-              adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
-            }`}>
-              <button
-                type="button"
-                onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2024-2025")}
-                className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
-                  selectedStudentAnnee === "2024-2025"
-                    ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
-                    : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
-                }`}
-                title="Année Précédente"
-              >
-                Précédent (24-25)
-              </button>
-              <button
-                type="button"
-                onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2025-2026")}
-                className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
-                  selectedStudentAnnee === "2025-2026"
-                    ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
-                    : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
-                }`}
-                title="Année Courante (Active)"
-              >
-                Courant (25-26)
-              </button>
-              <button
-                type="button"
-                onClick={() => onAnneeScolaireChange && onAnneeScolaireChange("2026-2027")}
-                className={`text-[9px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all ${
-                  selectedStudentAnnee === "2026-2027"
-                    ? (adminTheme === 'sombre-or' ? "bg-amber-500 text-slate-950 font-black shadow" : "bg-blue-600 text-white shadow")
-                    : (adminTheme === 'sombre-or' ? "text-slate-400 hover:text-white" : "text-slate-650 hover:text-slate-900")
-                }`}
-                title="Année Suivante"
-              >
-                Suivant (26-27)
-              </button>
-            </div>
-
             {/* 4. FILIÈRE ACTIVE */}
             <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
               adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
@@ -732,14 +657,38 @@ export default function StudentPortal({
                   <table className="custom-table min-w-[850px] text-xs">
                     <thead>
                       <tr className="bg-slate-900 text-slate-100 font-bold">
-                        <th className="py-2.5 px-4 uppercase text-[10px] text-left">Intitulé de la Matière / Module</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (40%)</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (60%)</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Moyenne Finale</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Grade Pondéré</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Mention</th>
-                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Statut LMD</th>
+                        <th className="py-2.5 px-4 uppercase text-[10px] text-left">
+                          <span className="md:hidden">Matière / Module</span>
+                          <span className="hidden md:inline">Intitulé de la Matière / Module</span>
+                        </th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                          <span className="md:hidden">CC (40%)</span>
+                          <span className="hidden md:inline">Note CC / Classe (40%)</span>
+                        </th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                          <span className="md:hidden">Exam (60%)</span>
+                          <span className="hidden md:inline">Note Examen (60%)</span>
+                        </th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                          <span className="md:hidden">Moy. Fin.</span>
+                          <span className="hidden md:inline">Moyenne Finale</span>
+                        </th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">
+                          <span className="md:hidden">Créd.</span>
+                          <span className="hidden md:inline">Crédits</span>
+                        </th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                          <span className="md:hidden">Pondéré</span>
+                          <span className="hidden md:inline">Grade Pondéré</span>
+                        </th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                          <span className="md:hidden">Ment.</span>
+                          <span className="hidden md:inline">Mention</span>
+                        </th>
+                        <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                          <span className="md:hidden">Statut</span>
+                          <span className="hidden md:inline">Statut LMD</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -802,7 +751,13 @@ export default function StudentPortal({
                               </td>
                               <td>
                                 <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
-                                  {subjStatus}
+                                  <span className="hidden md:inline">{subjStatus}</span>
+                                  <span className="inline md:hidden">
+                                    {subjStatus.includes("Capitalisé") ? "V.A." : 
+                                     subjStatus.includes("Compensé") ? "V.Comp" : 
+                                     subjStatus.includes("Rattrapage") ? "R.A." : 
+                                     subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                                  </span>
                                 </span>
                               </td>
                             </tr>
@@ -965,14 +920,38 @@ export default function StudentPortal({
                       <table className="custom-table min-w-[850px] w-full text-xs">
                         <thead>
                           <tr className="bg-slate-900 text-slate-100 font-bold">
-                            <th className="py-2.5 px-4 font-bold text-left">Cours module</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note CC / Classe (40%)</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Note Examen (60%)</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Moyenne Finale</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Total</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Mention</th>
-                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">Statut LMD</th>
+                            <th className="py-2.5 px-4 font-bold text-left">
+                              <span className="md:hidden">Module</span>
+                              <span className="hidden md:inline">Cours module</span>
+                            </th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                              <span className="md:hidden">CC (40%)</span>
+                              <span className="hidden md:inline">Note CC / Classe (40%)</span>
+                            </th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                              <span className="md:hidden">Exam (60%)</span>
+                              <span className="hidden md:inline">Note Examen (60%)</span>
+                            </th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                              <span className="md:hidden">Moy. Fin.</span>
+                              <span className="hidden md:inline">Moyenne Finale</span>
+                            </th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-14">
+                              <span className="md:hidden">Créd.</span>
+                              <span className="hidden md:inline">Crédits</span>
+                            </th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                              <span className="md:hidden">Total</span>
+                              <span className="hidden md:inline">Total</span>
+                            </th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                              <span className="md:hidden">Ment.</span>
+                              <span className="hidden md:inline">Mention</span>
+                            </th>
+                            <th className="py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                              <span className="md:hidden">Statut</span>
+                              <span className="hidden md:inline">Statut LMD</span>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1035,7 +1014,13 @@ export default function StudentPortal({
                                   </td>
                                   <td>
                                     <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
-                                      {subjStatus}
+                                      <span className="hidden md:inline">{subjStatus}</span>
+                                      <span className="inline md:hidden">
+                                        {subjStatus.includes("Capitalisé") ? "V.A." : 
+                                         subjStatus.includes("Compensé") ? "V.Comp" : 
+                                         subjStatus.includes("Rattrapage") ? "R.A." : 
+                                         subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                                      </span>
                                     </span>
                                   </td>
                                 </tr>
@@ -1061,33 +1046,52 @@ export default function StudentPortal({
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-200 pb-2">
                           <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
-                            Bilan des Crédits Académiques (Système LMD)
+                            <span className="md:hidden">Bilan Crédits (LMD)</span>
+                            <span className="hidden md:inline">Bilan des Crédits Académiques (Système LMD)</span>
                           </span>
-                          <span className="text-[10px] text-gray-500 font-mono">Compensations semestrielles actives</span>
+                          <span className="text-[10px] text-gray-500 font-mono">
+                            <span className="md:hidden">Compensations Actives</span>
+                            <span className="hidden md:inline">Compensations semestrielles actives</span>
+                          </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center">
                           <div className="bg-white p-2.5 rounded-lg border border-gray-200">
-                            <span className="text-[9px] font-bold text-gray-400 uppercase block">Crédits inscrits</span>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase block">
+                              <span className="md:hidden">Inscrits</span>
+                              <span className="hidden md:inline">Crédits inscrits</span>
+                            </span>
                             <span className="text-sm font-black text-slate-900">{totalSemCredits} ECTS</span>
                           </div>
                           <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100">
-                            <span className="text-[9px] font-bold text-emerald-600 uppercase block">Crédits capitalisés</span>
+                            <span className="text-[9px] font-bold text-emerald-600 uppercase block">
+                              <span className="md:hidden">Capitalisés</span>
+                              <span className="hidden md:inline">Crédits capitalisés</span>
+                            </span>
                             <span className="text-sm font-black text-emerald-800">{capCredits} ECTS</span>
                           </div>
                           <div className="bg-sky-50/50 p-2.5 rounded-lg border border-sky-150">
-                            <span className="text-[9px] font-bold text-sky-600 uppercase block">Crédits compensés</span>
+                            <span className="text-[9px] font-bold text-sky-600 uppercase block">
+                              <span className="md:hidden">Compensés</span>
+                              <span className="hidden md:inline">Crédits compensés</span>
+                            </span>
                             <span className="text-sm font-black text-sky-850">{compCredits} ECTS</span>
                           </div>
                           <div className="bg-indigo-50 p-2.5 rounded-lg border border-indigo-150">
-                            <span className="text-[9px] font-bold text-indigo-700 uppercase block">Crédits validés</span>
+                            <span className="text-[9px] font-bold text-indigo-700 uppercase block">
+                              <span className="md:hidden">Validés</span>
+                              <span className="hidden md:inline">Crédits validés</span>
+                            </span>
                             <span className="text-sm font-black text-indigo-900">{valCredits} / {totalSemCredits} ECTS</span>
                           </div>
                         </div>
 
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center text-[10px] font-bold text-slate-700">
-                            <span>Taux de validation du semestre :</span>
+                            <span>
+                              <span className="md:hidden">Taux Val. Semestre :</span>
+                              <span className="hidden md:inline">Taux de validation du semestre :</span>
+                            </span>
                             <span>{progressPercentage}%</span>
                           </div>
                           <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
@@ -1110,11 +1114,17 @@ export default function StudentPortal({
                       <div className="mt-6 border-t-2 border-slate-900 pt-5 flex flex-col md:flex-row gap-4">
                         <div className="flex-1 space-y-2 border border-dashed border-gray-300 p-4 rounded-xl text-xs font-semibold">
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Moyenne trimestrielle :</span>
+                            <span className="text-gray-500">
+                              <span className="md:hidden">Moy. Trim :</span>
+                              <span className="hidden md:inline">Moyenne trimestrielle :</span>
+                            </span>
                             <span className="text-slate-950 font-black">{currentAverage > 0 ? `${currentAverage.toFixed(2)}/20` : "Pas de moyenne"}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Validation administrative :</span>
+                            <span className="text-gray-500">
+                              <span className="md:hidden">Val. Admin :</span>
+                              <span className="hidden md:inline">Validation administrative :</span>
+                            </span>
                             <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${currentAverage >= 10 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
                               {currentAverage >= 10 ? 'Validé' : 'Non validé'}
                             </span>

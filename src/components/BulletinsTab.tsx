@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Etudiant, Note, Cours, Semestre, Filiere, Classe, Matiere } from '../types';
 import { 
   Award, Printer, Download, BookOpen, User, Calendar, 
-  GraduationCap, Pencil, Save, X, Check, Trash2, AlertCircle, FileText
+  GraduationCap, Pencil, Save, X, Check, Trash2, AlertCircle, FileText,
+  Search, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 const getValidationInfo = (valStr: string) => {
@@ -85,6 +86,10 @@ export default function BulletinsTab({
   const [localSemestreId, setLocalSemestreId] = useState<number>(semestres[0]?.id || 0);
   const [displayMode, setDisplayMode] = useState<'single' | 'all'>('single');
 
+  // État pour la recherche textuelle de l'étudiant et l'affichage du menu
+  const [studentSearchInput, setStudentSearchInput] = useState('');
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+
   const eligibleStudents = (globalFiliereId && globalFiliereId > 0 
     ? etudiants.filter(e => Number(e.filiere_id) === Number(globalFiliereId)) 
     : etudiants).sort((a, b) => {
@@ -101,6 +106,27 @@ export default function BulletinsTab({
     : 0;
 
   const activeStudent = etudiants.find(e => Number(e.id) === Number(selectedStudentId));
+
+  // Synchroniser le champ de recherche textuel quand un étudiant est sélectionné
+  useEffect(() => {
+    if (activeStudent) {
+      setStudentSearchInput(`${activeStudent.nom} ${activeStudent.prenom} (${activeStudent.matricule})`);
+    } else {
+      setStudentSearchInput('');
+    }
+  }, [selectedStudentId, activeStudent]);
+
+  // Filtrer la liste des étudiants éligibles en fonction de la saisie
+  const filteredStudents = studentSearchInput.trim() === "" || (activeStudent && studentSearchInput === `${activeStudent.nom} ${activeStudent.prenom} (${activeStudent.matricule})`)
+    ? eligibleStudents
+    : eligibleStudents.filter(etu => {
+        const query = studentSearchInput.toLowerCase().trim();
+        return (
+          (etu.nom || "").toLowerCase().includes(query) ||
+          (etu.prenom || "").toLowerCase().includes(query) ||
+          (etu.matricule || "").toLowerCase().includes(query)
+        );
+      });
 
   const activeFiliereFilter = globalFiliereId && globalFiliereId > 0 
     ? globalFiliereId 
@@ -570,14 +596,38 @@ export default function BulletinsTab({
             <table className="custom-table min-w-[850px] w-full text-xs" style={{ boxShadow: 'none' }}>
               <thead>
                 <tr className="bg-slate-900 text-slate-100">
-                  <th className="font-bold py-2.5 px-4 uppercase text-[10px] text-left">Modules / Cours Validés</th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note CC / Classe (40%)</th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">Note Examen (60%)</th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Moyenne Finale</th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-14">Crédits</th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Total pondéré</th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Mention</th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">Statut LMD</th>
+                  <th className="font-bold py-2.5 px-4 uppercase text-[10px] text-left">
+                    <span className="md:hidden">Matière / Module</span>
+                    <span className="hidden md:inline">Modules / Cours Validés</span>
+                  </th>
+                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">
+                    <span className="md:hidden">CC (40%)</span>
+                    <span className="hidden md:inline">Note CC / Classe (40%)</span>
+                  </th>
+                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">
+                    <span className="md:hidden">Exam (60%)</span>
+                    <span className="hidden md:inline">Note Examen (60%)</span>
+                  </th>
+                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                    <span className="md:hidden">Moy. Fin.</span>
+                    <span className="hidden md:inline">Moyenne Finale</span>
+                  </th>
+                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-14">
+                    <span className="md:hidden">Créd.</span>
+                    <span className="hidden md:inline">Crédits</span>
+                  </th>
+                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                    <span className="md:hidden">Pondéré</span>
+                    <span className="hidden md:inline">Total pondéré</span>
+                  </th>
+                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                    <span className="md:hidden">Ment.</span>
+                    <span className="hidden md:inline">Mention</span>
+                  </th>
+                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                    <span className="md:hidden">Statut</span>
+                    <span className="hidden md:inline">Statut LMD</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -702,7 +752,13 @@ export default function BulletinsTab({
                           </td>
                           <td>
                             <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
-                              {subjStatus}
+                              <span className="hidden md:inline">{subjStatus}</span>
+                              <span className="inline md:hidden">
+                                {subjStatus.includes("Capitalisé") ? "V.A." : 
+                                 subjStatus.includes("Compensé") ? "V.Comp" : 
+                                 subjStatus.includes("Rattrapage") ? "R.A." : 
+                                 subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                              </span>
                             </span>
                           </td>
                         </tr>
@@ -742,7 +798,13 @@ export default function BulletinsTab({
                           </td>
                           <td>
                             <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
-                              {subjStatus}
+                              <span className="hidden md:inline">{subjStatus}</span>
+                              <span className="inline md:hidden">
+                                {subjStatus.includes("Capitalisé") ? "V.A." : 
+                                 subjStatus.includes("Compensé") ? "V.Comp" : 
+                                 subjStatus.includes("Rattrapage") ? "R.A." : 
+                                 subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                              </span>
                             </span>
                           </td>
                         </tr>
@@ -769,26 +831,42 @@ export default function BulletinsTab({
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-200 pb-2">
                 <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
-                  Bilan Académique des Crédits (LMD / ECTS)
+                  <span className="md:hidden">Bilan Crédits (LMD)</span>
+                  <span className="hidden md:inline">Bilan Académique des Crédits (LMD / ECTS)</span>
                 </span>
-                <span className="text-[10px] text-gray-500 font-mono">Compensations automatiques actives</span>
+                <span className="text-[10px] text-gray-500 font-mono">
+                  <span className="md:hidden">Compensations Actives</span>
+                  <span className="hidden md:inline">Compensations automatiques actives</span>
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center">
                 <div className="bg-white p-2.5 rounded-lg border border-gray-200">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase block">Crédits inscrits</span>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase block">
+                    <span className="md:hidden">Inscrits</span>
+                    <span className="hidden md:inline">Crédits inscrits</span>
+                  </span>
                   <span className="text-sm font-black text-slate-900">{totalSemCredits} ECTS</span>
                 </div>
                 <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100">
-                  <span className="text-[9px] font-bold text-emerald-600 uppercase block">Crédits capitalisés</span>
+                  <span className="text-[9px] font-bold text-emerald-600 uppercase block">
+                    <span className="md:hidden">Capitalisés</span>
+                    <span className="hidden md:inline">Crédits capitalisés</span>
+                  </span>
                   <span className="text-sm font-black text-emerald-800">{capCredits} ECTS</span>
                 </div>
                 <div className="bg-sky-50/50 p-2.5 rounded-lg border border-sky-150">
-                  <span className="text-[9px] font-bold text-sky-600 uppercase block">Crédits compensés</span>
+                  <span className="text-[9px] font-bold text-sky-600 uppercase block">
+                    <span className="md:hidden">Compensés</span>
+                    <span className="hidden md:inline">Crédits compensés</span>
+                  </span>
                   <span className="text-sm font-black text-sky-850">{compCredits} ECTS</span>
                 </div>
                 <div className="bg-indigo-50 p-2.5 rounded-lg border border-indigo-150">
-                  <span className="text-[9px] font-bold text-indigo-700 uppercase block">Crédits validés</span>
+                  <span className="text-[9px] font-bold text-indigo-700 uppercase block">
+                    <span className="md:hidden">Validés</span>
+                    <span className="hidden md:inline">Crédits validés</span>
+                  </span>
                   <span className="text-sm font-black text-indigo-900">{valCredits} / {totalSemCredits} ECTS</span>
                 </div>
               </div>
@@ -796,7 +874,10 @@ export default function BulletinsTab({
               {/* Progress bar and informative alert */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-[10px] font-bold text-slate-700">
-                  <span>Taux d'acquisition de l'année / parcours :</span>
+                  <span>
+                    <span className="md:hidden">Taux d'Acquisition :</span>
+                    <span className="hidden md:inline">Taux d'acquisition de l'année / parcours :</span>
+                  </span>
                   <span>{progressPercentage}%</span>
                 </div>
                 <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
@@ -1031,30 +1112,118 @@ export default function BulletinsTab({
         adminTheme === 'sombre-or' ? 'bg-[#0f1422] border-amber-500/10' : 'bg-slate-50 border-slate-200'
       }`} id="bulletins-selectors">
         {displayMode === 'single' ? (
-          <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
-            adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-white border-slate-200'
-          }`}>
-            <span className={`font-extrabold uppercase tracking-wider ${
-              adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
-            }`}>Étudiant :</span>
-            <select 
-              value={selectedStudentId}
-              onChange={e => setLocalStudentId(Number(e.target.value))}
-              className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-ellipsis truncate max-w-[200px] ${
-                adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-800'
-              }`}
-            >
-              <option value={0} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>-- Sélectionner un élève --</option>
-              {eligibleStudents.length === 0 ? (
-                <option value={0} disabled className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>Aucun étudiant</option>
-              ) : (
-                eligibleStudents.map(etu => (
-                  <option key={etu.id} value={etu.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>
-                    {etu.nom} {etu.prenom} ({etu.matricule})
-                  </option>
-                ))
+          <div className="relative flex items-center">
+            {/* Backdrop transparent pour fermer le dropdown */}
+            {showStudentDropdown && (
+              <div 
+                className="fixed inset-0 z-30 cursor-default" 
+                onClick={() => setShowStudentDropdown(false)} 
+              />
+            )}
+            
+            <div className={`relative z-40 flex items-center gap-1.5 text-[11px] border rounded-lg p-1.5 px-3 transition-all min-w-[280px] sm:min-w-[320px] ${
+              adminTheme === 'sombre-or' 
+                ? 'bg-slate-950 border-amber-500/20 focus-within:border-amber-500/50 focus-within:ring-1 focus-within:ring-amber-500/20' 
+                : 'bg-white border-slate-200 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20'
+            }`}>
+              <span className={`font-extrabold uppercase tracking-wider flex-shrink-0 ${
+                adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
+              }`}>Étudiant :</span>
+              
+              <div className="flex-1 flex items-center gap-1 min-w-0">
+                <input 
+                  type="text"
+                  value={studentSearchInput}
+                  onFocus={() => setShowStudentDropdown(true)}
+                  onChange={e => {
+                    setStudentSearchInput(e.target.value);
+                    setShowStudentDropdown(true);
+                    if (e.target.value.trim() === "") {
+                      setLocalStudentId(0);
+                    }
+                  }}
+                  placeholder="Rechercher (Nom, matricule...)"
+                  className={`bg-transparent border-none text-xs font-bold outline-none focus:ring-0 p-0 w-full select-text ${
+                    adminTheme === 'sombre-or' ? 'text-white placeholder-slate-700' : 'text-slate-800 placeholder-slate-400'
+                  }`}
+                />
+              </div>
+
+              {studentSearchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStudentSearchInput('');
+                    setLocalStudentId(0);
+                    setShowStudentDropdown(true);
+                  }}
+                  className={`p-0.5 rounded-full transition-colors flex-shrink-0 ${
+                    adminTheme === 'sombre-or' ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               )}
-            </select>
+
+              <button
+                type="button"
+                onClick={() => setShowStudentDropdown(!showStudentDropdown)}
+                className={`p-0.5 rounded transition-colors flex-shrink-0 ${
+                  adminTheme === 'sombre-or' ? 'text-slate-400 hover:text-amber-400' : 'text-slate-400 hover:text-slate-800'
+                }`}
+              >
+                {showStudentDropdown ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            {/* Suggestions flottantes */}
+            {showStudentDropdown && (
+              <div className={`absolute left-0 top-full mt-1.5 w-full max-h-60 overflow-y-auto rounded-xl border shadow-2xl z-40 transition-all ${
+                adminTheme === 'sombre-or' 
+                  ? 'bg-[#0a0d18] border-amber-500/20 text-white divide-y divide-amber-500/5' 
+                  : 'bg-white border-slate-200 text-slate-800 divide-y divide-slate-100'
+              }`}>
+                {filteredStudents.length === 0 ? (
+                  <div className="p-3 text-center text-xs text-slate-500 font-medium">
+                    Aucun étudiant trouvé
+                  </div>
+                ) : (
+                  filteredStudents.map(etu => {
+                    const isSelected = Number(etu.id) === Number(selectedStudentId);
+                    return (
+                      <button
+                        key={etu.id}
+                        type="button"
+                        onClick={() => {
+                          setLocalStudentId(etu.id);
+                          setStudentSearchInput(`${etu.nom} ${etu.prenom} (${etu.matricule})`);
+                          setShowStudentDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-all flex items-center justify-between ${
+                          isSelected
+                            ? adminTheme === 'sombre-or'
+                              ? 'bg-amber-500/10 text-amber-400 font-extrabold'
+                              : 'bg-blue-50 text-blue-700 font-extrabold'
+                            : adminTheme === 'sombre-or'
+                              ? 'hover:bg-slate-900/60 text-slate-300 hover:text-white'
+                              : 'hover:bg-slate-50 text-slate-700 hover:text-slate-950'
+                        }`}
+                      >
+                        <div className="truncate pr-2">
+                          <span className="block truncate">{etu.nom} {etu.prenom}</span>
+                          <span className={`text-[10px] font-mono font-medium block mt-0.5 ${
+                            isSelected 
+                              ? adminTheme === 'sombre-or' ? 'text-amber-400/75' : 'text-blue-500'
+                              : 'text-slate-500'
+                          }`}>{etu.matricule}</span>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
