@@ -26,13 +26,14 @@ import AutorisationsTab from './components/AutorisationsTab';
 import PaiementsTab from './components/PaiementsTab';
 import CorbeilleTab from './components/CorbeilleTab';
 import StudentPortal from './components/StudentPortal';
+import WampConnector from './components/WampConnector';
 
 // Icons
 import { 
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
   BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info,
   ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon,
-  Lock, ShieldAlert, Eye, EyeOff, Minimize2, Maximize2
+  Lock, ShieldAlert, Eye, EyeOff, Minimize2, Maximize2, Server
 } from 'lucide-react';
 
 const shortenSemester = (name: string): string => {
@@ -320,6 +321,66 @@ export default function App() {
   React.useEffect(() => {
     localStorage.setItem('school_trash', JSON.stringify(trash));
   }, [trash]);
+
+  // --- REAL-TIME SYNC TO WAMP SERVER (IF ACTIVE) ---
+  React.useEffect(() => {
+    const isWampActive = localStorage.getItem('school_wamp_active') === 'true';
+    const apiUrl = localStorage.getItem('school_wamp_url') || 'http://localhost/school_php/api.php';
+    if (!isWampActive) return;
+
+    const timer = setTimeout(() => {
+      const payload = {
+        filieres,
+        matieres,
+        classes,
+        semestres,
+        etudiants,
+        cours,
+        notes,
+        autorisations,
+        paiements,
+        trash
+      };
+      fetch(`${apiUrl}?action=save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors',
+        body: JSON.stringify(payload)
+      }).catch(err => console.error("WAMP sync failed:", err));
+    }, 1200); // Debounce to allow multiple quick updates to bunch together
+
+    return () => clearTimeout(timer);
+  }, [filieres, matieres, classes, semestres, etudiants, cours, notes, autorisations, paiements, trash]);
+
+  // --- INITIAL LOAD FROM WAMP (IF ACTIVE) ---
+  React.useEffect(() => {
+    const isWampActive = localStorage.getItem('school_wamp_active') === 'true';
+    const apiUrl = localStorage.getItem('school_wamp_url') || 'http://localhost/school_php/api.php';
+    if (!isWampActive) return;
+
+    fetch(`${apiUrl}?action=get`)
+      .then(res => {
+        if (!res.ok) throw new Error("Server response not ok");
+        return res.json();
+      })
+      .then(resData => {
+        if (resData.status === 'success' && resData.data) {
+          const d = resData.data;
+          if (d.filieres) setFilieres(d.filieres);
+          if (d.matieres) setMatieres(d.matieres);
+          if (d.classes) setClasses(d.classes);
+          if (d.semestres) setSemestres(d.semestres);
+          if (d.etudiants) setEtudiants(d.etudiants);
+          if (d.cours) setCours(d.cours);
+          if (d.notes) setNotes(d.notes);
+          if (d.autorisations) setAutorisations(d.autorisations);
+          if (d.paiements) setPaiements(d.paiements);
+          if (d.trash) setTrash(d.trash);
+          console.log("WAMP Data synced on startup");
+        }
+      })
+      .catch(err => console.error("WAMP startup sync failed:", err));
+  }, []);
 
   // --- ACTIONS (CREATION / MODIFICATION / DELETION) ---
   
@@ -1551,6 +1612,7 @@ export default function App() {
                     { id: 'autorisations', label: "Autorisations", icon: ShieldCheck },
                     { id: 'paiements', label: "Paiements", icon: CreditCard },
                     { id: 'corbeille', label: `Corbeille (${trash.length})`, icon: Trash2 },
+                    { id: 'wamp', label: "Connexion WAMP", icon: Server },
                   ].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = adminActiveTab === tab.id;
@@ -1939,6 +2001,32 @@ export default function App() {
                           onPermanentDelete={handlePermanentDeleteItem}
                           onEmptyTrash={handleEmptyTrash}
                           onRestoreAll={handleRestoreAll}
+                        />
+                      )}
+
+                      {adminActiveTab === 'wamp' && (
+                        <WampConnector 
+                          adminTheme={adminTheme}
+                          filieres={filieres}
+                          matieres={matieres}
+                          classes={classes}
+                          semestres={semestres}
+                          etudiants={etudiants}
+                          cours={cours}
+                          notes={notes}
+                          autorisations={autorisations}
+                          paiements={paiements}
+                          trash={trash}
+                          setFilieres={setFilieres}
+                          setMatieres={setMatieres}
+                          setClasses={setClasses}
+                          setSemestres={setSemestres}
+                          setEtudiants={setEtudiants}
+                          setCours={setCours}
+                          setNotes={setNotes}
+                          setAutorisations={setAutorisations}
+                          setPaiements={setPaiements}
+                          setTrash={setTrash}
                         />
                       )}
                 </div>
