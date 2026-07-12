@@ -26,14 +26,13 @@ import AutorisationsTab from './components/AutorisationsTab';
 import PaiementsTab from './components/PaiementsTab';
 import CorbeilleTab from './components/CorbeilleTab';
 import StudentPortal from './components/StudentPortal';
-import WampConnector from './components/WampConnector';
 
 // Icons
 import { 
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
   BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info,
   ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon,
-  Lock, ShieldAlert, Eye, EyeOff, Minimize2, Maximize2, Server
+  Lock, ShieldAlert, Eye, EyeOff, Minimize2, Maximize2
 } from 'lucide-react';
 
 const shortenSemester = (name: string): string => {
@@ -42,6 +41,10 @@ const shortenSemester = (name: string): string => {
 };
 
 export default function App() {
+  const [isLoadedFromDb, setIsLoadedFromDb] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+
   // --- REAL-TIME REACT STATE ENGINE WITH LOCALSTORAGE PERSISTENCE ---
   const [filieres, setFilieres] = useState<Filiere[]>(() => {
     const saved = localStorage.getItem('school_filieres');
@@ -322,13 +325,46 @@ export default function App() {
     localStorage.setItem('school_trash', JSON.stringify(trash));
   }, [trash]);
 
-  // --- REAL-TIME SYNC TO WAMP SERVER (IF ACTIVE) ---
+  // --- COUPLAGE ET SYNCHRONISATION AVEC LA BASE DE DONNÉES SQL ---
   React.useEffect(() => {
-    const isWampActive = localStorage.getItem('school_wamp_active') === 'true';
-    const apiUrl = localStorage.getItem('school_wamp_url') || 'http://localhost/school_php/api.php';
-    if (!isWampActive) return;
+    fetch('/api/data')
+      .then(res => {
+        if (!res.ok) throw new Error("HTTP Status " + res.status);
+        return res.json();
+      })
+      .then(resData => {
+        if (resData.status === 'success' && resData.data) {
+          const d = resData.data;
+          if (d.filieres && d.filieres.length > 0) setFilieres(d.filieres);
+          if (d.matieres && d.matieres.length > 0) setMatieres(d.matieres);
+          if (d.classes && d.classes.length > 0) setClasses(d.classes);
+          if (d.semestres && d.semestres.length > 0) setSemestres(d.semestres);
+          if (d.etudiants && d.etudiants.length > 0) setEtudiants(d.etudiants);
+          if (d.cours) setCours(d.cours);
+          if (d.notes) setNotes(d.notes);
+          if (d.autorisations) setAutorisations(d.autorisations);
+          if (d.paiements) setPaiements(d.paiements);
+          if (d.admins && d.admins.length > 0) setAdminList(d.admins);
+          if (d.trash) setTrash(d.trash);
+          if (d.scolarite_annuelle) setScolariteAnnuelle(Number(d.scolarite_annuelle));
+          if (d.annees_scolaires && d.annees_scolaires.length > 0) setAnneesScolaires(d.annees_scolaires);
+          setIsLoadedFromDb(true);
+          console.log("=== Base de données SQL chargée avec succès ! ===");
+        } else {
+          throw new Error(resData.message || "Impossible de charger la base de données");
+        }
+      })
+      .catch(err => {
+        console.error("Erreur de connexion SQL, utilisation du stockage local en secours:", err);
+        setIsLoadedFromDb(true); // Fallback to localStorage initial values
+      });
+  }, []);
+
+  React.useEffect(() => {
+    if (!isLoadedFromDb) return;
 
     const timer = setTimeout(() => {
+      setIsSaving(true);
       const payload = {
         filieres,
         matieres,
@@ -339,48 +375,55 @@ export default function App() {
         notes,
         autorisations,
         paiements,
-        trash
+        admins: adminList,
+        trash,
+        scolarite_annuelle: scolariteAnnuelle,
+        annees_scolaires: anneesScolaires
       };
-      fetch(`${apiUrl}?action=save`, {
+
+      fetch('/api/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(payload)
-      }).catch(err => console.error("WAMP sync failed:", err));
-    }, 1200); // Debounce to allow multiple quick updates to bunch together
-
-    return () => clearTimeout(timer);
-  }, [filieres, matieres, classes, semestres, etudiants, cours, notes, autorisations, paiements, trash]);
-
-  // --- INITIAL LOAD FROM WAMP (IF ACTIVE) ---
-  React.useEffect(() => {
-    const isWampActive = localStorage.getItem('school_wamp_active') === 'true';
-    const apiUrl = localStorage.getItem('school_wamp_url') || 'http://localhost/school_php/api.php';
-    if (!isWampActive) return;
-
-    fetch(`${apiUrl}?action=get`)
+      })
       .then(res => {
-        if (!res.ok) throw new Error("Server response not ok");
+        if (!res.ok) throw new Error("HTTP Status " + res.status);
         return res.json();
       })
       .then(resData => {
-        if (resData.status === 'success' && resData.data) {
-          const d = resData.data;
-          if (d.filieres) setFilieres(d.filieres);
-          if (d.matieres) setMatieres(d.matieres);
-          if (d.classes) setClasses(d.classes);
-          if (d.semestres) setSemestres(d.semestres);
-          if (d.etudiants) setEtudiants(d.etudiants);
-          if (d.cours) setCours(d.cours);
-          if (d.notes) setNotes(d.notes);
-          if (d.autorisations) setAutorisations(d.autorisations);
-          if (d.paiements) setPaiements(d.paiements);
-          if (d.trash) setTrash(d.trash);
-          console.log("WAMP Data synced on startup");
+        if (resData.status === 'success') {
+          setLastSaved(new Date().toLocaleTimeString());
+        } else {
+          console.error("Échec de la sauvegarde SQL:", resData.message);
         }
       })
-      .catch(err => console.error("WAMP startup sync failed:", err));
-  }, []);
+      .catch(err => {
+        console.error("Erreur de sauvegarde de la base de données SQL:", err);
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
+    }, 1000); // 1 seconde de debounce pour regrouper les saisies rapides
+
+    return () => clearTimeout(timer);
+  }, [
+    isLoadedFromDb,
+    filieres,
+    matieres,
+    classes,
+    semestres,
+    etudiants,
+    cours,
+    notes,
+    autorisations,
+    paiements,
+    adminList,
+    trash,
+    scolariteAnnuelle,
+    anneesScolaires
+  ]);
 
   // --- ACTIONS (CREATION / MODIFICATION / DELETION) ---
   
@@ -1598,7 +1641,7 @@ export default function App() {
             }`} id="admin-horizontal-nav-scroll">
               <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
                 <div 
-                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-nowrap py-0.5 w-full" 
+                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-nowrap py-0.5 flex-grow" 
                   style={{ WebkitOverflowScrolling: 'touch' }}
                 >
                   {[
@@ -1612,7 +1655,6 @@ export default function App() {
                     { id: 'autorisations', label: "Autorisations", icon: ShieldCheck },
                     { id: 'paiements', label: "Paiements", icon: CreditCard },
                     { id: 'corbeille', label: `Corbeille (${trash.length})`, icon: Trash2 },
-                    { id: 'wamp', label: "Connexion WAMP", icon: Server },
                   ].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = adminActiveTab === tab.id;
@@ -1638,6 +1680,35 @@ export default function App() {
                       </button>
                     );
                   })}
+                </div>
+
+                {/* SQLITE REAL-TIME DB PILL */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                    isSaving 
+                      ? adminTheme === 'sombre-or' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-700 shadow-sm'
+                      : !isLoadedFromDb
+                        ? adminTheme === 'sombre-or' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-gray-150 border-gray-250 text-gray-500 shadow-sm'
+                        : adminTheme === 'sombre-or' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      isSaving 
+                        ? 'bg-amber-500 animate-pulse'
+                        : !isLoadedFromDb
+                          ? 'bg-slate-400 animate-pulse'
+                          : 'bg-emerald-500'
+                    }`} />
+                    <span>
+                      {isSaving 
+                        ? "Sauvegarde SQL..." 
+                        : !isLoadedFromDb 
+                          ? "Connexion SQL..." 
+                          : "Base SQL Connectée"}
+                    </span>
+                    {lastSaved && !isSaving && (
+                      <span className="opacity-60 font-medium hidden sm:inline">({lastSaved})</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -2001,32 +2072,6 @@ export default function App() {
                           onPermanentDelete={handlePermanentDeleteItem}
                           onEmptyTrash={handleEmptyTrash}
                           onRestoreAll={handleRestoreAll}
-                        />
-                      )}
-
-                      {adminActiveTab === 'wamp' && (
-                        <WampConnector 
-                          adminTheme={adminTheme}
-                          filieres={filieres}
-                          matieres={matieres}
-                          classes={classes}
-                          semestres={semestres}
-                          etudiants={etudiants}
-                          cours={cours}
-                          notes={notes}
-                          autorisations={autorisations}
-                          paiements={paiements}
-                          trash={trash}
-                          setFilieres={setFilieres}
-                          setMatieres={setMatieres}
-                          setClasses={setClasses}
-                          setSemestres={setSemestres}
-                          setEtudiants={setEtudiants}
-                          setCours={setCours}
-                          setNotes={setNotes}
-                          setAutorisations={setAutorisations}
-                          setPaiements={setPaiements}
-                          setTrash={setTrash}
                         />
                       )}
                 </div>
