@@ -125,18 +125,52 @@ async function startServer() {
   console.log("Initializing SQLite database 'school.db' using sql.js...");
   const SQL = await initSqlJs();
   const dbFilepath = path.join(process.cwd(), "school.db");
-  let rawDb;
-  
-  if (fs.existsSync(dbFilepath)) {
-    console.log("Loading existing database file...");
-    const fileBuffer = fs.readFileSync(dbFilepath);
-    rawDb = new SQL.Database(fileBuffer);
-  } else {
-    console.log("Creating new empty database...");
+  let rawDb: any;
+  let db!: SqlJsDatabase;
+
+  const tryLoadAndInitialize = async (filepath: string): Promise<boolean> => {
+    try {
+      if (fs.existsSync(filepath)) {
+        console.log("Loading existing database file...");
+        const fileBuffer = fs.readFileSync(filepath);
+        rawDb = new SQL.Database(fileBuffer);
+      } else {
+        console.log("Creating new empty database...");
+        rawDb = new SQL.Database();
+      }
+      db = new SqlJsDatabase(rawDb, filepath);
+
+      // Verify integrity by running a fast query on SQLite master or creating settings
+      await db.exec(`
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT
+        );
+      `);
+      return true;
+    } catch (err) {
+      console.error("Database loading or verification failed:", err);
+      return false;
+    }
+  };
+
+  let initSuccess = await tryLoadAndInitialize(dbFilepath);
+
+  if (!initSuccess) {
+    console.warn("⚠️ ALERTE : Le fichier de base de données 'school.db' est corrompu ou illisible (database disk image is malformed).");
+    try {
+      const backupPath = path.join(process.cwd(), `school.db.corrupted_${Date.now()}`);
+      if (fs.existsSync(dbFilepath)) {
+        console.log(`Sauvegarde de la base corrompue vers : ${backupPath}`);
+        fs.renameSync(dbFilepath, backupPath);
+      }
+    } catch (backupErr) {
+      console.error("Impossible de sauvegarder la base de données corrompue :", backupErr);
+    }
+    console.log("Création d'une nouvelle base de données SQLite saine...");
     rawDb = new SQL.Database();
+    db = new SqlJsDatabase(rawDb, dbFilepath);
   }
-  
-  const db = new SqlJsDatabase(rawDb, dbFilepath);
 
   // Create Relational Tables
   await db.exec(`

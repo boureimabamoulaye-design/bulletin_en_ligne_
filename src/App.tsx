@@ -26,6 +26,7 @@ import AutorisationsTab from './components/AutorisationsTab';
 import PaiementsTab from './components/PaiementsTab';
 import CorbeilleTab from './components/CorbeilleTab';
 import StudentPortal from './components/StudentPortal';
+import GuideTab from './components/GuideTab';
 
 // Icons
 import { 
@@ -1425,6 +1426,21 @@ export default function App() {
                       Corbeille ({trash.length})
                     </button>
                   </li>
+                  <li>
+                    <button 
+                      onClick={() => { setAdminActiveTab('guide'); }}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
+                        adminActiveTab === 'guide' 
+                          ? (adminTheme === 'sombre-or' 
+                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
+                              : 'bg-blue-600 text-white font-bold shadow')
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
+                    >
+                      <Info className="w-4 h-4" />
+                      Guide & Aide PDF
+                    </button>
+                  </li>
                 </ul>
               </nav>
             </div>
@@ -1655,6 +1671,7 @@ export default function App() {
                     { id: 'autorisations', label: "Autorisations", icon: ShieldCheck },
                     { id: 'paiements', label: "Paiements", icon: CreditCard },
                     { id: 'corbeille', label: `Corbeille (${trash.length})`, icon: Trash2 },
+                    { id: 'guide', label: "Guide & Aide", icon: Info },
                   ].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = adminActiveTab === tab.id;
@@ -1758,6 +1775,7 @@ export default function App() {
                         {adminActiveTab === 'autorisations' && "Liaisons Inter-parcours & Droits"}
                         {adminActiveTab === 'paiements' && "Suivi Énergique des Paiements"}
                         {adminActiveTab === 'corbeille' && "Corbeille & Récupération de Données"}
+                        {adminActiveTab === 'guide' && "Guide de l'Utilisateur & Manuel de Fonctionnement"}
                       </h2>
                       <p className={`text-[10px] font-semibold mt-0.5 ${
                         adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-500'
@@ -1771,6 +1789,7 @@ export default function App() {
                         {adminActiveTab === 'autorisations' && "Accréditations exceptionnelles d'accès de consultation inter-filières pour étudiants."}
                         {adminActiveTab === 'paiements' && "Suivi de la scolarité et encaissement des frais scolaires."}
                         {adminActiveTab === 'corbeille' && "Restaurez ou purgez définitivement vos enregistrements supprimés."}
+                        {adminActiveTab === 'guide' && "Consultez et téléchargez le manuel complet d'administration de la plateforme."}
                       </p>
                     </div>
                   </div>
@@ -2072,6 +2091,14 @@ export default function App() {
                           onPermanentDelete={handlePermanentDeleteItem}
                           onEmptyTrash={handleEmptyTrash}
                           onRestoreAll={handleRestoreAll}
+                        />
+                      )}
+
+                      {adminActiveTab === 'guide' && (
+                        <GuideTab 
+                          adminTheme={adminTheme}
+                          lastSaved={lastSaved}
+                          isLoadedFromDb={isLoadedFromDb}
                         />
                       )}
                 </div>
