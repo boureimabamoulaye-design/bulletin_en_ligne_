@@ -106,7 +106,9 @@ class SqlJsDatabase {
   private save() {
     try {
       const data = this.db.export();
-      fs.writeFileSync(this.filepath, Buffer.from(data));
+      const tmpPath = this.filepath + ".tmp";
+      fs.writeFileSync(tmpPath, Buffer.from(data));
+      fs.renameSync(tmpPath, this.filepath);
     } catch (err) {
       console.error("Error saving SQLite database to disk:", err);
     }
