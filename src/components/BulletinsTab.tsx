@@ -516,59 +516,59 @@ export default function BulletinsTab({
     return (
       <div 
         key={student.id} 
-        className={`bg-white p-8 max-w-4xl mx-auto rounded-2xl border-4 border-slate-900 shadow-xl relative overflow-hidden ${
-          isCascade ? "mb-10 bulletin-page shadow-md" : ""
+        className={`bg-[#ffffff] p-8 max-w-4xl mx-auto rounded-2xl border-4 border-[#000000] relative overflow-hidden text-[#000000] ${
+          isCascade ? "mb-10 bulletin-page" : ""
         }`} 
         id={isCascade ? undefined : "bulletin-official-canvas"}
       >
         {/* Subtle decoration background seal */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-12 pointer-events-none opacity-5 border-8 border-slate-900 rounded-full w-96 h-96 flex items-center justify-center">
-          <span className="text-slate-950 font-bold text-3xl tracking-widest text-center">ACADÉMIE<br />SCOLAIRE</span>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-12 pointer-events-none opacity-[0.04] border-8 border-[#000000] rounded-full w-96 h-96 flex items-center justify-center">
+          <span className="text-[#000000] font-bold text-3xl tracking-widest text-center">ACADÉMIE<br />SCOLAIRE</span>
         </div>
 
         {/* Letterhead Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center md:items-start border-b-2 border-slate-800 pb-5 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-start border-b-2 border-[#000000] pb-5 gap-4">
           <div className="text-center md:text-left">
-            <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2 justify-center md:justify-start">
-              <BookOpen className="w-6 h-6 text-blue-800" />
+            <h2 className="text-xl font-black text-[#000000] tracking-tight flex items-center gap-2 justify-center md:justify-start">
+              <BookOpen className="w-6 h-6 text-[#000000]" />
               <span>INSTITUT SUPÉRIEUR DES TECHNOLOGIES</span>
             </h2>
-            <p className="text-xs text-gray-500 mt-1 font-semibold uppercase">Bamako - Hamdallaye ACI | Tel: +223 20 22 40 30</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Ministère de l'Enseignement Technique & Professionnel</p>
+            <p className="text-xs text-[#000000] mt-1 font-bold uppercase">Bamako - Hamdallaye ACI | Tel: +223 20 22 40 30</p>
+            <p className="text-[10px] text-[#171717] mt-0.5 font-semibold">Ministère de l'Enseignement Technique & Professionnel</p>
           </div>
           
-          <div className="text-center md:text-right border-l-0 md:border-l border-gray-200 pl-0 md:pl-6 shrink-0 font-mono text-xs">
-            <strong className="text-slate-950 block">BULLETIN DE NOTES</strong>
-            <span className="text-gray-550 block mt-1 bg-slate-100 text-slate-800 py-1 px-3 rounded font-bold uppercase">
+          <div className="text-center md:text-right border-l-0 md:border-l border-[#000000] pl-0 md:pl-6 shrink-0 font-mono text-xs text-[#000000]">
+            <strong className="text-[#000000] block font-black">BULLETIN DE NOTES</strong>
+            <span className="text-[#000000] block mt-1 bg-[#ffffff] border border-[#000000] py-1 px-3 rounded font-bold uppercase">
               {shortenSemester(activeSem?.nom_semestre || "")}
             </span>
-            <span className="text-gray-400 block mt-1">Année {activeSem?.annee_scolaire}</span>
+            <span className="text-[#000000] block mt-1">Année {activeSem?.annee_scolaire}</span>
           </div>
         </div>
 
         {/* Identity panel of Student */}
-        <div className="my-6 md:flex gap-6 items-start bg-slate-50 border border-slate-200 rounded-xl p-5">
+        <div className="my-6 md:flex gap-6 items-start bg-[#ffffff] border-2 border-[#000000] rounded-xl p-5 text-[#000000]">
           <GraduationCap 
-            className="w-14 h-14 text-slate-800 bg-white p-2.5 rounded-lg border-2 border-slate-900 shadow-md mx-auto md:mx-0 shrink-0 mb-4 md:mb-0" 
+            className="w-14 h-14 text-[#000000] bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] mx-auto md:mx-0 shrink-0 mb-4 md:mb-0" 
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-xs text-slate-850 flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-xs text-[#000000] flex-1">
             <div>
-              <dt className="text-gray-400 uppercase font-black tracking-wide">ID Matricule Unifié</dt>
-              <dd className="font-mono text-sm font-bold text-slate-900">{student.matricule}</dd>
+              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">ID Matricule Unifié</dt>
+              <dd className="font-mono text-sm font-black text-[#000000]">{student.matricule}</dd>
             </div>
             <div>
-              <dt className="text-gray-400 uppercase font-black tracking-wide">Nom de famille & Prénoms</dt>
-              <dd className="text-sm font-black text-slate-950 uppercase">{student.nom} {student.prenom}</dd>
+              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">Nom de famille & Prénoms</dt>
+              <dd className="text-sm font-black text-[#000000] uppercase">{student.nom} {student.prenom}</dd>
             </div>
             <div>
-              <dt className="text-gray-400 uppercase font-black tracking-wide">Niveau d'études d'affectation</dt>
-              <dd className="font-semibold text-slate-900">
+              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">Niveau d'études d'affectation</dt>
+              <dd className="font-bold text-sm text-[#000000]">
                 {classes.find(c => Number(c.id) === Number(student.classe_id))?.nom_classe || "Non renseigné"}
               </dd>
             </div>
             <div>
-              <dt className="text-gray-400 uppercase font-black tracking-wide">Filière Académique d'Inscription</dt>
-              <dd className="font-black text-blue-900 uppercase">
+              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">Filière Académique d'Inscription</dt>
+              <dd className="font-black text-sm text-[#000000] uppercase">
                 {filieres.find(f => Number(f.id) === Number(student.filiere_id))?.nom_filiere}
               </dd>
             </div>
@@ -591,40 +591,40 @@ export default function BulletinsTab({
         )}
 
         {/* Marks table detail */}
-        <div className="border border-slate-300 rounded-xl overflow-hidden mt-6">
+        <div className="border-2 border-[#000000] rounded-xl overflow-hidden mt-6 bg-[#ffffff]">
           <div className="overflow-x-auto w-full">
-            <table className="custom-table min-w-[850px] w-full text-xs" style={{ boxShadow: 'none' }}>
+            <table className="min-w-[850px] w-full text-xs text-[#000000] bg-[#ffffff] border-collapse" style={{ boxShadow: 'none' }}>
               <thead>
-                <tr className="bg-slate-900 text-slate-100">
-                  <th className="font-bold py-2.5 px-4 uppercase text-[10px] text-left">
+                <tr className="bg-[#f5f5f5] border-b-2 border-[#000000] text-[#000000]">
+                  <th className="font-black py-3 px-4 uppercase text-[10px] text-left text-[#000000]">
                     <span className="md:hidden">Matière / Module</span>
                     <span className="hidden md:inline">Modules / Cours Validés</span>
                   </th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">
+                  <th className="font-black py-3 px-3 uppercase text-[10px] text-center w-36 text-[#000000] border-l border-[#000000]">
                     <span className="md:hidden">CC (40%)</span>
                     <span className="hidden md:inline">Note CC / Classe (40%)</span>
                   </th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-36">
+                  <th className="font-black py-3 px-3 uppercase text-[10px] text-center w-36 text-[#000000] border-l border-[#000000]">
                     <span className="md:hidden">Exam (60%)</span>
                     <span className="hidden md:inline">Note Examen (60%)</span>
                   </th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                  <th className="font-black py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
                     <span className="md:hidden">Moy. Fin.</span>
                     <span className="hidden md:inline">Moyenne Finale</span>
                   </th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-14">
+                  <th className="font-black py-3 px-3 uppercase text-[10px] text-center w-14 text-[#000000] border-l border-[#000000]">
                     <span className="md:hidden">Créd.</span>
                     <span className="hidden md:inline">Crédits</span>
                   </th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                  <th className="font-black py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
                     <span className="md:hidden">Pondéré</span>
                     <span className="hidden md:inline">Total pondéré</span>
                   </th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                  <th className="font-black py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
                     <span className="md:hidden">Ment.</span>
                     <span className="hidden md:inline">Mention</span>
                   </th>
-                  <th className="font-bold py-2.5 px-3 uppercase text-[10px] text-center w-24">
+                  <th className="font-black py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
                     <span className="md:hidden">Statut</span>
                     <span className="hidden md:inline">Statut LMD</span>
                   </th>
@@ -633,7 +633,7 @@ export default function BulletinsTab({
               <tbody>
                 {gradesToRender.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-gray-500 font-medium font-bold">Aucune note n'a été introduite ce semestre.</td>
+                    <td colSpan={8} className="p-8 text-center text-[#000000] font-bold">Aucune note n'a été introduite ce semestre.</td>
                   </tr>
                 ) : (
                   gradesToRender.map(g => {
@@ -652,19 +652,15 @@ export default function BulletinsTab({
 
                     // University LMD validation status: Validé (V.A.) or Compensé (V.Comp.) or Rattrapage (R.A.)
                     let subjStatus = "Rattrapage (R.A.)";
-                    let badgeStyle = "bg-rose-100 text-rose-850 border border-rose-250";
                     
                     if (finalNote !== null) {
                       if (finalNote >= 10) {
                         subjStatus = "Capitalisé (V.A.)";
-                        badgeStyle = "bg-emerald-100 text-emerald-850 border border-emerald-250";
                       } else if (studentGPA >= 10) {
                         subjStatus = "Compensé (V.Comp)";
-                        badgeStyle = "bg-sky-100 text-sky-850 border border-sky-200";
                       }
                     } else {
                       subjStatus = "Non saisi";
-                      badgeStyle = "bg-gray-100 text-gray-600 border border-gray-200";
                     }
 
                     const subjMention = getSubjMention(finalNote);
@@ -677,12 +673,12 @@ export default function BulletinsTab({
                       const examValInfo = getValidationInfo(examVal);
 
                       return (
-                        <tr key={g.matiere_id} className="border-b border-gray-150 hover:bg-slate-50 transition text-center">
-                          <td className="font-bold text-slate-900 py-3 px-4 text-left">
-                            <div>{g.nom_matiere}</div>
-                            <div className="text-[10px] font-mono text-gray-400 font-normal">{g.code_matiere}</div>
+                        <tr key={g.matiere_id} className="border-b border-[#000000] hover:bg-[#fafafa] transition text-center text-[#000000]">
+                          <td className="font-bold text-[#000000] py-3 px-4 text-left">
+                            <div className="font-bold text-sm">{g.nom_matiere}</div>
+                            <div className="text-[10px] font-mono text-[#525252] font-semibold">{g.code_matiere}</div>
                           </td>
-                          <td className="p-2 w-36">
+                          <td className="p-2 w-36 border-l border-[#000000]">
                             <div className="space-y-1">
                               <input
                                 type="text"
@@ -697,16 +693,16 @@ export default function BulletinsTab({
                                     }
                                   }));
                                 }}
-                                className={`w-full text-center text-xs font-semibold py-1 px-2 border rounded-md focus:outline-none focus:ring-1 ${ccValInfo.className}`}
+                                className={`w-full text-center text-xs font-black py-1 px-2 border-2 border-[#000000] rounded-md focus:outline-none focus:ring-1 bg-[#ffffff] text-[#000000]`}
                               />
                               {ccValInfo.helperText && (
-                                <div className={`text-[8px] font-bold ${ccValInfo.isError ? "text-rose-600" : "text-emerald-600"}`}>
+                                <div className={`text-[8px] font-black ${ccValInfo.isError ? "text-red-650" : "text-emerald-700"}`}>
                                   {ccValInfo.helperText}
                                 </div>
                               )}
                             </div>
                           </td>
-                          <td className="p-2 w-36">
+                          <td className="p-2 w-36 border-l border-[#000000]">
                             <div className="space-y-1">
                               <input
                                 type="text"
@@ -721,37 +717,33 @@ export default function BulletinsTab({
                                     }
                                   }));
                                 }}
-                                className={`w-full text-center text-xs font-semibold py-1 px-2 border rounded-md focus:outline-none focus:ring-1 ${examValInfo.className}`}
+                                className={`w-full text-center text-xs font-black py-1 px-2 border-2 border-[#000000] rounded-md focus:outline-none focus:ring-1 bg-[#ffffff] text-[#000000]`}
                               />
                               {examValInfo.helperText && (
-                                <div className={`text-[8px] font-bold ${examValInfo.isError ? "text-rose-600" : "text-emerald-600"}`}>
+                                <div className={`text-[8px] font-black ${examValInfo.isError ? "text-red-650" : "text-emerald-700"}`}>
                                   {examValInfo.helperText}
                                 </div>
                               )}
                             </div>
                           </td>
-                          <td className="font-bold text-slate-950 text-sm">
+                          <td className="font-black text-[#000000] text-sm border-l border-[#000000]">
                             {finalNote !== null ? `${finalNote.toFixed(2)}/20` : "-"}
                           </td>
-                          <td className="font-semibold text-gray-550">{g.credits}</td>
-                          <td className="font-bold text-slate-850">
+                          <td className="font-bold text-[#000000] border-l border-[#000000]">{g.credits}</td>
+                          <td className="font-black text-[#000000] border-l border-[#000000]">
                             {notePonderated !== null ? notePonderated.toFixed(2) : "-"}
                           </td>
-                          <td className="font-medium">
+                          <td className="font-bold border-l border-[#000000] p-1">
                             {finalNote !== null ? (
-                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                                finalNote >= 14 ? "bg-emerald-50 text-emerald-700" :
-                                finalNote >= 10 ? "bg-blue-50 text-blue-700" :
-                                "bg-rose-50 text-rose-700"
-                              }`}>
+                              <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
                                 {subjMention}
                               </span>
                             ) : (
-                              <span className="text-gray-400 font-normal italic">Non saisi</span>
+                              <span className="text-[#000000] font-normal italic">Non saisi</span>
                             )}
                           </td>
-                          <td>
-                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
+                          <td className="border-l border-[#000000] text-[#000000] p-1">
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
                               <span className="hidden md:inline">{subjStatus}</span>
                               <span className="inline md:hidden">
                                 {subjStatus.includes("Capitalisé") ? "V.A." : 
@@ -765,39 +757,35 @@ export default function BulletinsTab({
                       );
                     } else {
                       return (
-                        <tr key={g.matiere_id} className="border-b border-gray-150 hover:bg-slate-50 transition text-center">
-                          <td className="font-bold text-slate-900 py-3 px-4 text-left">
-                            <div>{g.nom_matiere}</div>
-                            <div className="text-[10px] font-mono text-gray-400 font-normal">{g.code_matiere}</div>
+                        <tr key={g.matiere_id} className="border-b border-[#000000] hover:bg-[#fafafa] transition text-center text-[#000000]">
+                          <td className="font-bold text-[#000000] py-3 px-4 text-left">
+                            <div className="font-bold text-sm">{g.nom_matiere}</div>
+                            <div className="text-[10px] font-mono text-[#525252] font-semibold">{g.code_matiere}</div>
                           </td>
-                          <td className="font-medium text-gray-700">
+                          <td className="font-bold text-[#000000] border-l border-[#000000]">
                             {g.note_classe !== null ? `${g.note_classe.toFixed(2)}/20` : "-"}
                           </td>
-                          <td className="font-medium text-gray-700">
+                          <td className="font-bold text-[#000000] border-l border-[#000000]">
                             {g.note_examen !== null ? `${g.note_examen.toFixed(2)}/20` : "-"}
                           </td>
-                          <td className="font-bold text-slate-950 text-sm">
+                          <td className="font-black text-[#000000] text-sm border-l border-[#000000]">
                             {finalNote !== null ? `${finalNote.toFixed(2)}/20` : "-"}
                           </td>
-                          <td className="font-semibold text-gray-550">{g.credits}</td>
-                          <td className="font-bold text-slate-850">
+                          <td className="font-bold text-[#000000] border-l border-[#000000]">{g.credits}</td>
+                          <td className="font-black text-[#000000] border-l border-[#000000]">
                             {notePonderated !== null ? notePonderated.toFixed(2) : "-"}
                           </td>
-                          <td className="font-medium">
+                          <td className="font-bold border-l border-[#000000] p-1">
                             {finalNote !== null ? (
-                              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                                finalNote >= 14 ? "bg-emerald-50 text-emerald-700" :
-                                finalNote >= 10 ? "bg-blue-50 text-blue-700" :
-                                "bg-rose-50 text-rose-700"
-                              }`}>
+                              <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
                                 {subjMention}
                               </span>
                             ) : (
-                              <span className="text-gray-400 font-normal italic">Non saisi</span>
+                              <span className="text-[#000000] font-normal italic">Non saisi</span>
                             )}
                           </td>
-                          <td>
-                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${badgeStyle}`}>
+                          <td className="border-l border-[#000000] text-[#000000] p-1">
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
                               <span className="hidden md:inline">{subjStatus}</span>
                               <span className="inline md:hidden">
                                 {subjStatus.includes("Capitalisé") ? "V.A." : 
@@ -827,68 +815,66 @@ export default function BulletinsTab({
           const progressPercentage = totalSemCredits > 0 ? Math.round((valCredits / totalSemCredits) * 100) : 0;
 
           return (
-            <div className="mt-5 p-4 bg-slate-50 border border-slate-350 rounded-xl space-y-3 relative">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-200 pb-2">
-                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+            <div className="mt-5 p-4 bg-[#ffffff] border-2 border-[#000000] rounded-xl space-y-3 relative text-[#000000]">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#000000] pb-2">
+                <span className="text-[10px] font-black text-[#000000] uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#000000] animate-pulse"></span>
                   <span className="md:hidden">Bilan Crédits (LMD)</span>
                   <span className="hidden md:inline">Bilan Académique des Crédits (LMD / ECTS)</span>
                 </span>
-                <span className="text-[10px] text-gray-500 font-mono">
+                <span className="text-[10px] text-[#000000] font-mono font-bold">
                   <span className="md:hidden">Compensations Actives</span>
                   <span className="hidden md:inline">Compensations automatiques actives</span>
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center">
-                <div className="bg-white p-2.5 rounded-lg border border-gray-200">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase block">
+                <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000]">
+                  <span className="text-[9px] font-bold text-[#525252] uppercase block">
                     <span className="md:hidden">Inscrits</span>
                     <span className="hidden md:inline">Crédits inscrits</span>
                   </span>
-                  <span className="text-sm font-black text-slate-900">{totalSemCredits} ECTS</span>
+                  <span className="text-sm font-black text-[#000000]">{totalSemCredits} ECTS</span>
                 </div>
-                <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100">
-                  <span className="text-[9px] font-bold text-emerald-600 uppercase block">
+                <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000]">
+                  <span className="text-[9px] font-bold text-[#525252] uppercase block">
                     <span className="md:hidden">Capitalisés</span>
                     <span className="hidden md:inline">Crédits capitalisés</span>
                   </span>
-                  <span className="text-sm font-black text-emerald-800">{capCredits} ECTS</span>
+                  <span className="text-sm font-black text-[#000000]">{capCredits} ECTS</span>
                 </div>
-                <div className="bg-sky-50/50 p-2.5 rounded-lg border border-sky-150">
-                  <span className="text-[9px] font-bold text-sky-600 uppercase block">
+                <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000]">
+                  <span className="text-[9px] font-bold text-[#525252] uppercase block">
                     <span className="md:hidden">Compensés</span>
                     <span className="hidden md:inline">Crédits compensés</span>
                   </span>
-                  <span className="text-sm font-black text-sky-850">{compCredits} ECTS</span>
+                  <span className="text-sm font-black text-[#000000]">{compCredits} ECTS</span>
                 </div>
-                <div className="bg-indigo-50 p-2.5 rounded-lg border border-indigo-150">
-                  <span className="text-[9px] font-bold text-indigo-700 uppercase block">
+                <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000]">
+                  <span className="text-[9px] font-bold text-[#525252] uppercase block">
                     <span className="md:hidden">Validés</span>
                     <span className="hidden md:inline">Crédits validés</span>
                   </span>
-                  <span className="text-sm font-black text-indigo-900">{valCredits} / {totalSemCredits} ECTS</span>
+                  <span className="text-sm font-black text-[#000000]">{valCredits} / {totalSemCredits} ECTS</span>
                 </div>
               </div>
 
               {/* Progress bar and informative alert */}
               <div className="space-y-1.5">
-                <div className="flex justify-between items-center text-[10px] font-bold text-slate-700">
+                <div className="flex justify-between items-center text-[10px] font-black text-[#000000]">
                   <span>
                     <span className="md:hidden">Taux d'Acquisition :</span>
                     <span className="hidden md:inline">Taux d'acquisition de l'année / parcours :</span>
                   </span>
                   <span>{progressPercentage}%</span>
                 </div>
-                <div className="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden">
+                <div className="w-full bg-[#ffffff] border-2 border-[#000000] h-3.5 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      progressPercentage >= 100 ? 'bg-emerald-500' : progressPercentage >= 50 ? 'bg-indigo-500' : 'bg-rose-500'
-                    }`}
+                    className="h-full rounded-full bg-[#000000] transition-all duration-500"
                     style={{ width: `${progressPercentage}%` }}
                   ></div>
                 </div>
-                <p className="text-[9px] text-gray-400 italic leading-relaxed">
+                <p className="text-[9px] text-[#262626] font-semibold leading-relaxed">
                    * Règle de l'Enseignement Supérieur : Les matières capitalisées (&ge;10/20) sont acquises définitivement. S'il y a compensation semestrielle (moyenne générale du semestre &ge;10.00), toutes les matières du semestre sont créditées. S'il n'y a pas compensation, l'étudiant doit reprendre au rattrapage uniquement les modules non-acquis.
                 </p>
               </div>
@@ -897,53 +883,53 @@ export default function BulletinsTab({
         })()}
 
         {/* Performance summary calculation */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t-2 border-slate-900 pt-5">
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t-2 border-[#000000] pt-5 text-[#000000]">
           {/* Class Rank and Averages */}
-          <div className="space-y-2 border border-dashed border-gray-300 p-4 rounded-xl">
+          <div className="space-y-2 border-2 border-[#000000] p-4 rounded-xl text-[#000000] bg-[#ffffff]">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-gray-600">Moyenne Générale de l'Élève :</span>
-              <span className="text-lg font-black text-slate-950">{studentGPA > 0 ? `${studentGPA.toFixed(2)}/20` : "N/A"}</span>
+              <span className="font-bold text-[#000000]">Moyenne Générale de l'Élève :</span>
+              <span className="text-lg font-black text-[#000000]">{studentGPA > 0 ? `${studentGPA.toFixed(2)}/20` : "N/A"}</span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-gray-600">Rang de l'Élève :</span>
-              <span className="font-mono text-xs font-bold text-indigo-650">{studentGPA > 0 ? `${studentRank} / ${totalClassmates}` : "N/A"}</span>
+              <span className="font-bold text-[#000000]">Rang de l'Élève :</span>
+              <span className="font-mono text-xs font-black text-[#000000]">{studentGPA > 0 ? `${studentRank} / ${totalClassmates}` : "N/A"}</span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-gray-600">Mention administrative :</span>
-              <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${studentGPA >= 15 ? "bg-emerald-100 text-emerald-800" : studentGPA >= 10 ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>
+              <span className="font-bold text-[#000000]">Mention administrative :</span>
+              <span className="font-mono text-xs font-black text-[#000000]">
                 {studentGPA > 0 ? studentMention : "Aucune éval"}
               </span>
             </div>
           </div>
 
           {/* Decision and dynamic signature section */}
-          <div className="bg-slate-50 border border-slate-900 flex flex-col justify-center items-center p-4 rounded-xl text-center font-bold">
-            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Résultat du conseil de classe</span>
-            <h3 className={`text-xl font-black uppercase tracking-tight mt-1 ${studentGPA >= 10 ? "text-emerald-700" : "text-red-700"}`}>
+          <div className="bg-[#ffffff] border-2 border-[#000000] flex flex-col justify-center items-center p-4 rounded-xl text-center font-bold text-[#000000]">
+            <span className="text-[10px] uppercase font-black text-[#525252] tracking-wider">Résultat du conseil de classe</span>
+            <h3 className="text-xl font-black uppercase tracking-tight mt-1 text-[#000000]">
               DÉCISION : {studentGPA > 0 ? studentDecision : "N/A"}
             </h3>
-            <p className="text-[10px] text-gray-500 mt-2 font-mono">
+            <p className="text-[10px] text-[#171717] mt-2 font-mono font-bold">
               {studentGPA >= 10 ? "L'étudiant a validé son semestre d'études." : "L'étudiant n'a pas validé son semestre et doit se présenter aux épreuves de rattrapage."}
             </p>
           </div>
         </div>
 
         {/* Validation section footer */}
-        <div className="mt-8 pt-8 border-t border-slate-300 grid grid-cols-2 text-center text-xs">
+        <div className="mt-8 pt-8 border-t border-[#000000] grid grid-cols-2 text-center text-xs text-[#000000]">
           <div>
-            <span className="font-black text-slate-900 uppercase block">La Direction des Études</span>
-            <p className="text-[10px] text-gray-400 mt-0.5 italic">Signature validée électroniquement</p>
-            <div className="mt-6 border-b border-gray-400 w-32 mx-auto"></div>
+            <span className="font-black text-[#000000] uppercase block">La Direction des Études</span>
+            <p className="text-[10px] text-[#525252] mt-0.5 font-bold italic">Signature validée électroniquement</p>
+            <div className="mt-6 border-b border-[#000000] w-32 mx-auto"></div>
           </div>
           
           <div className="relative">
-            <span className="font-black text-slate-900 uppercase block">Le Secrétariat Académique</span>
-            <p className="text-[10px] text-gray-400 mt-0.5 italic">Bamako, le 06 Juin 2026</p>
-            <div className="mt-6 border-b border-gray-400 w-32 mx-auto"></div>
+            <span className="font-black text-[#000000] uppercase block">Le Secrétariat Académique</span>
+            <p className="text-[10px] text-[#525252] mt-0.5 font-bold italic">Bamako, le 06 Juin 2026</p>
+            <div className="mt-6 border-b border-[#000000] w-32 mx-auto"></div>
             
             {/* Seal */}
-            <div className="absolute right-4 bottom-[-10px] rounded-full border-4 border-blue-900/40 text-blue-950/40 font-bold uppercase p-3 w-16 h-16 rounded-full flex items-center justify-center font-black tracking-widest text-[8px] transform rotate-12 pointer-events-none select-none">
-              SEAL
+            <div className="absolute right-4 bottom-[-10px] rounded-full border-4 border-[#000000] text-[#000000] font-black uppercase p-3 w-16 h-16 flex items-center justify-center tracking-widest text-[8px] transform rotate-12 pointer-events-none select-none">
+              SCEAU
             </div>
           </div>
         </div>

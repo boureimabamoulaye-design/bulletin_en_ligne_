@@ -232,56 +232,56 @@ select option {
 }
 
 /* Printable PDF card aesthetic tuning (and screen preview with high-contrast light backgrounds) */
-#student-pdf-bulletin, #bulletin-official-canvas {
+#student-pdf-bulletin, #bulletin-official-canvas, .bulletin-page {
   background-color: #ffffff !important;
-  color: #0f172a !important;
-  border: 4px solid #0f172a !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  color: #000000 !important;
+  border: 4px solid #000000 !important;
+  box-shadow: none !important;
 }
 
-#student-pdf-bulletin *, #bulletin-official-canvas * {
-  border-color: #e2e8f0 !important;
+#student-pdf-bulletin *, #bulletin-official-canvas *, .bulletin-page * {
+  border-color: #000000 !important;
   text-shadow: none !important;
+  box-shadow: none !important;
 }
 
 /* Forcing exact light background states inside the bulletin */
-#student-pdf-bulletin .bg-slate-50, #bulletin-official-canvas .bg-slate-50,
-#student-pdf-bulletin .bg-slate-100, #bulletin-official-canvas .bg-slate-100,
-#student-pdf-bulletin .bg-gray-50, #bulletin-official-canvas .bg-gray-50,
-#student-pdf-bulletin .bg-slate-100\/50, #bulletin-official-canvas .bg-slate-100\/50 {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-}
-
-#student-pdf-bulletin .bg-blue-50, #bulletin-official-canvas .bg-blue-50,
-#student-pdf-bulletin .bg-blue-50\/30, #bulletin-official-canvas .bg-blue-50\/30 {
-  background-color: #eff6ff !important;
-  border-color: #3b82f6 !important;
+#student-pdf-bulletin .bg-slate-50, #bulletin-official-canvas .bg-slate-50, .bulletin-page .bg-slate-50,
+#student-pdf-bulletin .bg-slate-100, #bulletin-official-canvas .bg-slate-100, .bulletin-page .bg-slate-100,
+#student-pdf-bulletin .bg-gray-50, #bulletin-official-canvas .bg-gray-50, .bulletin-page .bg-gray-50,
+#student-pdf-bulletin .bg-slate-100\/50, #bulletin-official-canvas .bg-slate-100\/50, .bulletin-page .bg-slate-100\/50,
+#student-pdf-bulletin .bg-blue-50, #bulletin-official-canvas .bg-blue-50, .bulletin-page .bg-blue-50,
+#student-pdf-bulletin .bg-blue-50\/30, #bulletin-official-canvas .bg-blue-50\/30, .bulletin-page .bg-blue-50\/30,
+#student-pdf-bulletin .bg-green-50, #bulletin-official-canvas .bg-green-50, .bulletin-page .bg-green-50,
+#student-pdf-bulletin .bg-emerald-50, #bulletin-official-canvas .bg-emerald-50, .bulletin-page .bg-emerald-50,
+#student-pdf-bulletin .bg-red-50, #bulletin-official-canvas .bg-red-50, .bulletin-page .bg-red-50 {
+  background-color: #ffffff !important;
+  border-color: #000000 !important;
 }
 
 /* table backgrounds inside bulletins */
 #student-pdf-bulletin table, #bulletin-official-canvas table, .bulletin-page table,
 #student-pdf-bulletin .custom-table, #bulletin-official-canvas .custom-table, .bulletin-page .custom-table {
   background-color: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #94a3b8 !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
 }
 
 #student-pdf-bulletin table th, #bulletin-official-canvas table th, .bulletin-page table th {
-  background-color: #0f172a !important;
-  color: #ffffff !important;
+  background-color: #f5f5f5 !important;
+  color: #000000 !important;
   font-weight: 700 !important;
-  border-bottom: 2px solid #0f172a !important;
+  border-bottom: 2px solid #000000 !important;
 }
 
 #student-pdf-bulletin table td, #bulletin-official-canvas table td, .bulletin-page table td {
   background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-bottom: 1px solid #cbd5e1 !important;
+  color: #000000 !important;
+  border-bottom: 1px solid #000000 !important;
 }
 
 #student-pdf-bulletin table tr:hover td, #bulletin-official-canvas table tr:hover td, .bulletin-page table tr:hover td {
-  background-color: #f8fafc !important;
+  background-color: #fafafa !important;
 }
 
 /* Exact typography overrides inside the bulletins */
@@ -292,8 +292,8 @@ select option {
 #student-pdf-bulletin h5, #bulletin-official-canvas h5, .bulletin-page h5,
 #student-pdf-bulletin strong, #bulletin-official-canvas strong, .bulletin-page strong,
 #student-pdf-bulletin dd, #bulletin-official-canvas dd, .bulletin-page dd {
-  color: #0f172a !important;
-  font-weight: 800 !important; /* Make sure all headings and strong text are highly legible */
+  color: #000000 !important;
+  font-weight: 800 !important;
 }
 
 #student-pdf-bulletin text, #bulletin-official-canvas text, .bulletin-page text,
@@ -301,7 +301,7 @@ select option {
 #student-pdf-bulletin div, #bulletin-official-canvas div, .bulletin-page div,
 #student-pdf-bulletin p, #bulletin-official-canvas p, .bulletin-page p,
 #student-pdf-bulletin dt, #bulletin-official-canvas dt, .bulletin-page dt {
-  color: #1e293b !important; /* ultra-sharp charcoal slate-800 instead of pale colors */
+  color: #000000 !important;
 }
 
 /* Support badges and statuses inside the documents */
@@ -309,7 +309,7 @@ select option {
 #student-pdf-bulletin .text-gray-500, #bulletin-official-canvas .text-gray-500, .bulletin-page .text-gray-500,
 #student-pdf-bulletin .text-slate-400, #bulletin-official-canvas .text-slate-400, .bulletin-page .text-slate-400,
 #student-pdf-bulletin .text-slate-500, #bulletin-official-canvas .text-slate-500, .bulletin-page .text-slate-500 {
-  color: #334155 !important; /* dark slate-700, very visible dark gray label */
+  color: #000000 !important;
   font-weight: 600 !important;
 }
 
@@ -317,37 +317,37 @@ select option {
 #student-pdf-bulletin .text-blue-800, #bulletin-official-canvas .text-blue-800, .bulletin-page .text-blue-800,
 #student-pdf-bulletin .text-blue-700, #bulletin-official-canvas .text-blue-700, .bulletin-page .text-blue-700,
 #student-pdf-bulletin .text-blue-600, #bulletin-official-canvas .text-blue-600, .bulletin-page .text-blue-600 {
-  color: #1e3a8a !important; /* very deep blue */
+  color: #000000 !important;
   font-weight: 700 !important;
 }
 
 #student-pdf-bulletin .text-green-600, #bulletin-official-canvas .text-green-600, .bulletin-page .text-green-600,
 #student-pdf-bulletin .text-emerald-600, #bulletin-official-canvas .text-emerald-600, .bulletin-page .text-emerald-600,
 #student-pdf-bulletin .text-teal-600, #bulletin-official-canvas .text-teal-600, .bulletin-page .text-teal-600 {
-  color: #166534 !important; /* very sharp forest green */
+  color: #000000 !important;
   font-weight: 700 !important;
 }
 
 #student-pdf-bulletin .bg-green-50, #bulletin-official-canvas .bg-green-50, .bulletin-page .bg-green-50,
 #student-pdf-bulletin .bg-emerald-50, #bulletin-official-canvas .bg-emerald-50, .bulletin-page .bg-emerald-50 {
-  background-color: #dcfce7 !important; /* slightly darker green background for higher contrast */
-  color: #166534 !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
 #student-pdf-bulletin .text-red-500, #bulletin-official-canvas .text-red-500, .bulletin-page .text-red-500,
 #student-pdf-bulletin .text-red-600, #bulletin-official-canvas .text-red-600, .bulletin-page .text-red-600 {
-  color: #991b1b !important; /* deep rich red */
+  color: #000000 !important;
   font-weight: 700 !important;
 }
 
 #student-pdf-bulletin .bg-red-50, #bulletin-official-canvas .bg-red-50, .bulletin-page .bg-red-50 {
-  background-color: #fee2e2 !important;
-  color: #991b1b !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
 #student-pdf-bulletin font, #bulletin-official-canvas font, .bulletin-page font,
 #student-pdf-bulletin b, #bulletin-official-canvas b, .bulletin-page b {
-  color: #0f172a !important;
+  color: #000000 !important;
   font-weight: 700 !important;
 }
 
