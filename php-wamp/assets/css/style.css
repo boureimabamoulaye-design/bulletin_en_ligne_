@@ -1,0 +1,456 @@
+/* ==========================================================================
+   CSS UNIFIÉ : GESTION SCOLAIRE MODERNE (BLEU, BLANC, GRIS)
+   ========================================================================== */
+
+:root {
+    --primary-color: #1e3a8a;       /* Deep Blue */
+    --primary-light: #3b82f6;      /* Sky Blue */
+    --accent-color: #2563eb;       /* Royal Blue */
+    --bg-color: #f3f4f6;           /* Gray 100 */
+    --card-bg: #ffffff;
+    --text-color: #1f2937;         /* Gray 800 */
+    --text-muted: #6b7280;         /* Gray 500 */
+    --border-color: #e5e7eb;       /* Gray 200 */
+    --success: #10b981;            /* Emerald */
+    --danger: #ef4444;             /* Red */
+    --warning: #f59e0b;            /* Amber */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --radius: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+}
+
+/* LOGIN LAYOUT */
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    margin: auto;
+    padding: 2rem;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border-top: 5px solid var(--primary-color);
+    margin-top: 5rem;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header h1 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    color: var(--text-muted);
+}
+
+/* APP LAYOUT - SYSTEM PANELS */
+.app-wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 260px;
+    background: var(--primary-color);
+    color: #ffffff;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    font-weight: bold;
+    background: #ffffff;
+    color: var(--primary-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-item a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-item a:hover, .nav-item.active a {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.user-badge {
+    margin-top: auto;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+/* MAIN CONTENT */
+.main-layout {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.header-bar {
+    background: #ffffff;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-bar h2 {
+    color: var(--primary-color);
+    font-size: 1.4rem;
+}
+
+.btn-signout {
+    background: var(--danger);
+    color: white;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.content-body {
+    padding: 2rem;
+}
+
+/* CARDS / CONTAINERS */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-card.stats-bulletin {
+    border-left-color: var(--success);
+}
+
+.stat-card.stats-major {
+    border-left-color: var(--warning);
+}
+
+.stat-val {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-color);
+    margin-top: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* DATA CONTAINERS */
+.table-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    color: var(--primary-color);
+}
+
+/* TABLES */
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.custom-table th {
+    background: #f9fafb;
+    padding: 1rem 1.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.custom-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.custom-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* BUTTONS */
+.btn {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: var(--radius);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background: var(--accent-color);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: white;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+/* FORMS */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.form-control:focus {
+    border-color: var(--primary-light);
+}
+
+/* ALERT MESSAGES */
+.alert {
+    padding: 1rem;
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+/* BULLETIN VISUAL PRINT / DOWNLOAD styles */
+.bulletin-container {
+    background: #ffffff;
+    border: 2px solid var(--primary-color);
+    padding: 2.5rem;
+    border-radius: 12px;
+    max-width: 800px;
+    margin: 1.5rem auto;
+    position: relative;
+    box-shadow: var(--shadow);
+}
+
+.bulletin-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1.5rem;
+}
+
+.school-info h2 {
+    color: var(--primary-color);
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.school-info p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.bulletin-title {
+    text-align: center;
+    background: var(--primary-color);
+    color: #ffffff;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.student-identity {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.student-identity img {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    object-fit: cover;
+}
+
+.student-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    flex-grow: 1;
+}
+
+.student-details div {
+    font-size: 0.95rem;
+}
+
+.student-details span {
+    font-weight: 600;
+}
+
+.seal-logo {
+    position: absolute;
+    bottom: 2.5rem;
+    right: 2.5rem;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 0.75rem;
+    opacity: 0.5;
+    text-align: center;
+    transform: rotate(-15deg);
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .bulletin-container, .bulletin-container * {
+        visibility: visible;
+    }
+    .bulletin-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border: none;
+        box-shadow: none;
+    }
+}
