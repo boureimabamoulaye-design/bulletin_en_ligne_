@@ -1944,14 +1944,6 @@ export default function App() {
                         </div>
                       </>
                     )}
-
-                    <span className={`text-[10px] uppercase font-bold border px-3 py-1.5 rounded-lg font-semibold tracking-wide ${
-                      adminTheme === 'sombre-or' 
-                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
-                        : 'bg-slate-100 border-slate-200 text-slate-400'
-                    }`}>
-                      Enregistrement session : Actif ✔
-                    </span>
                   </div>
                 </div>
 
@@ -2255,14 +2247,6 @@ export default function App() {
                         ))}
                       </select>
                     </div>
-
-                    <span className={`text-[10px] uppercase font-bold border px-3 py-1 rounded-sm font-semibold tracking-wide ${
-                      adminTheme === 'sombre-or' 
-                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
-                        : 'bg-slate-105 border-slate-200 text-slate-450'
-                    }`}>
-                      Enregistrement session : Actif ✔
-                    </span>
                   </div>
                 </header>
 

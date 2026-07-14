@@ -365,39 +365,6 @@ export default function StudentPortal({
                 ))}
               </select>
             </div>
-
-            {/* 5. PÉRIODE ACTIVE */}
-            <div className={`flex items-center gap-1 text-[11px] border rounded-lg p-1.5 px-3 transition-colors ${
-              adminTheme === 'sombre-or' ? 'bg-slate-950 border-amber-500/20' : 'bg-slate-50 border-slate-200'
-            }`}>
-              <span className={`font-extrabold uppercase tracking-wider ${
-                adminTheme === 'sombre-or' ? 'text-amber-400/80' : 'text-slate-400'
-              }`}>Période active :</span>
-              <select
-                value={selectedSemestreId}
-                onChange={e => setSelectedSemestreId(Number(e.target.value))}
-                className={`bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 ${
-                  adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-850'
-                }`}
-              >
-                {studentSemestres
-                  .filter(sem => !courseFiliereFilter || !sem.filiere_id || Number(sem.filiere_id) === Number(courseFiliereFilter))
-                  .map(sem => (
-                    <option key={sem.id} value={sem.id} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>
-                      {shortenSemester(sem.nom_semestre)}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            {/* 6. STATUS BADGE */}
-            <span className={`text-[10px] uppercase font-bold border px-3 py-1.5 rounded-lg font-semibold tracking-wide ${
-              adminTheme === 'sombre-or' 
-                ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
-                : 'bg-slate-100 border-slate-200 text-slate-400'
-            }`}>
-              Enregistrement session : Actif ✔
-            </span>
           </div>
         </header>
 
@@ -830,7 +797,7 @@ export default function StudentPortal({
                   return (
                     <div className="bg-slate-900 text-slate-100 p-5 flex flex-col sm:flex-row justify-between items-center text-xs font-bold shrink-0 rounded-b-xl gap-3">
                       <div className="flex items-center gap-2">
-                        <span>Période active :</span>
+                        <span>Semestre :</span>
                         <span className="text-amber-400 font-extrabold uppercase">{activeSem ? shortenSemester(activeSem.nom_semestre) : "Semestre"}</span>
                       </div>
                       <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-right">
