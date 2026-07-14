@@ -4,8 +4,8 @@ export const PHP_FILES = {
 -- STRUCTURE DE LA BASE DE DONNÉES SCOLAIRE
 -- ==========================================
 
-CREATE DATABASE IF NOT EXISTS gestion_scolaire DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE gestion_scolaire;
+CREATE DATABASE IF NOT EXISTS gestio_scolaire DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE gestio_scolaire;
 
 -- 1. Table des Semestres (demandée)
 CREATE TABLE IF NOT EXISTS semesters (
@@ -148,7 +148,7 @@ INSERT INTO classes (id, nom_classe) VALUES
  */
 
 $host = 'localhost';
-$dbname = 'gestion_scolaire';
+$dbname = 'gestio_scolaire';
 $username = 'root';
 $password = ''; // À adapter selon votre serveur (vide pour WAMP/XAMPP, 'root' pour MAMP)
 

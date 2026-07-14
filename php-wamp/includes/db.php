@@ -4,7 +4,7 @@
  */
 
 $host = 'localhost';
-$dbname = 'gestion_scolaire';
+$dbname = 'gestio_scolaire';
 $username = 'root';
 $password = ''; // À adapter selon votre serveur (vide pour WAMP/XAMPP, 'root' pour MAMP)
 
