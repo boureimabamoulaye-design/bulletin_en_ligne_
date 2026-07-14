@@ -13,6 +13,13 @@ import {
   INITIAL_PAIEMENTS
 } from './mockData';
 import { Filiere, Matiere, Classe, Semestre, Etudiant, Cours, Note, AutorisationFiliere, HistoriqueAcces, Administrateur, Paiement, TrashItem } from './types';
+import { 
+  seedCollectionIfEmpty, 
+  fetchGlobalConfig, 
+  saveGlobalConfig, 
+  syncCollectionToFirestore 
+} from './lib/firebase';
+
 
 // Tab components
 import AdminDashboard from './components/AdminDashboard';
@@ -26,12 +33,11 @@ import AutorisationsTab from './components/AutorisationsTab';
 import PaiementsTab from './components/PaiementsTab';
 import CorbeilleTab from './components/CorbeilleTab';
 import StudentPortal from './components/StudentPortal';
-import GuideTab from './components/GuideTab';
 
 // Icons
 import { 
   Users, GraduationCap, Calendar, FileText, Award, ShieldCheck, 
-  BookOpen, LogOut, Terminal, LayoutDashboard, Key, Shield, Info,
+  BookOpen, LogOut, LayoutDashboard, Key, Shield, Info,
   ArrowLeft, Menu, X, CreditCard, DollarSign, Trash2, Pencil, Sun, Moon,
   Lock, ShieldAlert, Eye, EyeOff, Minimize2, Maximize2
 } from 'lucide-react';
@@ -42,9 +48,21 @@ const shortenSemester = (name: string): string => {
 };
 
 export default function App() {
-  const [isLoadedFromDb, setIsLoadedFromDb] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  // --- DATABASE STATE & SYNC REFS ---
+  const [isLoadingDb, setIsLoadingDb] = useState<boolean>(true);
+
+  const prevFilieresRef = React.useRef<Filiere[] | null>(null);
+  const prevMatieresRef = React.useRef<Matiere[] | null>(null);
+  const prevClassesRef = React.useRef<Classe[] | null>(null);
+  const prevSemestresRef = React.useRef<Semestre[] | null>(null);
+  const prevEtudiantsRef = React.useRef<Etudiant[] | null>(null);
+  const prevCoursRef = React.useRef<Cours[] | null>(null);
+  const prevNotesRef = React.useRef<Note[] | null>(null);
+  const prevAutorisationsRef = React.useRef<AutorisationFiliere[] | null>(null);
+  const prevLogsRef = React.useRef<HistoriqueAcces[] | null>(null);
+  const prevPaiementsRef = React.useRef<Paiement[] | null>(null);
+  const prevAdminListRef = React.useRef<Administrateur[] | null>(null);
+  const prevTrashRef = React.useRef<TrashItem[] | null>(null);
 
   // --- REAL-TIME REACT STATE ENGINE WITH LOCALSTORAGE PERSISTENCE ---
   const [filieres, setFilieres] = useState<Filiere[]>(() => {
@@ -282,149 +300,161 @@ export default function App() {
     }
   }, [globalFiliereId, globalAnneeScolaire, semestres, globalSemestreId]);
 
-  // --- SYNC TO LOCAL STORAGE ---
+  // --- LOAD EVERYTHING FROM FIREBASE ON MOUNT ---
   React.useEffect(() => {
-    localStorage.setItem('school_filieres', JSON.stringify(filieres));
-  }, [filieres]);
-  React.useEffect(() => {
-    localStorage.setItem('school_matieres', JSON.stringify(matieres));
-  }, [matieres]);
-  React.useEffect(() => {
-    localStorage.setItem('school_classes', JSON.stringify(classes));
-  }, [classes]);
-  React.useEffect(() => {
-    localStorage.setItem('school_semestres', JSON.stringify(semestres));
-  }, [semestres]);
-  React.useEffect(() => {
-    localStorage.setItem('school_etudiants', JSON.stringify(etudiants));
-  }, [etudiants]);
-  React.useEffect(() => {
-    localStorage.setItem('school_cours', JSON.stringify(cours));
-  }, [cours]);
-  React.useEffect(() => {
-    localStorage.setItem('school_notes', JSON.stringify(notes));
-  }, [notes]);
-  React.useEffect(() => {
-    localStorage.setItem('school_autorisations', JSON.stringify(autorisations));
-  }, [autorisations]);
-  React.useEffect(() => {
-    localStorage.setItem('school_acces_logs', JSON.stringify(logs));
-  }, [logs]);
-  React.useEffect(() => {
-    localStorage.setItem('school_admins', JSON.stringify(adminList));
-  }, [adminList]);
-  React.useEffect(() => {
-    localStorage.setItem('school_paiements', JSON.stringify(paiements));
-  }, [paiements]);
-  React.useEffect(() => {
-    localStorage.setItem('school_scolarite_annuelle', String(scolariteAnnuelle));
-  }, [scolariteAnnuelle]);
-  React.useEffect(() => {
-    localStorage.setItem('school_annees_scolaires', JSON.stringify(anneesScolaires));
-  }, [anneesScolaires]);
-  React.useEffect(() => {
-    localStorage.setItem('school_trash', JSON.stringify(trash));
-  }, [trash]);
+    async function loadFirebaseData() {
+      try {
+        console.log("[Firebase Init] Fetching and seeding database from cloud...");
+        
+        // Load collections & seed if empty
+        const [
+          dbFilieres,
+          dbMatieres,
+          dbClasses,
+          dbSemestres,
+          dbEtudiants,
+          dbCours,
+          dbNotes,
+          dbAutorisations,
+          dbLogs,
+          dbPaiements,
+          dbAdmins,
+          dbTrash,
+          dbConfig
+        ] = await Promise.all([
+          seedCollectionIfEmpty<Filiere>("filieres", INITIAL_FILIERES),
+          seedCollectionIfEmpty<Matiere>("matieres", INITIAL_MATIERES),
+          seedCollectionIfEmpty<Classe>("classes", INITIAL_CLASSES),
+          seedCollectionIfEmpty<Semestre>("semestres", INITIAL_SEMESTRES),
+          seedCollectionIfEmpty<Etudiant>("etudiants", INITIAL_ETUDIANTS),
+          seedCollectionIfEmpty<Cours>("cours", INITIAL_COURS),
+          seedCollectionIfEmpty<Note>("notes", INITIAL_NOTES),
+          seedCollectionIfEmpty<AutorisationFiliere>("autorisations", INITIAL_AUTORISATIONS),
+          seedCollectionIfEmpty<HistoriqueAcces>("logs", INITIAL_ACCES_LOGS),
+          seedCollectionIfEmpty<Paiement>("paiements", INITIAL_PAIEMENTS),
+          seedCollectionIfEmpty<Administrateur>("admins", INITIAL_ADMINS),
+          seedCollectionIfEmpty<TrashItem>("trash", []),
+          fetchGlobalConfig(1500000, ["2025-2026", "2026-2027", "2024-2025"])
+        ]);
 
-  // --- COUPLAGE ET SYNCHRONISATION AVEC LA BASE DE DONNÉES SQL ---
-  React.useEffect(() => {
-    fetch('/api/data')
-      .then(res => {
-        if (!res.ok) throw new Error("HTTP Status " + res.status);
-        return res.json();
-      })
-      .then(resData => {
-        if (resData.status === 'success' && resData.data) {
-          const d = resData.data;
-          if (d.filieres && d.filieres.length > 0) setFilieres(d.filieres);
-          if (d.matieres && d.matieres.length > 0) setMatieres(d.matieres);
-          if (d.classes && d.classes.length > 0) setClasses(d.classes);
-          if (d.semestres && d.semestres.length > 0) setSemestres(d.semestres);
-          if (d.etudiants && d.etudiants.length > 0) setEtudiants(d.etudiants);
-          if (d.cours) setCours(d.cours);
-          if (d.notes) setNotes(d.notes);
-          if (d.autorisations) setAutorisations(d.autorisations);
-          if (d.paiements) setPaiements(d.paiements);
-          if (d.admins && d.admins.length > 0) setAdminList(d.admins);
-          if (d.trash) setTrash(d.trash);
-          if (d.scolarite_annuelle) setScolariteAnnuelle(Number(d.scolarite_annuelle));
-          if (d.annees_scolaires && d.annees_scolaires.length > 0) setAnneesScolaires(d.annees_scolaires);
-          setIsLoadedFromDb(true);
-          console.log("=== Base de données SQL chargée avec succès ! ===");
-        } else {
-          throw new Error(resData.message || "Impossible de charger la base de données");
-        }
-      })
-      .catch(err => {
-        console.error("Erreur de connexion SQL, utilisation du stockage local en secours:", err);
-        setIsLoadedFromDb(true); // Fallback to localStorage initial values
-      });
+        // Initialize state
+        setFilieres(dbFilieres);
+        setMatieres(dbMatieres);
+        setClasses(dbClasses);
+        setSemestres(dbSemres => {
+          // If the backend has empty or mismatch, fallback is handled.
+          // But here, we just set the fetched semestres.
+          return dbSemestres;
+        });
+        setEtudiants(dbEtudiants);
+        setCours(dbCours);
+        setNotes(dbNotes);
+        setAutorisations(dbAutorisations);
+        setLogs(dbLogs);
+        setPaiements(dbPaiements);
+        setAdminList(dbAdmins);
+        setTrash(dbTrash);
+        setScolariteAnnuelle(dbConfig.scolariteAnnuelle);
+        setAnneesScolaires(dbConfig.anneesScolaires);
+
+        // Initialize refs to block initial syncing writes on mount
+        prevFilieresRef.current = [...dbFilieres];
+        prevMatieresRef.current = [...dbMatieres];
+        prevClassesRef.current = [...dbClasses];
+        prevSemestresRef.current = [...dbSemestres];
+        prevEtudiantsRef.current = [...dbEtudiants];
+        prevCoursRef.current = [...dbCours];
+        prevNotesRef.current = [...dbNotes];
+        prevAutorisationsRef.current = [...dbAutorisations];
+        prevLogsRef.current = [...dbLogs];
+        prevPaiementsRef.current = [...dbPaiements];
+        prevAdminListRef.current = [...dbAdmins];
+        prevTrashRef.current = [...dbTrash];
+
+      } catch (error) {
+        console.error("Failed to load/seed Firebase data:", error);
+      } finally {
+        setIsLoadingDb(false);
+      }
+    }
+
+    loadFirebaseData();
   }, []);
 
+  // --- SYNC TO FIREBASE AND LOCAL STORAGE ON CHANGES ---
   React.useEffect(() => {
-    if (!isLoadedFromDb) return;
+    localStorage.setItem('school_filieres', JSON.stringify(filieres));
+    syncCollectionToFirestore("filieres", filieres, prevFilieresRef);
+  }, [filieres]);
 
-    const timer = setTimeout(() => {
-      setIsSaving(true);
-      const payload = {
-        filieres,
-        matieres,
-        classes,
-        semestres,
-        etudiants,
-        cours,
-        notes,
-        autorisations,
-        paiements,
-        admins: adminList,
-        trash,
-        scolarite_annuelle: scolariteAnnuelle,
-        annees_scolaires: anneesScolaires
-      };
+  React.useEffect(() => {
+    localStorage.setItem('school_matieres', JSON.stringify(matieres));
+    syncCollectionToFirestore("matieres", matieres, prevMatieresRef);
+  }, [matieres]);
 
-      fetch('/api/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("HTTP Status " + res.status);
-        return res.json();
-      })
-      .then(resData => {
-        if (resData.status === 'success') {
-          setLastSaved(new Date().toLocaleTimeString());
-        } else {
-          console.error("Échec de la sauvegarde SQL:", resData.message);
-        }
-      })
-      .catch(err => {
-        console.error("Erreur de sauvegarde de la base de données SQL:", err);
-      })
-      .finally(() => {
-        setIsSaving(false);
-      });
-    }, 1000); // 1 seconde de debounce pour regrouper les saisies rapides
+  React.useEffect(() => {
+    localStorage.setItem('school_classes', JSON.stringify(classes));
+    syncCollectionToFirestore("classes", classes, prevClassesRef);
+  }, [classes]);
 
-    return () => clearTimeout(timer);
-  }, [
-    isLoadedFromDb,
-    filieres,
-    matieres,
-    classes,
-    semestres,
-    etudiants,
-    cours,
-    notes,
-    autorisations,
-    paiements,
-    adminList,
-    trash,
-    scolariteAnnuelle,
-    anneesScolaires
-  ]);
+  React.useEffect(() => {
+    localStorage.setItem('school_semestres', JSON.stringify(semestres));
+    syncCollectionToFirestore("semestres", semestres, prevSemestresRef);
+  }, [semestres]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_etudiants', JSON.stringify(etudiants));
+    syncCollectionToFirestore("etudiants", etudiants, prevEtudiantsRef);
+  }, [etudiants]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_cours', JSON.stringify(cours));
+    syncCollectionToFirestore("cours", cours, prevCoursRef);
+  }, [cours]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_notes', JSON.stringify(notes));
+    syncCollectionToFirestore("notes", notes, prevNotesRef);
+  }, [notes]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_autorisations', JSON.stringify(autorisations));
+    syncCollectionToFirestore("autorisations", autorisations, prevAutorisationsRef);
+  }, [autorisations]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_acces_logs', JSON.stringify(logs));
+    syncCollectionToFirestore("logs", logs, prevLogsRef);
+  }, [logs]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_admins', JSON.stringify(adminList));
+    syncCollectionToFirestore("admins", adminList, prevAdminListRef);
+  }, [adminList]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_paiements', JSON.stringify(paiements));
+    syncCollectionToFirestore("paiements", paiements, prevPaiementsRef);
+  }, [paiements]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_scolarite_annuelle', String(scolariteAnnuelle));
+    if (prevFilieresRef.current !== null) {
+      saveGlobalConfig(scolariteAnnuelle, anneesScolaires);
+    }
+  }, [scolariteAnnuelle, anneesScolaires]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_annees_scolaires', JSON.stringify(anneesScolaires));
+    if (prevFilieresRef.current !== null) {
+      saveGlobalConfig(scolariteAnnuelle, anneesScolaires);
+    }
+  }, [anneesScolaires, scolariteAnnuelle]);
+
+  React.useEffect(() => {
+    localStorage.setItem('school_trash', JSON.stringify(trash));
+    syncCollectionToFirestore("trash", trash, prevTrashRef);
+  }, [trash]);
 
   // --- ACTIONS (CREATION / MODIFICATION / DELETION) ---
   
@@ -1028,6 +1058,32 @@ export default function App() {
     setActiveStudent(null);
   };
 
+  if (isLoadingDb) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-sans text-slate-100 p-6 relative overflow-hidden" id="db-loading-screen">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+
+        <div className="relative z-10 flex flex-col items-center max-w-md text-center">
+          <div className="relative mb-6">
+            <div className="w-20 h-20 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
+            <GraduationCap className="w-8 h-8 text-amber-400 absolute inset-0 m-auto animate-pulse" />
+          </div>
+          
+          <h2 className="font-extrabold text-lg tracking-wider text-slate-100 uppercase mb-2">
+            Portail Académique Sécurisé
+          </h2>
+          <p className="text-sm text-amber-500 font-medium tracking-widest uppercase animate-pulse mb-4">
+            Connexion à Firestore en cours...
+          </p>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Initialisation de la base de données cloud et chargement des données de scolarité en temps réel. Veuillez patienter.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between font-sans overflow-x-hidden relative" id="layout-app-root">
       
@@ -1426,21 +1482,6 @@ export default function App() {
                       Corbeille ({trash.length})
                     </button>
                   </li>
-                  <li>
-                    <button 
-                      onClick={() => { setAdminActiveTab('guide'); }}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all duration-150 ${
-                        adminActiveTab === 'guide' 
-                          ? (adminTheme === 'sombre-or' 
-                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20' 
-                              : 'bg-blue-600 text-white font-bold shadow')
-                          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                      }`}
-                    >
-                      <Info className="w-4 h-4" />
-                      Guide & Aide PDF
-                    </button>
-                  </li>
                 </ul>
               </nav>
             </div>
@@ -1657,7 +1698,7 @@ export default function App() {
             }`} id="admin-horizontal-nav-scroll">
               <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
                 <div 
-                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-nowrap py-0.5 flex-grow" 
+                  className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth flex-nowrap py-0.5 w-full" 
                   style={{ WebkitOverflowScrolling: 'touch' }}
                 >
                   {[
@@ -1671,7 +1712,6 @@ export default function App() {
                     { id: 'autorisations', label: "Autorisations", icon: ShieldCheck },
                     { id: 'paiements', label: "Paiements", icon: CreditCard },
                     { id: 'corbeille', label: `Corbeille (${trash.length})`, icon: Trash2 },
-                    { id: 'guide', label: "Guide & Aide", icon: Info },
                   ].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = adminActiveTab === tab.id;
@@ -1697,35 +1737,6 @@ export default function App() {
                       </button>
                     );
                   })}
-                </div>
-
-                {/* SQLITE REAL-TIME DB PILL */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                    isSaving 
-                      ? adminTheme === 'sombre-or' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-amber-50 border-amber-200 text-amber-700 shadow-sm'
-                      : !isLoadedFromDb
-                        ? adminTheme === 'sombre-or' ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-gray-150 border-gray-250 text-gray-500 shadow-sm'
-                        : adminTheme === 'sombre-or' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      isSaving 
-                        ? 'bg-amber-500 animate-pulse'
-                        : !isLoadedFromDb
-                          ? 'bg-slate-400 animate-pulse'
-                          : 'bg-emerald-500'
-                    }`} />
-                    <span>
-                      {isSaving 
-                        ? "Sauvegarde SQL..." 
-                        : !isLoadedFromDb 
-                          ? "Connexion SQL..." 
-                          : "Base SQL Connectée"}
-                    </span>
-                    {lastSaved && !isSaving && (
-                      <span className="opacity-60 font-medium hidden sm:inline">({lastSaved})</span>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
@@ -1775,7 +1786,6 @@ export default function App() {
                         {adminActiveTab === 'autorisations' && "Liaisons Inter-parcours & Droits"}
                         {adminActiveTab === 'paiements' && "Suivi Énergique des Paiements"}
                         {adminActiveTab === 'corbeille' && "Corbeille & Récupération de Données"}
-                        {adminActiveTab === 'guide' && "Guide de l'Utilisateur & Manuel de Fonctionnement"}
                       </h2>
                       <p className={`text-[10px] font-semibold mt-0.5 ${
                         adminTheme === 'sombre-or' ? 'text-slate-300' : 'text-gray-500'
@@ -1789,7 +1799,6 @@ export default function App() {
                         {adminActiveTab === 'autorisations' && "Accréditations exceptionnelles d'accès de consultation inter-filières pour étudiants."}
                         {adminActiveTab === 'paiements' && "Suivi de la scolarité et encaissement des frais scolaires."}
                         {adminActiveTab === 'corbeille' && "Restaurez ou purgez définitivement vos enregistrements supprimés."}
-                        {adminActiveTab === 'guide' && "Consultez et téléchargez le manuel complet d'administration de la plateforme."}
                       </p>
                     </div>
                   </div>
@@ -2091,14 +2100,6 @@ export default function App() {
                           onPermanentDelete={handlePermanentDeleteItem}
                           onEmptyTrash={handleEmptyTrash}
                           onRestoreAll={handleRestoreAll}
-                        />
-                      )}
-
-                      {adminActiveTab === 'guide' && (
-                        <GuideTab 
-                          adminTheme={adminTheme}
-                          lastSaved={lastSaved}
-                          isLoadedFromDb={isLoadedFromDb}
                         />
                       )}
                 </div>

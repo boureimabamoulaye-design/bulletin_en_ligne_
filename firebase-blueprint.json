@@ -1,0 +1,153 @@
+{
+  "collections": {
+    "filieres": {
+      "description": "Filières académiques",
+      "schema": {
+        "id": "number",
+        "nom_filiere": "string",
+        "code_filiere": "string",
+        "duree_semestres": "number",
+        "description": "string"
+      }
+    },
+    "matieres": {
+      "description": "Matières d'enseignement",
+      "schema": {
+        "id": "number",
+        "nom_matiere": "string",
+        "code_matiere": "string",
+        "credits": "number",
+        "filiere_id": "number",
+        "semestre_id": "number"
+      }
+    },
+    "classes": {
+      "description": "Classes d'étudiants",
+      "schema": {
+        "id": "number",
+        "nom_classe": "string",
+        "filiere_id": "number",
+        "annee_scolaire": "string"
+      }
+    },
+    "semestres": {
+      "description": "Semestres scolaires",
+      "schema": {
+        "id": "number",
+        "nom_semestre": "string",
+        "debut": "string",
+        "fin": "string",
+        "actif": "boolean",
+        "annee_scolaire": "string"
+      }
+    },
+    "etudiants": {
+      "description": "Registre des étudiants",
+      "schema": {
+        "id": "number",
+        "matricule": "string",
+        "nom": "string",
+        "prenom": "string",
+        "email": "string",
+        "telephone": "string",
+        "date_naissance": "string",
+        "adresse": "string",
+        "photo": "string",
+        "filiere_id": "number",
+        "classe_id": "number",
+        "annee_scolaire": "string",
+        "date_inscription": "string",
+        "statut": "string"
+      }
+    },
+    "cours": {
+      "description": "Supports de cours",
+      "schema": {
+        "id": "number",
+        "titre": "string",
+        "description": "string",
+        "fichier": "string",
+        "date_upload": "string",
+        "matiere_id": "number",
+        "filiere_id": "number",
+        "semestre_id": "number",
+        "fichierData": "string?"
+      }
+    },
+    "notes": {
+      "description": "Notes des étudiants",
+      "schema": {
+        "id": "number",
+        "etudiant_id": "number",
+        "matiere_id": "number",
+        "note_controle": "number",
+        "note_examen": "number",
+        "note_rattrapage": "number",
+        "coeff": "number",
+        "appreciation": "string",
+        "date_saisie": "string"
+      }
+    },
+    "autorisations": {
+      "description": "Autorisations spéciales de consultation",
+      "schema": {
+        "id": "number",
+        "etudiant_id": "number",
+        "filiere_id": "number",
+        "date_autorisation": "string",
+        "motif": "string"
+      }
+    },
+    "logs": {
+      "description": "Historique des accès et des actions",
+      "schema": {
+        "id": "number",
+        "etudiant_id": "number",
+        "date_acces": "string",
+        "type_action": "string",
+        "description": "string",
+        "adresse_ip": "string"
+      }
+    },
+    "paiements": {
+      "description": "Suivi des paiements de scolarité",
+      "schema": {
+        "id": "number",
+        "etudiant_id": "number",
+        "montant": "number",
+        "date_paiement": "string",
+        "type_paiement": "string",
+        "reference": "string",
+        "statut": "string",
+        "description": "string"
+      }
+    },
+    "trash": {
+      "description": "Corbeille des éléments supprimés",
+      "schema": {
+        "id": "number",
+        "type_entite": "string",
+        "date_suppression": "string",
+        "donnees_entite": "string"
+      }
+    },
+    "admins": {
+      "description": "Administrateurs de l'application",
+      "schema": {
+        "id": "number",
+        "nom": "string",
+        "email": "string",
+        "mot_de_passe": "string",
+        "date_creation": "string"
+      }
+    },
+    "config": {
+      "description": "Configuration globale de l'application",
+      "schema": {
+        "id": "string",
+        "scolariteAnnuelle": "number",
+        "anneesScolaires": "array"
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "name": "Gestion Scolaire SQL",
-  "description": "Plateforme moderne de gestion scolaire construite en React et Node.js avec base de données relationnelle SQL (SQLite) persistante.",
+  "name": "Gestion Scolaire PHP-MySQL",
+  "description": "Plateforme moderne de gestion scolaire construite avec PHP, HTML5, CSS3 et MySQL. Comprend un tableau de bord, la gestion des étudiants et filières, bulletins et autorisations.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
