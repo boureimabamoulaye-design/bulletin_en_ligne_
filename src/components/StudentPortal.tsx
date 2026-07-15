@@ -248,6 +248,206 @@ export default function StudentPortal({
     window.print();
   };
 
+  const renderStudentBulletinSheet = (sem: Semestre, isCascade: boolean) => {
+    // Local filter of grades for this semester
+    const semGrades = notes.filter(n => {
+      if (Number(n.etudiant_id) !== Number(activeStudent.id)) return false;
+      if (Number(n.semestre_id) !== Number(sem.id)) return false;
+      const parentCourse = cours.find(c => Number(c.id) === Number(n.cours_id));
+      return parentCourse ? Number(parentCourse.filiere_id) === Number(courseFiliereFilter) : false;
+    });
+
+    const semAverage = (() => {
+      if (semGrades.length === 0) return 0;
+      let sumVal = 0;
+      let sumCredits = 0;
+      semGrades.forEach(g => {
+        sumVal += Number(g.note || 0) * Number(g.credits || 0);
+        sumCredits += Number(g.credits || 0);
+      });
+      return sumCredits > 0 ? (sumVal / sumCredits) : 0;
+    })();
+
+    const semMention = getMention(semAverage);
+    const semDecision = semAverage >= 10 ? "Admis" : "Ajourné";
+
+    // Rank relative to classmates in this semester
+    const semRankInfo = (() => {
+      if (!etudiants || etudiants.length === 0) return { rank: 1, total: 1 };
+      const classmates = etudiants.filter(e => Number(e.classe_id) === Number(activeStudent.classe_id));
+      if (classmates.length === 0) return { rank: 1, total: 1 };
+
+      const rankList = classmates.map(c => {
+        return {
+          id: c.id,
+          gpa: calculateGPAForStudent(c.id, sem.id)
+        };
+      }).sort((a, b) => b.gpa - a.gpa);
+
+      const position = rankList.findIndex(item => Number(item.id) === Number(activeStudent.id));
+      return {
+        rank: position !== -1 ? position + 1 : 1,
+        total: classmates.length
+      };
+    })();
+
+    return (
+      <div 
+        key={sem.id} 
+        className={`bg-[#ffffff] p-4 sm:p-8 max-w-4xl mx-auto rounded-2xl border-4 border-[#000000] text-[#000000] relative overflow-hidden ${
+          isCascade ? "mb-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bulletin-page" : "shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]"
+        }`} 
+        id={isCascade ? undefined : "student-pdf-bulletin"}
+      >
+        {/* Stamp background seal */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-12 pointer-events-none opacity-[0.04] border-8 border-[#000000] rounded-full w-96 h-96 flex items-center justify-center">
+          <span className="text-[#000000] font-bold text-3xl tracking-widest text-center">ACADÉMIE<br />SCOLAIRE</span>
+        </div>
+
+        {/* Header school letterhead */}
+        <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-[#000000] pb-5 gap-4">
+          <div className="text-center md:text-left">
+            <h2 className="text-lg font-black text-[#000000] tracking-tight flex items-center gap-2 justify-center md:justify-start">
+              <BookOpen className="w-6 h-6 text-[#000000]" />
+              <span>INSTITUT SUPÉRIEUR DES TECHNOLOGIES</span>
+            </h2>
+            <p className="text-xs text-[#000000] mt-1 uppercase font-bold">Bamako - Hamdallaye ACI | Tel: +223 20 22 40 30</p>
+          </div>
+          <div className="text-center md:text-right font-mono text-xs border-l-0 md:border-l border-[#000000] pl-0 md:pl-6 shrink-0 w-full md:w-auto text-[#000000]">
+            <strong className="text-[#000000] block font-black uppercase">BULLETIN SCOLAIRE OFFICIEL</strong>
+            <span className="text-[#000000] font-extrabold uppercase mt-1 block">{shortenSemester(sem.nom_semestre)} ({sem.annee_scolaire})</span>
+          </div>
+        </div>
+
+        {/* Student identities */}
+        <div className="my-6 md:flex gap-6 bg-[#ffffff] border-2 border-[#000000] rounded-xl p-4 text-[#000000]">
+          <GraduationCap className="w-12 h-12 text-[#000000] bg-[#ffffff] border-2 border-[#000000] rounded p-2 hidden md:block" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-xs text-[#000000] w-full">
+            <div>
+              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Numéro Matricule Unique</dt>
+              <dd className="font-mono text-xs font-black text-[#000000]">{activeStudent.matricule}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Nom de l'étudiant</dt>
+              <dd className="text-xs font-black text-[#000000] uppercase">{activeStudent.nom} {activeStudent.prenom}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Classe d'études active</dt>
+              <dd className="font-bold text-xs text-[#000000]">{classeActuelle?.nom_classe || "Inconnu"}</dd>
+            </div>
+            <div>
+              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Filière / Domaine</dt>
+              <dd className="font-bold text-xs text-[#000000]">{filierePrincipale?.nom_filiere || "Non classifié"}</dd>
+            </div>
+          </div>
+        </div>
+
+        {/* Grades Table */}
+        <div className="border-2 border-[#000000] rounded-xl overflow-hidden mt-6 bg-[#ffffff]">
+          <div className="overflow-x-auto w-full">
+            <table className="min-w-[850px] w-full text-xs text-[#000000] bg-[#ffffff]">
+            <thead>
+              <tr className="bg-[#000000] text-[#ffffff] font-extrabold text-center uppercase">
+                <th className="py-2.5 px-4 text-left font-black w-2/5">Intitulé de l'élément constitutif (Matière)</th>
+                <th className="py-2.5 px-2 font-black">Coeff / Crédits</th>
+                <th className="py-2.5 px-2 font-black">Moy. CC (40%)</th>
+                <th className="py-2.5 px-2 font-black">Moy. Exam (60%)</th>
+                <th className="py-2.5 px-2 font-black">Moy. Générale</th>
+                <th className="py-2.5 px-2 font-black text-right pr-4">Mention LMD</th>
+              </tr>
+            </thead>
+            <tbody>
+              {semGrades.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-[#000000] font-bold">Aucun bulletin disponible (pas de notes validées).</td>
+                </tr>
+              ) : (
+                semGrades.map(g => {
+                  const courseObj = cours.find(c => c.id === g.cours_id);
+                  const finalNote = Number(g.note);
+
+                  const getSubjMention = (val: number) => {
+                    if (val >= 16) return "Tr. Bien";
+                    if (val >= 14) return "Bien";
+                    if (val >= 12) return "As. Bien";
+                    if (val >= 10) return "Passable";
+                    return "Ajourné";
+                  };
+
+                  return (
+                    <tr key={g.id} className="border-b border-[#000000]/10 hover:bg-slate-50 text-center font-semibold text-[#000000]">
+                      <td className="py-3 px-4 font-bold text-left text-[#000000]">{courseObj ? courseObj.titre : "Enseignement Général"}</td>
+                      <td className="py-3 font-bold">{g.credits} ECTS</td>
+                      <td className="py-3 font-semibold text-[#404040]">
+                        {g.note_classe !== undefined ? `${g.note_classe.toFixed(2)}/20` : "-"}
+                      </td>
+                      <td className="py-3 font-semibold text-[#404040]">
+                        {g.note_examen !== undefined ? `${g.note_examen.toFixed(2)}/20` : "-"}
+                      </td>
+                      <td className="py-3 font-black text-slate-900 text-sm">{finalNote.toFixed(2)}/20</td>
+                      <td className="py-3 pr-4 text-right font-black">
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded border border-[#000000]/20 ${
+                          finalNote >= 10 ? "bg-slate-100 text-slate-900" : "bg-rose-50 text-rose-700"
+                        }`}>
+                          {getSubjMention(finalNote)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        {/* Summary Box */}
+        {semGrades.length > 0 && (
+          <div className="mt-6 border-4 border-[#000000] bg-[#ffffff] rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 text-[#000000]">
+            <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
+              <div>
+                <dt className="text-[10px] font-extrabold text-gray-500 uppercase">Moyenne Générale</dt>
+                <dd className="text-xl font-black text-[#000000]">{semAverage.toFixed(2)} / 20</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-extrabold text-gray-500 uppercase">Mention Décernée</dt>
+                <dd className="text-xl font-black text-[#000000]">{semMention}</dd>
+              </div>
+              <div>
+                <dt className="text-[10px] font-extrabold text-gray-500 uppercase">Rang Semestriel</dt>
+                <dd className="text-xl font-black text-[#000000]">
+                  {semRankInfo.rank}<sup>e</sup> sur {semRankInfo.total}
+                </dd>
+              </div>
+            </div>
+            <div className="text-center md:text-right shrink-0">
+              <span className="text-[10px] text-gray-500 uppercase font-black block">Décision Académique</span>
+              <span className={`inline-block mt-1 font-extrabold text-xs uppercase px-3 py-1 rounded-full border-2 border-[#000000] ${
+                semAverage >= 10 ? "bg-emerald-500 text-[#ffffff]" : "bg-rose-500 text-[#ffffff]"
+              }`}>
+                {semDecision}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Stamp space */}
+        <div className="mt-8 pt-8 border-t border-[#000000] grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-0 text-center text-xs text-[#000000]">
+          <div>
+            <strong className="text-[#000000] block uppercase font-black text-[10px]">La Direction-Générale</strong>
+            <p className="text-[10px] mt-0.5 font-bold italic">Signature validée électroniquement</p>
+            <div className="mt-8 border-b border-[#000000] w-24 mx-auto"></div>
+          </div>
+          <div>
+            <strong className="text-[#000000] block uppercase font-black text-[10px]">Le Sceau d'Établissement</strong>
+            <p className="text-[10px] mt-0.5 font-bold italic">Sceau officiel de scolarité</p>
+            <div className="mt-8 border-b border-[#000000] w-24 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-slate-100 pt-[60px] lg:pt-0" id="student-portal-wrapper">
       
@@ -611,6 +811,7 @@ export default function StudentPortal({
                       onChange={e => setSelectedSemestreId(Number(e.target.value))}
                       className="form-control"
                     >
+                      <option value={0}>Tous les semestres</option>
                       {semestres
                         .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
                         .map(s => (
@@ -825,6 +1026,7 @@ export default function StudentPortal({
                     onChange={e => setSelectedSemestreId(Number(e.target.value))}
                     className="form-control w-52"
                   >
+                    <option value={0}>Tous les semestres</option>
                     {semestres
                       .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
                       .map(s => (
@@ -836,291 +1038,18 @@ export default function StudentPortal({
               </div>
 
               {/* Complete visual bulletin printable card representation */}
-              {activeStudent && activeSem ? (
-                <div className="bg-[#ffffff] p-8 max-w-4xl mx-auto rounded-2xl border-4 border-[#000000] shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden text-[#000000]" id="student-pdf-bulletin">
-                  
-                  {/* Stamp background seal */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-12 pointer-events-none opacity-[0.04] border-8 border-[#000000] rounded-full w-96 h-96 flex items-center justify-center">
-                    <span className="text-[#000000] font-bold text-3xl tracking-widest text-center">ACADÉMIE<br />SCOLAIRE</span>
+              {activeStudent && (activeSem || selectedSemestreId === 0) ? (
+                selectedSemestreId === 0 ? (
+                  <div className="space-y-8">
+                    {semestres
+                      .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
+                      .map(s => renderStudentBulletinSheet(s, true))}
                   </div>
-
-                  {/* Header school letterhead */}
-                  <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-[#000000] pb-5 gap-4">
-                    <div className="text-center md:text-left">
-                      <h2 className="text-lg font-black text-[#000000] tracking-tight flex items-center gap-2 justify-center md:justify-start">
-                        <BookOpen className="w-6 h-6 text-[#000000]" />
-                        <span>INSTITUT SUPÉRIEUR DES TECHNOLOGIES</span>
-                      </h2>
-                      <p className="text-xs text-[#000000] mt-1 uppercase font-bold">Bamako - Hamdallaye ACI | Tel: +223 20 22 40 30</p>
-                    </div>
-                    <div className="text-center md:text-right font-mono text-xs border-l-0 md:border-l border-[#000000] pl-0 md:pl-6 shrink-0 w-full md:w-auto text-[#000000]">
-                      <strong className="text-[#000000] block font-black uppercase">BULLETIN SCOLAIRE OFFICIEL</strong>
-                      <span className="text-[#000000] font-extrabold uppercase mt-1 block">{shortenSemester(activeSem.nom_semestre)} ({activeSem.annee_scolaire})</span>
-                    </div>
-                  </div>
-
-                  {/* Student identities */}
-                  <div className="my-6 md:flex gap-6 bg-[#ffffff] border-2 border-[#000000] rounded-xl p-4 text-[#000000]">
-                    <GraduationCap 
-                      className="w-14 h-14 text-[#000000] bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mx-auto md:mx-0 shrink-0 mb-3 md:mb-0" 
-                    />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4 text-xs text-[#000000] flex-1">
-                      <div>
-                        <span className="text-[#525252] uppercase font-black tracking-wider block text-[9px]">ID Matricule</span>
-                        <strong className="font-mono text-[#000000] text-sm">{activeStudent.matricule}</strong>
-                      </div>
-                      <div>
-                        <span className="text-[#525252] uppercase font-black tracking-wider block text-[9px]">Étudiant</span>
-                        <strong className="text-[#000000] uppercase text-sm font-black">{activeStudent.nom} {activeStudent.prenom}</strong>
-                      </div>
-                      <div>
-                        <span className="text-[#525252] uppercase font-black tracking-wider block text-[9px]">Filière</span>
-                        <strong className="text-[#000000] font-black uppercase text-sm">{filierePrincipale?.nom_filiere}</strong>
-                      </div>
-                      <div>
-                        <span className="text-[#525252] uppercase font-black tracking-wider block text-[9px]">Enseigne niveau</span>
-                        <strong className="text-[#000000] font-bold text-sm">{classeActuelle?.nom_classe}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Grades grid */}
-                  <div className="border-2 border-[#000000] rounded-xl overflow-hidden mt-6 bg-[#ffffff]">
-                    <div className="overflow-x-auto w-full">
-                      <table className="min-w-[850px] w-full text-xs text-[#000000] bg-[#ffffff] border-collapse" style={{ boxShadow: 'none' }}>
-                        <thead>
-                          <tr className="bg-[#f5f5f5] border-b-2 border-[#000000] text-[#000000]">
-                            <th className="py-3 px-4 font-black text-left text-[#000000]">
-                              <span className="md:hidden">Module</span>
-                              <span className="hidden md:inline">Cours module</span>
-                            </th>
-                            <th className="py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
-                              <span className="md:hidden">CC (40%)</span>
-                              <span className="hidden md:inline">Note CC / Classe (40%)</span>
-                            </th>
-                            <th className="py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
-                              <span className="md:hidden">Exam (60%)</span>
-                              <span className="hidden md:inline">Note Examen (60%)</span>
-                            </th>
-                            <th className="py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
-                              <span className="md:hidden">Moy. Fin.</span>
-                              <span className="hidden md:inline">Moyenne Finale</span>
-                            </th>
-                            <th className="py-3 px-3 uppercase text-[10px] text-center w-14 text-[#000000] border-l border-[#000000]">
-                              <span className="md:hidden">Créd.</span>
-                              <span className="hidden md:inline">Crédits</span>
-                            </th>
-                            <th className="py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
-                              <span className="md:hidden">Total</span>
-                              <span className="hidden md:inline">Total pondéré</span>
-                            </th>
-                            <th className="py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
-                              <span className="md:hidden">Ment.</span>
-                              <span className="hidden md:inline">Mention</span>
-                            </th>
-                            <th className="py-3 px-3 uppercase text-[10px] text-center w-24 text-[#000000] border-l border-[#000000]">
-                              <span className="md:hidden">Statut</span>
-                              <span className="hidden md:inline">Statut LMD</span>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {studentGrades.length === 0 ? (
-                            <tr>
-                              <td colSpan={8} className="p-8 text-center text-[#000000] font-bold">Aucun bulletin disponible (pas de notes validées).</td>
-                            </tr>
-                          ) : (
-                            studentGrades.map(g => {
-                              const courseObj = cours.find(c => c.id === g.cours_id);
-                              const finalNote = Number(g.note);
-                              const notePonderated = finalNote * Number(g.credits);
-
-                              const getSubjMention = (val: number) => {
-                                if (val >= 16) return "Très Bien";
-                                if (val >= 14) return "Bien";
-                                if (val >= 12) return "Assez Bien";
-                                if (val >= 10) return "Passable";
-                                return "Ajourné";
-                              };
-
-                              // University LMD validation status
-                              let subjStatus = "Rattrapage (R.A.)";
-                              
-                              if (finalNote >= 10) {
-                                subjStatus = "Capitalisé (V.A.)";
-                              } else if (currentAverage >= 10) {
-                                subjStatus = "Compensé (V.Comp)";
-                              }
-
-                              const subjMention = getSubjMention(finalNote);
-
-                              return (
-                                <tr key={g.id} className="border-b border-[#000000] hover:bg-[#fafafa] transition text-center text-[#000000]">
-                                  <td className="font-bold text-[#000000] py-3 px-4 text-left">
-                                    <div className="font-bold text-sm">{courseObj ? courseObj.titre : "Cours"}</div>
-                                  </td>
-                                  <td className="font-bold text-[#000000] border-l border-[#000000]">
-                                    {g.note_classe !== undefined ? `${g.note_classe.toFixed(2)}/20` : "-"}
-                                  </td>
-                                  <td className="font-bold text-[#000000] border-l border-[#000000]">
-                                    {g.note_examen !== undefined ? `${g.note_examen.toFixed(2)}/20` : "-"}
-                                  </td>
-                                  <td className="font-black text-[#000000] text-sm border-l border-[#000000]">
-                                    {finalNote.toFixed(2)}/20
-                                  </td>
-                                  <td className="font-bold text-[#000000] border-l border-[#000000]">{g.credits}</td>
-                                  <td className="font-black text-[#000000] border-l border-[#000000]">{notePonderated.toFixed(2)}</td>
-                                  <td className="font-bold border-l border-[#000000] p-1">
-                                    <span className={`text-[10px] font-mono font-black px-1.5 py-0.5 rounded border border-[#000000] ${
-                                      finalNote >= 10 ? "bg-[#e2f3e2] text-[#0f5132]" : "bg-[#f8d7da] text-[#842029]"
-                                    }`}>
-                                      {subjMention}
-                                    </span>
-                                  </td>
-                                  <td className="border-l border-[#000000] text-[#000000] p-1">
-                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#000000] ${
-                                      subjStatus.includes("Capitalisé") ? "bg-[#e2f3e2] text-[#0f5132]" : 
-                                      subjStatus.includes("Compensé") ? "bg-[#e8f0fe] text-[#1a73e8]" : 
-                                      "bg-[#f8d7da] text-[#842029]"
-                                    }`}>
-                                      <span className="hidden md:inline">{subjStatus}</span>
-                                      <span className="inline md:hidden">
-                                        {subjStatus.includes("Capitalisé") ? "V.A." : 
-                                         subjStatus.includes("Compensé") ? "V.Comp" : 
-                                         subjStatus.includes("Rattrapage") ? "R.A." : 
-                                         subjStatus === "Non saisi" ? "N.S." : subjStatus}
-                                      </span>
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* LMD Credits Balance Section */}
-                  {studentGrades.length > 0 && (() => {
-                    const totalSemCredits = studentGrades.reduce((sum, g) => sum + Number(g.credits), 0);
-                    const capCredits = studentGrades.filter(g => Number(g.note) >= 10).reduce((sum, g) => sum + Number(g.credits), 0);
-                    const isComp = currentAverage >= 10;
-                    const valCredits = isComp ? totalSemCredits : capCredits;
-                    const compCredits = isComp ? (totalSemCredits - capCredits) : 0;
-                    const progressPercentage = totalSemCredits > 0 ? Math.round((valCredits / totalSemCredits) * 100) : 0;
-
-                    return (
-                      <div className="mt-5 p-4 bg-[#ffffff] border-2 border-[#000000] rounded-xl space-y-3 relative mx-auto w-full text-[#000000] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#000000] pb-2">
-                          <span className="text-[10px] font-black text-[#000000] uppercase tracking-widest flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-[#000000] animate-pulse"></span>
-                            <span className="md:hidden">Bilan Crédits (LMD)</span>
-                            <span className="hidden md:inline">Bilan des Crédits Académiques (Système LMD)</span>
-                          </span>
-                          <span className="text-[10px] text-[#000000] font-mono font-bold">
-                            <span className="md:hidden">Compensations Actives</span>
-                            <span className="hidden md:inline">Compensations semestrielles actives</span>
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center">
-                          <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            <span className="text-[9px] font-bold text-[#525252] uppercase block">
-                              <span className="md:hidden">Inscrits</span>
-                              <span className="hidden md:inline">Crédits inscrits</span>
-                            </span>
-                            <span className="text-sm font-black text-[#000000]">{totalSemCredits} ECTS</span>
-                          </div>
-                          <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            <span className="text-[9px] font-bold text-[#525252] uppercase block">
-                              <span className="md:hidden">Capitalisés</span>
-                              <span className="hidden md:inline">Crédits capitalisés</span>
-                            </span>
-                            <span className="text-sm font-black text-[#000000]">{capCredits} ECTS</span>
-                          </div>
-                          <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            <span className="text-[9px] font-bold text-[#525252] uppercase block">
-                              <span className="md:hidden">Compensés</span>
-                              <span className="hidden md:inline">Crédits compensés</span>
-                            </span>
-                            <span className="text-sm font-black text-[#000000]">{compCredits} ECTS</span>
-                          </div>
-                          <div className="bg-[#ffffff] p-2.5 rounded-lg border-2 border-[#000000] text-[#000000] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                            <span className="text-[9px] font-bold text-[#525252] uppercase block">
-                              <span className="md:hidden">Validés</span>
-                              <span className="hidden md:inline">Crédits validés</span>
-                            </span>
-                            <span className="text-sm font-black text-[#000000]">{valCredits} / {totalSemCredits} ECTS</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <div className="flex justify-between items-center text-[10px] font-black text-[#000000]">
-                            <span>
-                              <span className="md:hidden">Taux Val. Semestre :</span>
-                              <span className="hidden md:inline">Taux de validation du semestre :</span>
-                            </span>
-                            <span>{progressPercentage}%</span>
-                          </div>
-                          <div className="w-full bg-[#ffffff] border-2 border-[#000000] h-3.5 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full rounded-full bg-[#000000] transition-all duration-500"
-                              style={{ width: `${progressPercentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Results summarisations */}
-                  {(() => {
-                    const { rank, total } = studentRankInfo;
-                    return (
-                      <div className="mt-6 border-t-2 border-[#000000] pt-5 flex flex-col md:flex-row gap-4 text-[#000000]">
-                        <div className="flex-1 space-y-2 border-2 border-[#000000] p-4 rounded-xl text-xs font-bold text-[#000000] bg-[#ffffff] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                          <div className="flex justify-between">
-                            <span className="text-[#000000] font-bold">
-                              <span className="md:hidden">Moy. Trim :</span>
-                              <span className="hidden md:inline">Moyenne trimestrielle :</span>
-                            </span>
-                            <span className="text-[#000000] font-black">{currentAverage > 0 ? `${currentAverage.toFixed(2)}/20` : "Pas de moyenne"}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#000000] font-bold">
-                              <span className="md:hidden">Val. Admin :</span>
-                              <span className="hidden md:inline">Validation administrative :</span>
-                            </span>
-                            <span className="text-[#000000] font-extrabold uppercase font-mono">
-                              {currentAverage >= 10 ? 'Validé' : 'Non validé'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex-1 bg-[#ffffff] border-2 border-[#000000] rounded-xl p-4 flex flex-col items-center justify-center text-center text-[#000000] font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                          <span className="text-[10px] uppercase font-black text-[#525252]">Mention Scolaire</span>
-                          <strong className="text-lg text-[#000000] uppercase mt-1 font-black">{currentAverage > 0 ? getMention(currentAverage) : "-"}</strong>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Stamp space */}
-                  <div className="mt-8 pt-8 border-t border-[#000000] grid grid-cols-2 text-center text-xs text-[#000000]">
-                    <div>
-                      <strong className="text-[#000000] block uppercase font-black text-[10px]">La Direction-Générale</strong>
-                      <p className="text-[10px] mt-0.5 font-bold italic">Signature validée électroniquement</p>
-                      <div className="mt-8 border-b border-[#000000] w-24 mx-auto"></div>
-                    </div>
-                    <div>
-                      <strong className="text-[#000000] block uppercase font-black text-[10px]">Le Sceau d'Établissement</strong>
-                      <p className="text-[10px] mt-0.5 font-bold italic">Sceau officiel de scolarité</p>
-                      <div className="mt-8 border-b border-[#000000] w-24 mx-auto"></div>
-                    </div>
-                  </div>
-
-                </div>
+                ) : activeSem ? (
+                  renderStudentBulletinSheet(activeSem, false)
+                ) : (
+                  <p className="p-8 text-center text-gray-500">Bulletin provisoire indisponible.</p>
+                )
               ) : (
                 <p className="p-8 text-center text-gray-500">Bulletin provisoire indisponible.</p>
               )}

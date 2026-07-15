@@ -144,7 +144,7 @@ export default function BulletinsTab({
     }
   }, [activeFiliereFilter, semestres, localSemestreId]);
 
-  const selectedSemestreId = globalSemestreId && globalSemestreId > 0 ? globalSemestreId : localSemestreId;
+  const selectedSemestreId = globalSemestreId !== undefined ? globalSemestreId : localSemestreId;
 
   const activeSem = semestres.find(s => Number(s.id) === Number(selectedSemestreId));
 
@@ -402,7 +402,7 @@ export default function BulletinsTab({
   };
 
   const handleDownloadReport = () => {
-    if (!activeStudent || !activeSem) return;
+    if (!activeStudent) return;
     
     let reportDoc = `====================================================\n`;
     reportDoc += `         BULLETIN SCOLAIRE OFFICIEL\n`;
@@ -411,44 +411,68 @@ export default function BulletinsTab({
     reportDoc += `Matricule : ${activeStudent.matricule}\n`;
     reportDoc += `Nom Complet : ${activeStudent.nom} ${activeStudent.prenom}\n`;
     reportDoc += `Sexe : ${activeStudent.sexe} | Date Naiss : ${activeStudent.date_naissance}\n`;
-    reportDoc += `Période : ${activeSem.nom_semestre} (${activeSem.annee_scolaire})\n`;
     reportDoc += `Filière : ${filieres.find(x => x.id === activeStudent.filiere_id)?.nom_filiere}\n`;
     reportDoc += `Classe : ${classes.find(x => x.id === activeStudent.classe_id)?.nom_classe}\n`;
-    reportDoc += `----------------------------------------------------\n`;
-    reportDoc += `Détails des Évaluations :\n`;
     
-    studentGrades.forEach(g => {
-      const cTitle = cours.find(x => x.id === g.cours_id)?.titre || "Matière";
-      reportDoc += `- ${cTitle} (${g.credits} crédits) : ${Number(g.note).toFixed(2)}/20\n`;
+    const targetSemesters = selectedSemestreId === 0
+      ? semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
+      : [activeSem].filter(Boolean) as Semestre[];
+
+    targetSemesters.forEach(sem => {
+      reportDoc += `\n====================================================\n`;
+      reportDoc += `Période : ${sem.nom_semestre} (${sem.annee_scolaire})\n`;
+      reportDoc += `----------------------------------------------------\n`;
+      reportDoc += `Détails des Évaluations :\n`;
+      
+      const semGrades = notes.filter(n => 
+        Number(n.etudiant_id) === Number(activeStudent.id) && 
+        Number(n.semestre_id) === Number(sem.id)
+      );
+
+      let sumNotes = 0;
+      let sumCredits = 0;
+      
+      semGrades.forEach(g => {
+        const cTitle = cours.find(x => x.id === g.cours_id)?.titre || "Matière";
+        reportDoc += `- ${cTitle} (${g.credits} crédits) : ${Number(g.note).toFixed(2)}/20\n`;
+        sumNotes += Number(g.note) * Number(g.credits);
+        sumCredits += Number(g.credits);
+      });
+
+      const semGPA = sumCredits > 0 ? (sumNotes / sumCredits) : 0;
+      const semMention = getMention(semGPA);
+      const semDecision = semGPA >= 10 ? "Validé" : "Non validé";
+
+      reportDoc += `----------------------------------------------------\n`;
+      reportDoc += `MOYENNE GÉNÉRALE : ${semGPA.toFixed(2)} / 20\n`;
+      reportDoc += `MENTION : ${semMention}\n`;
+      reportDoc += `DÉCISION DU JURY : ${semDecision}\n`;
     });
-    
-    reportDoc += `----------------------------------------------------\n`;
-    reportDoc += `MOYENNE GÉNÉRALE : ${activeGPA.toFixed(2)} / 20\n`;
-    reportDoc += `MENTION : ${activeMention}\n`;
-    reportDoc += `DÉCISION DU JURY : ${activeDecision}\n\n`;
+
+    reportDoc += `\n====================================================\n`;
     reportDoc += `Fait à Bamako, le 06/06/2026\n`;
     reportDoc += `Le Secrétaire Général de Direction\n`;
     
     const element = document.createElement("a");
     const file = new Blob([reportDoc], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `bulletin_${activeStudent.matricule}_${activeSem.nom_semestre.replace(" ", "_")}.txt`;
+    element.download = `bulletins_${activeStudent.matricule}_complet.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
   };
 
-  const renderSingleBulletin = (student: Etudiant, isCascade: boolean) => {
+  const renderSingleBulletin = (student: Etudiant, targetSem: Semestre, isCascade: boolean) => {
     // 1. Get subjects of the semester for this student
     const studentMatieresOfSem = matieres.filter(m => 
       Number(m.filiere_id) === Number(student.filiere_id) && 
-      Number(m.semestre_id) === Number(selectedSemestreId)
+      Number(m.semestre_id) === Number(targetSem.id)
     );
 
     // 2. Filter grades for this student
     const studentGrades = notes.filter(n => 
       Number(n.etudiant_id) === Number(student.id) && 
-      Number(n.semestre_id) === Number(selectedSemestreId)
+      Number(n.semestre_id) === Number(targetSem.id)
     );
 
     // 3. Define structured grades list to render, adapting if in edit mode (only allowed in single view for selectedStudentId)
@@ -509,14 +533,14 @@ export default function BulletinsTab({
     }
 
     // Rank and Mention
-    const { rank: studentRank, total: totalClassmates } = getStudentRank(student.id, selectedSemestreId);
+    const { rank: studentRank, total: totalClassmates } = getStudentRank(student.id, targetSem.id);
     const studentMention = getMention(studentGPA);
     const studentDecision = studentGPA >= 10 ? "Validé" : "Non validé";
 
     return (
       <div 
-        key={student.id} 
-        className={`bg-[#ffffff] p-8 max-w-4xl mx-auto rounded-2xl border-4 border-[#000000] relative overflow-hidden text-[#000000] ${
+        key={`${student.id}-${targetSem.id}`} 
+        className={`bg-[#ffffff] p-4 sm:p-8 max-w-4xl mx-auto rounded-2xl border-4 border-[#000000] relative overflow-hidden text-[#000000] ${
           isCascade ? "mb-10 bulletin-page" : ""
         }`} 
         id={isCascade ? undefined : "bulletin-official-canvas"}
@@ -540,9 +564,9 @@ export default function BulletinsTab({
           <div className="text-center md:text-right border-l-0 md:border-l border-[#000000] pl-0 md:pl-6 shrink-0 font-mono text-xs text-[#000000]">
             <strong className="text-[#000000] block font-black">BULLETIN DE NOTES</strong>
             <span className="text-[#000000] block mt-1 bg-[#ffffff] border border-[#000000] py-1 px-3 rounded font-bold uppercase">
-              {shortenSemester(activeSem?.nom_semestre || "")}
+              {shortenSemester(targetSem?.nom_semestre || "")}
             </span>
-            <span className="text-[#000000] block mt-1">Année {activeSem?.annee_scolaire}</span>
+            <span className="text-[#000000] block mt-1">Année {targetSem?.annee_scolaire}</span>
           </div>
         </div>
 
@@ -915,7 +939,7 @@ export default function BulletinsTab({
         </div>
 
         {/* Validation section footer */}
-        <div className="mt-8 pt-8 border-t border-[#000000] grid grid-cols-2 text-center text-xs text-[#000000]">
+        <div className="mt-8 pt-8 border-t border-[#000000] grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-0 text-center text-xs text-[#000000]">
           <div>
             <span className="font-black text-[#000000] uppercase block">La Direction des Études</span>
             <p className="text-[10px] text-[#525252] mt-0.5 font-bold italic">Signature validée électroniquement</p>
@@ -1244,6 +1268,9 @@ export default function BulletinsTab({
               adminTheme === 'sombre-or' ? 'text-white' : 'text-slate-800'
             }`}
           >
+            <option value={0} className={adminTheme === 'sombre-or' ? 'bg-slate-950 text-white' : ''}>
+              Toutes les périodes
+            </option>
             {semestres
               .filter(sem => !activeFiliereFilter || !sem.filiere_id || Number(sem.filiere_id) === Number(activeFiliereFilter))
               .map(sem => (
@@ -1282,9 +1309,9 @@ export default function BulletinsTab({
               <>
                 <button 
                   onClick={handleStartEditing}
-                  disabled={selectedStudentId === 0}
+                  disabled={selectedStudentId === 0 || selectedSemestreId === 0}
                   className="btn bg-amber-500 hover:bg-amber-600 text-white font-semibold disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition duration-200 cursor-pointer text-xs"
-                  title="Passer en mode d'édition directe pour ce bulletin"
+                  title={selectedSemestreId === 0 ? "Veuillez sélectionner une période spécifique pour modifier les notes" : "Passer en mode d'édition directe pour ce bulletin"}
                 >
                   <Pencil className="w-4 h-4 text-white" /> Modifier les notes
                 </button>
@@ -1323,8 +1350,20 @@ export default function BulletinsTab({
 
       {/* Main visual display of the report card(s) */}
       {displayMode === 'single' ? (
-        activeStudent && activeSem ? (
-          renderSingleBulletin(activeStudent, false)
+        activeStudent ? (
+          selectedSemestreId === 0 ? (
+            semestres
+              .filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id))
+              .map(sem => renderSingleBulletin(activeStudent, sem, false))
+          ) : activeSem ? (
+            renderSingleBulletin(activeStudent, activeSem, false)
+          ) : (
+            <div className="bg-slate-50 border border-dashed border-gray-300 p-12 text-center rounded-2xl flex flex-col items-center justify-center gap-3">
+              <BookOpen className="w-10 h-10 text-slate-400" />
+              <h3 className="font-bold text-slate-900 text-sm">Aucun bulletin de notes ouvert</h3>
+              <p className="text-xs text-slate-500 max-w-md">Veuillez sélectionner un élève dans la liste ci-dessus pour charger et générer son relevé de notes semestriel officiel.</p>
+            </div>
+          )
         ) : (
           <div className="bg-slate-50 border border-dashed border-gray-300 p-12 text-center rounded-2xl flex flex-col items-center justify-center gap-3">
             <BookOpen className="w-10 h-10 text-slate-400" />
@@ -1341,7 +1380,14 @@ export default function BulletinsTab({
               <p className="text-xs text-slate-500 max-w-md">Il n'y a aucun étudiant enregistré dans cette filière académique.</p>
             </div>
           ) : (
-            eligibleStudents.map(student => renderSingleBulletin(student, true))
+            eligibleStudents.flatMap(student => {
+              const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(student.filiere_id));
+              if (selectedSemestreId === 0) {
+                return studentSemestres.map(sem => renderSingleBulletin(student, sem, true));
+              } else {
+                return activeSem ? [renderSingleBulletin(student, activeSem, true)] : [];
+              }
+            })
           )}
         </div>
       )}
