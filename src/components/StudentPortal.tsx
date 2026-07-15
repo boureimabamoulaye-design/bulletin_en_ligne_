@@ -61,9 +61,7 @@ export default function StudentPortal({
   const [activeTab, setActiveTab] = useState<'profil' | 'cours' | 'notes' | 'bulletins' | 'paiements'>('bulletins');
   const [menuOpen, setMenuOpen] = useState(false);
   const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
-  const [localSemestreId, setLocalSemestreId] = useState<number>(() => {
-    return studentSemestres[0]?.id || semestres[0]?.id || 0;
-  });
+  const [localSemestreId, setLocalSemestreId] = useState<number>(0);
   const selectedSemestreId = globalSemestreId && globalSemestreId > 0 ? globalSemestreId : localSemestreId;
   const setSelectedSemestreId = (id: number) => {
     if (onSemestreChange) {
@@ -87,6 +85,7 @@ export default function StudentPortal({
   const [selectedStudentAnnee, setSelectedStudentAnnee] = useState<string>(() => {
     return uniqueAnneeScolaires.includes("2025-2026") ? "2025-2026" : (uniqueAnneeScolaires[0] || "2025-2026");
   });
+  const [studentDisplaySubMode, setStudentDisplaySubMode] = useState<'table' | 'cards'>('cards');
 
   // Sync state with global academic year toggle
   React.useEffect(() => {
@@ -100,9 +99,7 @@ export default function StudentPortal({
     setActiveTab('bulletins');
     setMenuOpen(false);
     
-    const sSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
-    const firstSemId = sSemestres[0]?.id || semestres[0]?.id || 0;
-    setSelectedSemestreId(firstSemId);
+    setSelectedSemestreId(0);
     
     setCourseFiliereFilter(initialFiliereId || activeStudent.filiere_id);
     
@@ -115,7 +112,7 @@ export default function StudentPortal({
   React.useEffect(() => {
     const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(activeStudent.filiere_id));
     if (studentSemestres.length > 0) {
-      if (!studentSemestres.some(s => s.id === selectedSemestreId)) {
+      if (selectedSemestreId !== 0 && !studentSemestres.some(s => s.id === selectedSemestreId)) {
         setSelectedSemestreId(studentSemestres[0].id);
       }
     }
@@ -324,19 +321,19 @@ export default function StudentPortal({
           <GraduationCap className="w-12 h-12 text-[#000000] bg-[#ffffff] border-2 border-[#000000] rounded p-2 hidden md:block" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-xs text-[#000000] w-full">
             <div>
-              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Numéro Matricule Unique</dt>
+              <dt className="text-slate-900 font-extrabold uppercase text-[9px] tracking-wide">Numéro Matricule Unique</dt>
               <dd className="font-mono text-xs font-black text-[#000000]">{activeStudent.matricule}</dd>
             </div>
             <div>
-              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Nom de l'étudiant</dt>
+              <dt className="text-slate-900 font-extrabold uppercase text-[9px] tracking-wide">Nom de l'étudiant</dt>
               <dd className="text-xs font-black text-[#000000] uppercase">{activeStudent.nom} {activeStudent.prenom}</dd>
             </div>
             <div>
-              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Classe d'études active</dt>
+              <dt className="text-slate-900 font-extrabold uppercase text-[9px] tracking-wide">Classe d'études active</dt>
               <dd className="font-bold text-xs text-[#000000]">{classeActuelle?.nom_classe || "Inconnu"}</dd>
             </div>
             <div>
-              <dt className="text-gray-500 font-extrabold uppercase text-[9px] tracking-wide">Filière / Domaine</dt>
+              <dt className="text-slate-900 font-extrabold uppercase text-[9px] tracking-wide">Filière / Domaine</dt>
               <dd className="font-bold text-xs text-[#000000]">{filierePrincipale?.nom_filiere || "Non classifié"}</dd>
             </div>
           </div>
@@ -379,10 +376,10 @@ export default function StudentPortal({
                       <td className="py-3 px-4 font-bold text-left text-[#000000]">{courseObj ? courseObj.titre : "Enseignement Général"}</td>
                       <td className="py-3 font-bold">{g.credits} ECTS</td>
                       <td className="py-3 font-semibold text-[#404040]">
-                        {g.note_classe !== undefined ? `${g.note_classe.toFixed(2)}/20` : "-"}
+                        {g.note_classe !== undefined && g.note_classe !== null ? `${g.note_classe.toFixed(2)}/20` : ""}
                       </td>
                       <td className="py-3 font-semibold text-[#404040]">
-                        {g.note_examen !== undefined ? `${g.note_examen.toFixed(2)}/20` : "-"}
+                        {g.note_examen !== undefined && g.note_examen !== null ? `${g.note_examen.toFixed(2)}/20` : ""}
                       </td>
                       <td className="py-3 font-black text-slate-900 text-sm">{finalNote.toFixed(2)}/20</td>
                       <td className="py-3 pr-4 text-right font-black">
@@ -406,22 +403,16 @@ export default function StudentPortal({
           <div className="mt-6 border-4 border-[#000000] bg-[#ffffff] rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4 text-[#000000]">
             <div className="flex gap-4 md:gap-8 flex-wrap justify-center">
               <div>
-                <dt className="text-[10px] font-extrabold text-gray-500 uppercase">Moyenne Générale</dt>
+                <dt className="text-[10px] font-extrabold text-slate-900 uppercase">Moyenne Générale</dt>
                 <dd className="text-xl font-black text-[#000000]">{semAverage.toFixed(2)} / 20</dd>
               </div>
               <div>
-                <dt className="text-[10px] font-extrabold text-gray-500 uppercase">Mention Décernée</dt>
+                <dt className="text-[10px] font-extrabold text-slate-900 uppercase">Mention Décernée</dt>
                 <dd className="text-xl font-black text-[#000000]">{semMention}</dd>
-              </div>
-              <div>
-                <dt className="text-[10px] font-extrabold text-gray-500 uppercase">Rang Semestriel</dt>
-                <dd className="text-xl font-black text-[#000000]">
-                  {semRankInfo.rank}<sup>e</sup> sur {semRankInfo.total}
-                </dd>
               </div>
             </div>
             <div className="text-center md:text-right shrink-0">
-              <span className="text-[10px] text-gray-500 uppercase font-black block">Décision Académique</span>
+              <span className="text-[10px] text-slate-900 uppercase font-black block">Décision Académique</span>
               <span className={`inline-block mt-1 font-extrabold text-xs uppercase px-3 py-1 rounded-full border-2 border-[#000000] ${
                 semAverage >= 10 ? "bg-emerald-500 text-[#ffffff]" : "bg-rose-500 text-[#ffffff]"
               }`}>
@@ -1018,13 +1009,13 @@ export default function StudentPortal({
           {activeTab === 'bulletins' && (
             <div className="space-y-6" id="student-bulletins-tab">
               {/* Period selection header */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <span className="text-xs font-bold text-gray-550 uppercase">Rapport de Notes Semestriel :</span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-3 items-center w-full sm:w-auto justify-between sm:justify-end">
                   <select 
                     value={selectedSemestreId} 
                     onChange={e => setSelectedSemestreId(Number(e.target.value))}
-                    className="form-control w-52"
+                    className="form-control w-full sm:w-52"
                   >
                     <option value={0}>Tous les semestres</option>
                     {semestres
@@ -1034,6 +1025,7 @@ export default function StudentPortal({
                       ))}
                   </select>
 
+                  {/* Fiches de notes selected by default */}
                 </div>
               </div>
 

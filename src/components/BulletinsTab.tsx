@@ -84,7 +84,8 @@ export default function BulletinsTab({
 }: BulletinsTabProps) {
   const [localStudentId, setLocalStudentId] = useState<number>(0);
   const [localSemestreId, setLocalSemestreId] = useState<number>(semestres[0]?.id || 0);
-  const [displayMode, setDisplayMode] = useState<'single' | 'all'>('single');
+  const [displayMode, setDisplayMode] = useState<'single' | 'all'>('all');
+  const [allDisplaySubMode, setAllDisplaySubMode] = useState<'table' | 'cards'>('cards');
 
   // État pour la recherche textuelle de l'étudiant et l'affichage du menu
   const [studentSearchInput, setStudentSearchInput] = useState('');
@@ -577,21 +578,21 @@ export default function BulletinsTab({
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-xs text-[#000000] flex-1">
             <div>
-              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">ID Matricule Unifié</dt>
+              <dt className="text-[#1a1a1a] uppercase font-black tracking-wide text-[9px]">ID Matricule Unifié</dt>
               <dd className="font-mono text-sm font-black text-[#000000]">{student.matricule}</dd>
             </div>
             <div>
-              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">Nom de famille & Prénoms</dt>
+              <dt className="text-[#1a1a1a] uppercase font-black tracking-wide text-[9px]">Nom de famille & Prénoms</dt>
               <dd className="text-sm font-black text-[#000000] uppercase">{student.nom} {student.prenom}</dd>
             </div>
             <div>
-              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">Niveau d'études d'affectation</dt>
+              <dt className="text-[#1a1a1a] uppercase font-black tracking-wide text-[9px]">Niveau d'études d'affectation</dt>
               <dd className="font-bold text-sm text-[#000000]">
                 {classes.find(c => Number(c.id) === Number(student.classe_id))?.nom_classe || "Non renseigné"}
               </dd>
             </div>
             <div>
-              <dt className="text-[#525252] uppercase font-black tracking-wide text-[9px]">Filière Académique d'Inscription</dt>
+              <dt className="text-[#1a1a1a] uppercase font-black tracking-wide text-[9px]">Filière Académique d'Inscription</dt>
               <dd className="font-black text-sm text-[#000000] uppercase">
                 {filieres.find(f => Number(f.id) === Number(student.filiere_id))?.nom_filiere}
               </dd>
@@ -750,12 +751,12 @@ export default function BulletinsTab({
                               )}
                             </div>
                           </td>
-                          <td className="font-black text-[#000000] text-sm border-l border-[#000000]">
-                            {finalNote !== null ? `${finalNote.toFixed(2)}/20` : "-"}
+                           <td className="font-black text-[#000000] text-sm border-l border-[#000000]">
+                            {finalNote !== null ? `${finalNote.toFixed(2)}/20` : ""}
                           </td>
                           <td className="font-bold text-[#000000] border-l border-[#000000]">{g.credits}</td>
                           <td className="font-black text-[#000000] border-l border-[#000000]">
-                            {notePonderated !== null ? notePonderated.toFixed(2) : "-"}
+                            {notePonderated !== null ? notePonderated.toFixed(2) : ""}
                           </td>
                           <td className="font-bold border-l border-[#000000] p-1">
                             {finalNote !== null ? (
@@ -763,19 +764,23 @@ export default function BulletinsTab({
                                 {subjMention}
                               </span>
                             ) : (
-                              <span className="text-[#000000] font-normal italic">Non saisi</span>
+                              ""
                             )}
                           </td>
                           <td className="border-l border-[#000000] text-[#000000] p-1">
-                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
-                              <span className="hidden md:inline">{subjStatus}</span>
-                              <span className="inline md:hidden">
-                                {subjStatus.includes("Capitalisé") ? "V.A." : 
-                                 subjStatus.includes("Compensé") ? "V.Comp" : 
-                                 subjStatus.includes("Rattrapage") ? "R.A." : 
-                                 subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                            {finalNote !== null ? (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
+                                <span className="hidden md:inline">{subjStatus}</span>
+                                <span className="inline md:hidden">
+                                  {subjStatus.includes("Capitalisé") ? "V.A." : 
+                                   subjStatus.includes("Compensé") ? "V.Comp" : 
+                                   subjStatus.includes("Rattrapage") ? "R.A." : 
+                                   subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                                </span>
                               </span>
-                            </span>
+                            ) : (
+                              ""
+                            )}
                           </td>
                         </tr>
                       );
@@ -787,17 +792,17 @@ export default function BulletinsTab({
                             <div className="text-[10px] font-mono text-[#525252] font-semibold">{g.code_matiere}</div>
                           </td>
                           <td className="font-bold text-[#000000] border-l border-[#000000]">
-                            {g.note_classe !== null ? `${g.note_classe.toFixed(2)}/20` : "-"}
+                            {g.note_classe !== null ? `${g.note_classe.toFixed(2)}/20` : ""}
                           </td>
                           <td className="font-bold text-[#000000] border-l border-[#000000]">
-                            {g.note_examen !== null ? `${g.note_examen.toFixed(2)}/20` : "-"}
+                            {g.note_examen !== null ? `${g.note_examen.toFixed(2)}/20` : ""}
                           </td>
                           <td className="font-black text-[#000000] text-sm border-l border-[#000000]">
-                            {finalNote !== null ? `${finalNote.toFixed(2)}/20` : "-"}
+                            {finalNote !== null ? `${finalNote.toFixed(2)}/20` : ""}
                           </td>
                           <td className="font-bold text-[#000000] border-l border-[#000000]">{g.credits}</td>
                           <td className="font-black text-[#000000] border-l border-[#000000]">
-                            {notePonderated !== null ? notePonderated.toFixed(2) : "-"}
+                            {notePonderated !== null ? notePonderated.toFixed(2) : ""}
                           </td>
                           <td className="font-bold border-l border-[#000000] p-1">
                             {finalNote !== null ? (
@@ -805,19 +810,23 @@ export default function BulletinsTab({
                                 {subjMention}
                               </span>
                             ) : (
-                              <span className="text-[#000000] font-normal italic">Non saisi</span>
+                              ""
                             )}
                           </td>
                           <td className="border-l border-[#000000] text-[#000000] p-1">
-                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
-                              <span className="hidden md:inline">{subjStatus}</span>
-                              <span className="inline md:hidden">
-                                {subjStatus.includes("Capitalisé") ? "V.A." : 
-                                 subjStatus.includes("Compensé") ? "V.Comp" : 
-                                 subjStatus.includes("Rattrapage") ? "R.A." : 
-                                 subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                            {finalNote !== null ? (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#000000] bg-[#ffffff] text-[#000000]">
+                                <span className="hidden md:inline">{subjStatus}</span>
+                                <span className="inline md:hidden">
+                                  {subjStatus.includes("Capitalisé") ? "V.A." : 
+                                   subjStatus.includes("Compensé") ? "V.Comp" : 
+                                   subjStatus.includes("Rattrapage") ? "R.A." : 
+                                   subjStatus === "Non saisi" ? "N.S." : subjStatus}
+                                </span>
                               </span>
-                            </span>
+                            ) : (
+                              ""
+                            )}
                           </td>
                         </tr>
                       );
@@ -913,10 +922,6 @@ export default function BulletinsTab({
             <div className="flex justify-between items-center text-xs">
               <span className="font-bold text-[#000000]">Moyenne Générale de l'Élève :</span>
               <span className="text-lg font-black text-[#000000]">{studentGPA > 0 ? `${studentGPA.toFixed(2)}/20` : "N/A"}</span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-[#000000]">Rang de l'Élève :</span>
-              <span className="font-mono text-xs font-black text-[#000000]">{studentGPA > 0 ? `${studentRank} / ${totalClassmates}` : "N/A"}</span>
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="font-bold text-[#000000]">Mention administrative :</span>
@@ -1372,22 +1377,24 @@ export default function BulletinsTab({
           </div>
         )
       ) : (
-        <div className="space-y-8">
-          {eligibleStudents.length === 0 ? (
+        <div className="space-y-6 animate-fade-in">
+          {filteredStudents.length === 0 ? (
             <div className="bg-slate-50 border border-dashed border-gray-300 p-12 text-center rounded-2xl flex flex-col items-center justify-center gap-3">
               <BookOpen className="w-10 h-10 text-slate-400" />
               <h3 className="font-bold text-slate-900 text-sm">Aucun étudiant éligible</h3>
-              <p className="text-xs text-slate-500 max-w-md">Il n'y a aucun étudiant enregistré dans cette filière académique.</p>
+              <p className="text-xs text-slate-500 max-w-md">Il n'y a aucun étudiant enregistré correspondant à vos critères de recherche.</p>
             </div>
           ) : (
-            eligibleStudents.flatMap(student => {
-              const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(student.filiere_id));
-              if (selectedSemestreId === 0) {
-                return studentSemestres.map(sem => renderSingleBulletin(student, sem, true));
-              } else {
-                return activeSem ? [renderSingleBulletin(student, activeSem, true)] : [];
-              }
-            })
+            <div className="space-y-8">
+              {filteredStudents.flatMap(student => {
+                const studentSemestres = semestres.filter(s => !s.filiere_id || Number(s.filiere_id) === Number(student.filiere_id));
+                if (selectedSemestreId === 0) {
+                  return studentSemestres.map(sem => renderSingleBulletin(student, sem, true));
+                } else {
+                  return activeSem ? [renderSingleBulletin(student, activeSem, true)] : [];
+                }
+              })}
+            </div>
           )}
         </div>
       )}
