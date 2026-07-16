@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Université des Sciences - Gestion Académique</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+              mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+              space: ['Space Grotesk', 'sans-serif']
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Smooth transitions */
+      .fade-enter {
+        animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .modal-anim {
+        animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes modalIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      /* Custom scrollbars */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(156, 163, 175, 0.25);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(156, 163, 175, 0.4);
+      }
+      /* Sombre & Or styling adjustments */
+      .theme-sombre-or {
+        --color-bg: #030712;
+        --color-card: #0b0f19;
+        --color-accent: #f59e0b;
+        --color-text: #f3f4f6;
+      }
+      .theme-clair-pro {
+        --color-bg: #f8fafc;
+        --color-card: #ffffff;
+        --color-accent: #2563eb;
+        --color-text: #0f172a;
+      }
+      /* Hide elements gracefully */
+      .view-hidden {
+        display: none !important;
+      }
+    </style>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body class="h-full bg-slate-950 font-sans text-slate-100 antialiased transition-colors duration-300" id="body-container">
+
+    <!-- ============================================ -->
+    <!-- 1. LOGIN SCREEN -->
+    <!-- ============================================ -->
+    <div id="login-screen" class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gradient-to-tr from-slate-950 via-[#0e1424] to-slate-900 transition-all duration-300 fade-enter">
+      <div class="sm:mx-auto sm:w-full sm:max-w-md text-center px-4">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-400/40 shadow-xl shadow-amber-500/10 mb-5">
+          <i data-lucide="graduation-cap" class="w-9 h-9 text-slate-950"></i>
+        </div>
+        <h2 class="font-space text-3xl font-extrabold tracking-tight text-white">Université des Sciences</h2>
+        <p class="mt-2 text-xs text-slate-400 font-semibold tracking-wider uppercase">Système Intégré de Gestion Scolaire</p>
+      </div>
+
+      <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
+        <div class="bg-[#0b0f19]/80 backdrop-blur border border-slate-800/80 py-8 px-6 shadow-2xl rounded-2xl space-y-6 sm:px-10">
+          
+          <!-- Role Selector -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 text-center">Choisissez votre profil d'accès</label>
+            <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-850">
+              <button type="button" id="role-admin-btn" onclick="setLoginRole('admin')" class="flex items-center justify-center gap-2 py-2 px-4 text-xs font-black rounded-lg transition-all text-amber-400 bg-amber-500/10 border border-amber-500/25">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                Administrateur
+              </button>
+              <button type="button" id="role-student-btn" onclick="setLoginRole('student')" class="flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-slate-200">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                Étudiant
+              </button>
+            </div>
+          </div>
+
+          <!-- Login Error -->
+          <div id="login-error-container" class="bg-rose-500/10 border border-rose-500/35 text-rose-400 text-xs px-4 py-3 rounded-xl flex items-start gap-2.5 view-hidden">
+            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+            <span id="login-error-msg" class="font-semibold leading-normal"></span>
+          </div>
+
+          <!-- Form -->
+          <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+            <div>
+              <label for="username-input" class="block text-xs font-bold text-slate-300 mb-1" id="username-label">Adresse Email / Identifiant</label>
+              <div class="relative rounded-xl shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <i data-lucide="mail" class="w-4 h-4" id="username-icon"></i>
+                </div>
+                <input type="text" id="username-input" required class="block w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs outline-none focus:border-amber-500 transition" placeholder="nom@ecole.com">
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label for="password-input" class="block text-xs font-bold text-slate-300">Mot de Passe</label>
+              </div>
+              <div class="relative rounded-xl shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <i data-lucide="lock" class="w-4 h-4"></i>
+                </div>
+                <input type="password" id="password-input" required class="block w-full pl-10 pr-10 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 text-xs outline-none focus:border-amber-500 transition" placeholder="••••••••">
+                <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+                  <i data-lucide="eye" class="w-4 h-4" id="eye-icon"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-xs font-black text-slate-950 bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-95 active:scale-[0.99] transition-all cursor-pointer">
+                Valider l'authentification
+              </button>
+            </div>
+          </form>
+
+          <div class="pt-4 border-t border-slate-800 text-center">
+            <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Compte Test : bourekane223@gmail.com / admin123</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- 2. MAIN ADMIN PORTAL LAYER -->
+    <!-- ============================================ -->
+    <div id="admin-portal" class="min-h-full flex flex-col view-hidden fade-enter">
+      
+      <!-- Top header -->
+      <header class="bg-slate-900 border-b border-amber-500/20 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 transition-all duration-300" id="admin-header-panel">
+        <div>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-400/40 shadow-lg flex items-center justify-center shrink-0">
+              <i data-lucide="graduation-cap" class="w-5 h-5 text-slate-950"></i>
+            </div>
+            <div>
+              <h2 class="text-md font-space font-extrabold tracking-tight text-amber-400" id="admin-title">Tableau de Bord Administratif</h2>
+              <p class="text-[10px] text-slate-400 font-semibold" id="admin-subtitle">Plateforme moderne de gestion scolaire unifiée.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global Selectors Toolbar -->
+        <div class="flex flex-wrap items-center gap-3">
+          
+          <!-- Compact Scroll Toggle -->
+          <button type="button" onclick="toggleCompactScroll()" id="compact-scroll-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all duration-200 bg-amber-500/15 border-amber-500/40 text-amber-400 shadow shadow-amber-950/20" title="Activer/Désactiver la hauteur compacte des listes">
+            <i data-lucide="minimize-2" class="w-3.5 h-3.5 text-amber-500"></i>
+            <span>Hauteur Compacte ✓</span>
+          </button>
+
+          <!-- Theme Selection Toggle -->
+          <button type="button" onclick="toggleTheme()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all duration-200 bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20" id="theme-btn">
+            <i data-lucide="moon" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" id="theme-btn-icon"></i>
+            <span id="theme-btn-text">Mode Sombre & Or</span>
+          </button>
+
+          <!-- School Year Selector -->
+          <div class="flex items-center border border-amber-500/20 rounded-xl p-0.5 space-x-0.5 bg-slate-950" id="school-year-toolbar">
+            <button type="button" onclick="setGlobalSchoolYear('2024-2025')" id="year-btn-24" class="text-[10px] font-bold px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all">Précédent (24-25)</button>
+            <button type="button" onclick="setGlobalSchoolYear('2025-2026')" id="year-btn-25" class="text-[10px] font-black px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-black shadow transition-all">Courant (25-26)</button>
+            <button type="button" onclick="setGlobalSchoolYear('2026-2027')" id="year-btn-26" class="text-[10px] font-bold px-2.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all">Suivant (26-27)</button>
+          </div>
+
+          <!-- Active Filiere Selector -->
+          <div class="flex items-center gap-1 text-[11px] border border-amber-500/20 rounded-lg p-1.5 px-3 bg-slate-950">
+            <span class="font-extrabold uppercase tracking-wider text-amber-400/80">Filière :</span>
+            <select id="global-filiere-select" onchange="handleGlobalFiliereChange()" class="bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-white max-w-[150px] truncate">
+              <option value="0" class="bg-slate-950 text-white">Toutes les filières</option>
+            </select>
+          </div>
+
+          <!-- Active Semestre Selector -->
+          <div class="flex items-center gap-1 text-[11px] border border-amber-500/20 rounded-lg p-1.5 px-3 bg-slate-950">
+            <span class="font-extrabold uppercase tracking-wider text-amber-400/80">Période :</span>
+            <select id="global-semestre-select" onchange="handleGlobalSemestreChange()" class="bg-transparent border-none text-xs font-bold outline-none cursor-pointer focus:ring-0 p-0 text-white">
+              <!-- Semestres load dynamically -->
+            </select>
+          </div>
+
+          <!-- Sign Out Button -->
+          <button type="button" onclick="handleLogout()" class="flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-red-500/20 border border-slate-750 hover:border-red-500/30 text-slate-300 hover:text-red-400 transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+
+        </div>
+      </header>
+
+      <!-- Main Layout Body -->
+      <div class="flex-grow flex flex-col lg:flex-row transition-colors duration-300">
+        
+        <!-- Left lateral navigation bar -->
+        <aside class="w-full lg:w-64 bg-slate-900 text-slate-100 shrink-0 flex flex-col border-r border-slate-800 p-4 justify-between" id="admin-sidebar">
+          <div>
+            <!-- Header branding in sidebar -->
+            <div class="logo-area flex items-center gap-3 border-b border-slate-800 pb-4 mb-6">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg border border-amber-400/20">
+                <i data-lucide="graduation-cap" class="w-5.5 h-5.5 text-slate-950"></i>
+              </div>
+              <div>
+                <h3 class="font-space font-black text-xs tracking-wider text-slate-100 uppercase leading-tight">Université</h3>
+                <span class="text-[9px] font-bold block uppercase tracking-wide text-amber-400">ADMINISTRATION</span>
+              </div>
+            </div>
+
+            <!-- Tabs list -->
+            <nav class="space-y-1" id="nav-tabs-container">
+              <button onclick="setActiveTab('dashboard')" id="tab-btn-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow shadow-amber-500/20">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                Vue d'Ensemble
+              </button>
+              <button onclick="setActiveTab('etudiants')" id="tab-btn-etudiants" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                Gestion Étudiants
+              </button>
+              <button onclick="setActiveTab('filieres')" id="tab-btn-filieres" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+                Filières Académiques
+              </button>
+              <button onclick="setActiveTab('semestres')" id="tab-btn-semestres" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                Semestres d'Études
+              </button>
+              <button onclick="setActiveTab('cours')" id="tab-btn-cours" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                Supports de Cours
+              </button>
+              <button onclick="setActiveTab('notes')" id="tab-btn-notes" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="award" class="w-4 h-4"></i>
+                Saisie des Notes
+              </button>
+              <button onclick="setActiveTab('bulletins')" id="tab-btn-bulletins" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="book-open" class="w-4 h-4"></i>
+                Génération Bulletins
+              </button>
+              <button onclick="setActiveTab('autorisations')" id="tab-btn-autorisations" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                Autorisations d'Accès
+              </button>
+              <button onclick="setActiveTab('paiements')" id="tab-btn-paiements" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                <i data-lucide="credit-card" class="w-4 h-4"></i>
+                Gestion des Paiements
+              </button>
+              <button onclick="setActiveTab('corbeille')" id="tab-btn-corbeille" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800 hover:text-red-400">
+                <i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i>
+                <span>Corbeille</span>
+                <span id="trash-badge" class="ml-auto bg-rose-500/20 border border-rose-500/30 text-rose-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold">0</span>
+              </button>
+            </nav>
+          </div>
+
+          <!-- Bottom account session details -->
+          <div class="mt-8 border-t border-slate-800 pt-4 space-y-3">
+            <div class="flex items-center gap-2.5 px-1">
+              <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-black text-amber-400">
+                A
+              </div>
+              <div class="min-w-0">
+                <p id="connected-user-name" class="text-xs font-bold text-white truncate"></p>
+                <span class="text-[9px] font-mono text-amber-500 block">Administrateur Actif</span>
+              </div>
+            </div>
+            <!-- Database type info line -->
+            <div class="bg-slate-950 p-2 rounded-lg border border-slate-850 flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+              <p class="text-[9px] text-slate-400 font-mono">Bdd : SQLITE / MYSQL ACTIVE</p>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Dynamic Work Desk Container -->
+        <main class="flex-grow p-6 overflow-y-auto space-y-6 bg-slate-950 text-slate-100" id="admin-work-desk">
+
+          <!-- ============================================ -->
+          <!-- TAB: DASHBOARD VUE D'ENSEMBLE -->
+          <!-- ============================================ -->
+          <div id="panel-dashboard" class="space-y-6 fade-enter">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Total Students Card -->
+              <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative overflow-hidden group">
+                <div class="absolute right-3 top-3 w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                  <i data-lucide="users" class="w-5.5 h-5.5"></i>
+                </div>
+                <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Effectif Étudiants</p>
+                <h3 id="stat-students-count" class="text-3xl font-extrabold tracking-tight text-white mt-1">0</h3>
+                <span class="text-[10px] text-slate-500 mt-2 block font-medium">Inscrits cette année</span>
+              </div>
+              <!-- Average Grade Card -->
+              <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative overflow-hidden group">
+                <div class="absolute right-3 top-3 w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                  <i data-lucide="award" class="w-5.5 h-5.5"></i>
+                </div>
+                <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Moyenne Générale</p>
+                <h3 id="stat-avg-grade" class="text-3xl font-extrabold tracking-tight text-amber-400 mt-1">0.00 / 20</h3>
+                <span class="text-[10px] text-slate-500 mt-2 block font-medium">Sur l'ensemble des notes</span>
+              </div>
+              <!-- Total Courses Card -->
+              <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative overflow-hidden group">
+                <div class="absolute right-3 top-3 w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                  <i data-lucide="file-text" class="w-5.5 h-5.5"></i>
+                </div>
+                <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Supports de Cours</p>
+                <h3 id="stat-courses-count" class="text-3xl font-extrabold tracking-tight text-white mt-1">0</h3>
+                <span class="text-[10px] text-slate-500 mt-2 block font-medium">Documents de cours actifs</span>
+              </div>
+              <!-- Tuition Finance Card -->
+              <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl relative overflow-hidden group">
+                <div class="absolute right-3 top-3 w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                  <i data-lucide="credit-card" class="w-5.5 h-5.5"></i>
+                </div>
+                <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Scolarité Recouvrée</p>
+                <h3 id="stat-tuition-sum" class="text-2xl font-black mt-1.5 text-emerald-400">0 FCFA</h3>
+                <span class="text-[10px] text-slate-500 mt-2 block font-medium">Total versements</span>
+              </div>
+            </div>
+
+            <!-- Welcome Desk Banner -->
+            <div class="bg-[#0b0f19] border border-amber-500/15 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div class="space-y-2 text-center md:text-left">
+                <h3 class="text-lg font-space font-black text-amber-400 flex items-center justify-center md:justify-start gap-2">
+                  <i data-lucide="party-popper" class="w-5 h-5 text-amber-400"></i>
+                  Bienvenue dans votre nouvel Espace SQL
+                </h3>
+                <p class="text-xs text-slate-300 max-w-xl leading-relaxed">
+                  Cette interface est maintenant entièrement convertie en **HTML standard et Vanilla JavaScript**, propulsée par un serveur Express et une base de données relationnelle **SQLite/MySQL**. Aucune librairie lourde comme React n'est utilisée.
+                </p>
+              </div>
+              <div class="flex gap-3">
+                <button onclick="setActiveTab('notes')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                  Saisir des Notes
+                </button>
+                <button onclick="setActiveTab('etudiants')" class="px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-100 text-xs rounded-xl cursor-pointer transition">
+                  Gérer les Étudiants
+                </button>
+              </div>
+            </div>
+
+            <!-- Access Log / Historique desk row -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="history" class="w-4.5 h-4.5 text-amber-500"></i>
+                  Historique Récent des Actions (Base de Données)
+                </h3>
+                <span class="text-[9px] font-mono text-slate-500 uppercase">10 derniers événements SQL</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                  <thead>
+                    <tr class="border-b border-slate-850 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                      <th class="pb-2">ID</th>
+                      <th class="pb-2">Utilisateur</th>
+                      <th class="pb-2">Action de sécurité</th>
+                      <th class="pb-2">Date et Heure</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboard-logs-tbody">
+                    <!-- Loaded dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: GESTION ETUDIANTS -->
+          <!-- ============================================ -->
+          <div id="panel-etudiants" class="space-y-4 view-hidden fade-enter">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <h3 class="text-lg font-space font-black text-white">Gestion des Étudiants</h3>
+                <p class="text-xs text-slate-400">Inscrire, modifier et suivre le dossier de vos étudiants.</p>
+              </div>
+              <button onclick="openAddStudentModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-90 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                Ajouter un Étudiant
+              </button>
+            </div>
+
+            <!-- Search and Filtering Bar -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row gap-3">
+              <div class="flex-grow relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 pointer-events-none">
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                </div>
+                <input type="text" id="student-search" oninput="renderStudentsTable()" placeholder="Rechercher par nom, prénom, matricule ou email..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+              </div>
+              <div class="grid grid-cols-2 gap-2 max-w-sm shrink-0">
+                <select id="student-filter-gender" onchange="renderStudentsTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                  <option value="ALL">Tous les sexes</option>
+                  <option value="M">Masculin (M)</option>
+                  <option value="F">Féminin (F)</option>
+                </select>
+                <select id="student-filter-classe" onchange="renderStudentsTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                  <option value="ALL">Toutes les classes</option>
+                  <!-- Load dynamically -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Student Table -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-200">
+                  <thead class="bg-slate-950 border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    <tr>
+                      <th class="p-3.5">Matricule</th>
+                      <th class="p-3.5">Nom & Prénom</th>
+                      <th class="p-3.5">Sexe</th>
+                      <th class="p-3.5">Date Naiss.</th>
+                      <th class="p-3.5">Contact</th>
+                      <th class="p-3.5">Filière / Classe</th>
+                      <th class="p-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="students-table-tbody" class="divide-y divide-slate-850">
+                    <!-- Dynamic -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: FILIERES ACADEMIQUES -->
+          <!-- ============================================ -->
+          <div id="panel-filieres" class="space-y-4 view-hidden fade-enter">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-space font-black text-white">Filières Académiques</h3>
+                <p class="text-xs text-slate-400">Définir les parcours de formation universitaires.</p>
+              </div>
+              <button onclick="openAddFiliereModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                Ajouter une Filière
+              </button>
+            </div>
+
+            <!-- Filieres cards/grid list -->
+            <div id="filieres-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Cards load dynamically -->
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: SEMESTRES D'ETUDES -->
+          <!-- ============================================ -->
+          <div id="panel-semestres" class="space-y-4 view-hidden fade-enter">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-space font-black text-white">Semestres d'Études</h3>
+                <p class="text-xs text-slate-400">Périodes d'évaluation reliées aux différentes filières.</p>
+              </div>
+              <button onclick="openAddSemestreModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                Ajouter un Semestre
+              </button>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-200">
+                <thead class="bg-slate-950 border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3.5">ID</th>
+                    <th class="p-3.5">Intitulé du Semestre</th>
+                    <th class="p-3.5">Filière Associée</th>
+                    <th class="p-3.5">Année Scolaire</th>
+                    <th class="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="semestres-table-tbody" class="divide-y divide-slate-850">
+                  <!-- Load dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: SUPPORTS DE COURS -->
+          <!-- ============================================ -->
+          <div id="panel-cours" class="space-y-4 view-hidden fade-enter">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-space font-black text-white">Supports de Cours & Documents</h3>
+                <p class="text-xs text-slate-400">Gérer les cours partagés avec vos étudiants.</p>
+              </div>
+              <button onclick="openAddCoursModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                Publier un Cours
+              </button>
+            </div>
+
+            <div id="cours-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Load dynamically -->
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: SAISIE DES NOTES -->
+          <!-- ============================================ -->
+          <div id="panel-notes" class="space-y-4 view-hidden fade-enter">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-space font-black text-white">Saisie des Notes & Crédits ECTS</h3>
+                <p class="text-xs text-slate-400">Évaluation des compétences scolaires.</p>
+              </div>
+              <button onclick="openAddNoteModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Enregistrer des Notes
+              </button>
+            </div>
+
+            <!-- Grade Grid with details -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-200">
+                <thead class="bg-slate-950 border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3.5">Étudiant évalué</th>
+                    <th class="p-3.5">Matière / Cours</th>
+                    <th class="p-3.5">Note brute / 20</th>
+                    <th class="p-3.5">Coefficient</th>
+                    <th class="p-3.5">Note Pondérée</th>
+                    <th class="p-3.5">Période Semestrielle</th>
+                    <th class="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="notes-table-tbody" class="divide-y divide-slate-850">
+                  <!-- Load dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: BULLETINS DES ETUDIANTS -->
+          <!-- ============================================ -->
+          <div id="panel-bulletins" class="space-y-4 view-hidden fade-enter">
+            <div>
+              <h3 class="text-lg font-space font-black text-white">Génération des Bulletins de Notes</h3>
+              <p class="text-xs text-slate-400">Edition et calcul automatique des bulletins académiques.</p>
+            </div>
+
+            <!-- Bulletins search box -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-3">
+              <div class="flex-grow relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                </div>
+                <input type="text" id="bulletin-search-input" oninput="renderBulletinsList()" placeholder="Entrez le nom ou le matricule de l'étudiant pour filtrer..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Bulletins Grid list -->
+            <div id="bulletins-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Dynamic -->
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: AUTORISATIONS D'ACCES -->
+          <!-- ============================================ -->
+          <div id="panel-autorisations" class="space-y-4 view-hidden fade-enter">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-space font-black text-white">Autorisations Inter-Filières</h3>
+                <p class="text-xs text-slate-400">Accorder un droit d'accès temporaire ou permanent à d'autres filières académiques.</p>
+              </div>
+              <button onclick="openAddAutorisationModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                <i data-lucide="key" class="w-4 h-4"></i>
+                Accorder une Autorisation
+              </button>
+            </div>
+
+            <!-- List of authorizations -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-200">
+                <thead class="bg-slate-950 border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3.5">ID</th>
+                    <th class="p-3.5">Étudiant Bénéficiaire</th>
+                    <th class="p-3.5">Filière Autorisée</th>
+                    <th class="p-3.5">Motif / Justification</th>
+                    <th class="p-3.5">Accordé Par</th>
+                    <th class="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="autorisations-table-tbody" class="divide-y divide-slate-850">
+                  <!-- Dynamic -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: GESTION DES PAIEMENTS -->
+          <!-- ============================================ -->
+          <div id="panel-paiements" class="space-y-4 view-hidden fade-enter">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <h3 class="text-lg font-space font-black text-white">Gestion de la Scolarité & Paiements</h3>
+                <p class="text-xs text-slate-400">Versements de scolarité, reçus et suivi de solvabilité.</p>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="openConfigureTuitionModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-100 text-xs rounded-xl font-bold transition">
+                  Configurer Tarif Annuel
+                </button>
+                <button onclick="openAddPaiementModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs rounded-xl shadow cursor-pointer transition">
+                  <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                  Enregistrer un Versement
+                </button>
+              </div>
+            </div>
+
+            <!-- Tuition statistics row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <span class="text-[10px] text-slate-400 font-bold uppercase">Scolarité Annuelle Obligatoire</span>
+                <p id="tuition-annual-config-display" class="text-xl font-black mt-1 text-white">0 FCFA</p>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <span class="text-[10px] text-slate-400 font-bold uppercase">Nombre Total de Versements</span>
+                <p id="tuition-count-display" class="text-xl font-black mt-1 text-white">0 reçus</p>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <span class="text-[10px] text-slate-400 font-bold uppercase">Solvabilité Globale de l'École</span>
+                <p id="tuition-solvability-percentage" class="text-xl font-black mt-1 text-emerald-400">100%</p>
+              </div>
+            </div>
+
+            <!-- Payments list table -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-200">
+                <thead class="bg-slate-950 border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3.5">Référence Reçu</th>
+                    <th class="p-3.5">Étudiant payeur</th>
+                    <th class="p-3.5">Montant versé</th>
+                    <th class="p-3.5">Date de paiement</th>
+                    <th class="p-3.5">Mode de versement</th>
+                    <th class="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="paiements-table-tbody" class="divide-y divide-slate-850">
+                  <!-- Load dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+
+          <!-- ============================================ -->
+          <!-- TAB: CORBEILLE (TRASH) -->
+          <!-- ============================================ -->
+          <div id="panel-corbeille" class="space-y-4 view-hidden fade-enter">
+            <div>
+              <h3 class="text-lg font-space font-black text-rose-500">Corbeille de l'Administration</h3>
+              <p class="text-xs text-slate-400">Restaurer ou supprimer définitivement les éléments supprimés de la base de données SQL.</p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-200">
+                <thead class="bg-slate-950 border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3.5">Type de document</th>
+                    <th class="p-3.5">Description de l'objet</th>
+                    <th class="p-3.5">Date de suppression</th>
+                    <th class="p-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="corbeille-table-tbody" class="divide-y divide-slate-850">
+                  <!-- Load dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- 3. MAIN STUDENT PORTAL LAYER -->
+    <!-- ============================================ -->
+    <div id="student-portal" class="min-h-full flex flex-col view-hidden fade-enter">
+      <!-- Top navbar -->
+      <nav class="bg-slate-900 border-b border-amber-500/20 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0 transition-all">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center border border-amber-400/40 shadow-lg">
+            <i data-lucide="graduation-cap" class="w-6 h-6 text-slate-950"></i>
+          </div>
+          <div>
+            <h2 class="text-md font-space font-extrabold tracking-tight text-white">Espace Étudiant d'Excellence</h2>
+            <p class="text-[9px] text-amber-400 font-bold tracking-wider uppercase">Université des Sciences de Gestion</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <p id="student-header-name" class="text-xs font-black text-white"></p>
+            <span id="student-header-matricule" class="text-[9px] font-mono text-slate-400 block"></span>
+          </div>
+          <button type="button" onclick="handleLogout()" class="flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-red-500/20 border border-slate-750 text-slate-300 hover:text-red-400 cursor-pointer transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Main student dashboard -->
+      <main class="flex-grow p-6 overflow-y-auto bg-slate-950 text-slate-100 max-w-7xl mx-auto w-full space-y-6">
+        
+        <!-- Welcome banner -->
+        <div class="bg-gradient-to-r from-[#0b0f19] to-[#121626] border border-amber-500/15 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden shadow-2xl">
+          <div class="space-y-1.5 z-10 text-center md:text-left">
+            <h3 class="text-xl font-space font-black text-amber-400" id="student-portal-welcome-title">Bienvenue</h3>
+            <p class="text-xs text-slate-300 max-w-xl leading-relaxed">
+              Consultez vos supports de cours mis à disposition par vos professeurs, visualisez votre relevé de notes en temps réel et imprimez vos fiches scolaires.
+            </p>
+          </div>
+          <div class="bg-amber-500/5 border border-amber-500/10 p-3 px-4 rounded-xl text-center shrink-0">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Filière / Classe Active</span>
+            <p id="student-active-filiere-label" class="text-xs font-black text-white mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Two Column Layout: Left (Courses & Payments), Right (Fiche de notes) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- LEFT: Courses and payments -->
+          <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Courses tab -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div class="flex justify-between items-center border-b border-slate-850 pb-3.5 mb-4">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="file-text" class="w-4.5 h-4.5 text-amber-500"></i>
+                  Supports de Cours & Ressources de Formation
+                </h3>
+                <span id="student-courses-count-label" class="bg-slate-850 text-slate-300 text-[10px] font-mono px-2.5 py-0.5 rounded-full border border-slate-800">0 documents</span>
+              </div>
+              <div id="student-courses-container" class="space-y-2.5">
+                <!-- Loaded dynamically -->
+              </div>
+            </div>
+
+            <!-- Payments history tab -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div class="flex justify-between items-center border-b border-slate-850 pb-3.5 mb-4">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="credit-card" class="w-4.5 h-4.5 text-amber-500"></i>
+                  Historique Comptable & Scolarité
+                </h3>
+              </div>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-850">
+                  <div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Scolarité totale due :</span>
+                    <span class="text-md font-black text-white" id="student-solvability-total">1 500 000 FCFA</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Reste à solder :</span>
+                    <span class="text-md font-black text-rose-400" id="student-solvability-remaining">0 FCFA</span>
+                  </div>
+                </div>
+                <!-- Mini table -->
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead>
+                      <tr class="text-[10px] text-slate-500 uppercase font-bold border-b border-slate-850">
+                        <th class="pb-2">Référence Reçu</th>
+                        <th class="pb-2">Montant</th>
+                        <th class="pb-2">Date d'encaissement</th>
+                        <th class="pb-2 text-right">Mode</th>
+                      </tr>
+                    </thead>
+                    <tbody id="student-payments-tbody" class="divide-y divide-slate-850">
+                      <!-- Loaded dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT: FICHES DE NOTES (Grades, calculations, average) -->
+          <div class="lg:col-span-5 space-y-6">
+            
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div class="flex justify-between items-center border-b border-slate-850 pb-3.5 mb-4">
+                <h3 class="text-sm font-space font-black text-white flex items-center gap-2 uppercase tracking-wide">
+                  <i data-lucide="award" class="w-4.5 h-4.5 text-amber-500"></i>
+                  FICHES DE NOTES
+                </h3>
+                <button onclick="window.print()" class="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-slate-950 font-black rounded-lg text-[10px] cursor-pointer shadow hover:opacity-90">
+                  <i data-lucide="printer" class="w-3 h-3"></i>
+                  Imprimer
+                </button>
+              </div>
+
+              <!-- Grades Transcript Table -->
+              <div class="space-y-4">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-xs">
+                    <thead>
+                      <tr class="text-[9.5px] text-slate-400 uppercase font-bold border-b border-slate-850">
+                        <th class="pb-2">Cours / Matière</th>
+                        <th class="pb-2">Note / 20</th>
+                        <th class="pb-2 text-center">Coeff</th>
+                        <th class="pb-2 text-right">Moy. Pondérée</th>
+                      </tr>
+                    </thead>
+                    <tbody id="student-notes-tbody" class="divide-y divide-slate-850">
+                      <!-- Dynamic -->
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Calculations overview -->
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-850/80 space-y-2">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400 font-medium">Total notes pondérées :</span>
+                    <span id="student-notes-total-weighted" class="font-bold text-white">0.00</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400 font-medium">Somme des coefficients :</span>
+                    <span id="student-notes-total-coefs" class="font-bold text-white">0</span>
+                  </div>
+                  <div class="border-t border-slate-850 pt-2 flex justify-between items-center">
+                    <span class="text-xs font-bold text-amber-400 uppercase">Moyenne Semestrielle :</span>
+                    <span id="student-notes-gpa-display" class="text-lg font-black text-amber-400">0.00 / 20</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Mention :</span>
+                    <span id="student-notes-mention-display" class="font-bold text-slate-200">-</span>
+                  </div>
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Décision académique :</span>
+                    <span id="student-notes-decision-display" class="px-2 py-0.5 rounded-full font-bold text-[10px]">-</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- 4. MODALS (DYNAMIC DIALOG BOXES) -->
+    <!-- ============================================ -->
+
+    <!-- Add/Edit Student Modal -->
+    <div id="modal-student" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 id="modal-student-title" class="text-sm font-space font-extrabold text-white">Inscrire un Nouvel Étudiant</h3>
+          <button onclick="closeModal('modal-student')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handleStudentFormSubmit(event)" class="space-y-4">
+          <input type="hidden" id="form-student-id">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Matricule</label>
+              <input type="text" id="form-student-matricule" required placeholder="Ex: ETU20250009" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Email</label>
+              <input type="email" id="form-student-email" required placeholder="nom@ecole.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Nom de famille</label>
+              <input type="text" id="form-student-nom" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Prénom</label>
+              <input type="text" id="form-student-prenom" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Sexe</label>
+              <select id="form-student-sexe" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+                <option value="M">Masculin (M)</option>
+                <option value="F">Féminin (F)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Date de Naissance</label>
+              <input type="date" id="form-student-dob" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Téléphone</label>
+              <input type="text" id="form-student-tel" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Adresse de résidence</label>
+              <input type="text" id="form-student-adresse" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Filière d'Études</label>
+              <select id="form-student-filiere" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+                <!-- Loaded dynamically -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Classe / Niveau</label>
+              <select id="form-student-classe" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+                <!-- Loaded dynamically -->
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Mot de Passe d'accès</label>
+            <input type="password" id="form-student-pass" placeholder="Par défaut: admin123" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none focus:border-amber-500">
+          </div>
+          <div class="flex justify-end gap-2.5 pt-3">
+            <button type="button" onclick="closeModal('modal-student')" class="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Inscrire l'étudiant</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add/Edit Filiere Modal -->
+    <div id="modal-filiere" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 class="text-sm font-space font-extrabold text-white">Ajouter une Nouvelle Filière</h3>
+          <button onclick="closeModal('modal-filiere')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handleFiliereFormSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Intitulé de la filière</label>
+            <input type="text" id="form-filiere-nom" required placeholder="Ex: Informatique de Gestion" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Description / Objectifs</label>
+            <textarea id="form-filiere-desc" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none" placeholder="Description sommaire du programme..."></textarea>
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeModal('modal-filiere')" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Créer la filière</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add/Edit Semestre Modal -->
+    <div id="modal-semestre" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 class="text-sm font-space font-extrabold text-white">Ajouter un Semestre d'Études</h3>
+          <button onclick="closeModal('modal-semestre')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handleSemestreFormSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Intitulé du Semestre</label>
+            <input type="text" id="form-semestre-nom" required placeholder="Ex: Semestre 1 (IG)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Filière Académique Rattachée</label>
+            <select id="form-semestre-filiere" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Load filieres -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Année Académique</label>
+            <select id="form-semestre-annee" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <option value="2025-2026">2025-2026</option>
+              <option value="2026-2027">2026-2027</option>
+              <option value="2024-2025">2024-2025</option>
+            </select>
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeModal('modal-semestre')" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Ajouter le semestre</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add/Edit Cours Modal -->
+    <div id="modal-cours" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 class="text-sm font-space font-extrabold text-white">Publier un Support de Cours</h3>
+          <button onclick="closeModal('modal-cours')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handleCoursFormSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Titre de la matière / Cours</label>
+            <input type="text" id="form-cours-titre" required placeholder="Ex: Programmation Web" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Description sommaire</label>
+            <textarea id="form-cours-desc" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none" placeholder="Objectifs pédagogiques..."></textarea>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Fichier de cours (PDF)</label>
+            <input type="text" id="form-cours-fichier" placeholder="Ex: cours_web_complet.pdf" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Enseignant / Professeur</label>
+            <input type="text" id="form-cours-enseignant" required placeholder="Ex: Dr. Diallo" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Filière</label>
+              <select id="form-cours-filiere" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+                <!-- Loaded dynamically -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Niveau / Classe</label>
+              <select id="form-cours-classe" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+                <!-- Loaded dynamically -->
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Rattaché au Semestre</label>
+            <select id="form-cours-semestre" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Loaded dynamically -->
+            </select>
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeModal('modal-cours')" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Publier le cours</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add/Edit Note Modal -->
+    <div id="modal-note" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 class="text-sm font-space font-extrabold text-white">Saisir une Note de Contrôle</h3>
+          <button onclick="closeModal('modal-note')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handleNoteFormSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Sélectionnez l'Étudiant</label>
+            <select id="form-note-etudiant" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Load etudiants -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Sélectionnez le Cours / Matière</label>
+            <select id="form-note-cours" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Load cours -->
+            </select>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Note / 20</label>
+              <input type="number" step="0.25" min="0" max="20" id="form-note-valeur" required placeholder="14.5" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Coefficient</label>
+              <input type="number" min="1" max="10" id="form-note-coef" required value="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Crédits ECTS</label>
+              <input type="number" min="1" max="30" id="form-note-credits" required value="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Période Semestrielle</label>
+            <select id="form-note-semestre" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Load semestres -->
+            </select>
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeModal('modal-note')" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Configure Tuition Modal -->
+    <div id="modal-tuition-config" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 class="text-sm font-space font-extrabold text-white">Tarification Annuelle</h3>
+          <button onclick="closeModal('modal-tuition-config')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handleConfigureTuitionSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Montant Scolarité Annuelle (FCFA)</label>
+            <input type="number" id="form-tuition-annual" required placeholder="1500000" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeModal('modal-tuition-config')" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Payment Modal -->
+    <div id="modal-paiement" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 class="text-sm font-space font-extrabold text-white">Saisir un Versement Bancaire</h3>
+          <button onclick="closeModal('modal-paiement')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handlePaiementFormSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Sélectionnez l'Étudiant Payeur</label>
+            <select id="form-pay-etudiant" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Load etudiants -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Montant Versé (FCFA)</label>
+            <input type="number" id="form-pay-montant" required placeholder="500000" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Date de Versement</label>
+              <input type="date" id="form-pay-date" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">Mode de Paiement</label>
+              <select id="form-pay-type" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+                <option value="Virement Bancaire">Virement Bancaire</option>
+                <option value="Chèque">Chèque de Banque</option>
+                <option value="Espèces">Espèces au guichet</option>
+                <option value="Mobile Money">Orange / MTN Money</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Numéro de Reçu / Référence</label>
+            <input type="text" id="form-pay-recu" required placeholder="REC-2025-001" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeModal('modal-paiement')" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Enregistrer versement</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Autorisation Modal -->
+    <div id="modal-autorisation" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 view-hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl modal-anim">
+        <div class="flex justify-between items-center border-b border-slate-850 pb-3 mb-4">
+          <h3 class="text-sm font-space font-extrabold text-white">Accorder une Autorisation</h3>
+          <button onclick="closeModal('modal-autorisation')" class="text-slate-400 hover:text-white transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form onsubmit="handleAutorisationFormSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Étudiant Bénéficiaire</label>
+            <select id="form-aut-etudiant" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Load etudiants -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Filière Autorisée</label>
+            <select id="form-aut-filiere" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+              <!-- Load filieres -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Justificatif / Motif</label>
+            <input type="text" id="form-aut-motif" required placeholder="Ex: Étudiant transféré, cours de rattrapage..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none">
+          </div>
+          <div class="flex justify-end gap-2.5 pt-2">
+            <button type="button" onclick="closeModal('modal-autorisation')" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-lg text-xs cursor-pointer">Annuler</button>
+            <button type="submit" class="px-5 py-2 bg-amber-500 text-slate-950 font-black text-xs rounded-lg cursor-pointer">Autoriser</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- 5. MAIN LOGIC SCRIPT (VANIILA JS) -->
+    <!-- ============================================ -->
+    <script src="/app.js"></script>
+
+  </body>
+</html>
